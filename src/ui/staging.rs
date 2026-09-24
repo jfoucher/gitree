@@ -291,8 +291,6 @@ impl StagingView {
         gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(300), move || {
             view.scroll_to(index, gtk::ListScrollFlags::FOCUS, None);
             view.grab_focus();
-            let win = view.root().and_downcast::<gtk::Window>().unwrap();
-            eprintln!("DBG active={} focus={:?} list_has_focus={}", win.is_active(), gtk::prelude::RootExt::focus(&win).map(|w| w.type_()), view.has_focus());
         });
     }
 

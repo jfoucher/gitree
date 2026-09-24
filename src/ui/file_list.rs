@@ -22,7 +22,8 @@ struct FNode {
     /// File path, or directory path for folders.
     full: String,
     file: Option<FileItem>,
-    children: Vec<Rc<FNode>>,
+    /// Updated in place when a folder row is kept across a refresh.
+    children: RefCell<Vec<Rc<FNode>>>,
 }
 
 impl FNode {
@@ -30,7 +31,7 @@ impl FNode {
         if let Some(f) = &self.file {
             out.push(f.clone());
         }
-        for c in &self.children {
+        for c in self.children.borrow().iter() {
             c.files(out);
         }
     }
@@ -72,7 +73,7 @@ fn build_tree(items: &[FileItem]) -> Vec<Rc<FNode>> {
                 name,
                 full,
                 file: None,
-                children,
+                children: RefCell::new(children),
             }));
         }
         let mut files = d.files;
@@ -82,7 +83,7 @@ fn build_tree(items: &[FileItem]) -> Vec<Rc<FNode>> {
                 name: f.path.rsplit('/').next().unwrap_or(&f.path).to_string(),
                 full: f.path.clone(),
                 file: Some(f),
-                children: Vec::new(),
+                children: RefCell::new(Vec::new()),
             }));
         }
         out
@@ -135,7 +136,7 @@ impl FileList {
                 return None;
             }
             let store = gio::ListStore::new::<glib::BoxedAnyObject>();
-            for c in &node.children {
+            for c in node.children.borrow().iter() {
                 store.append(&glib::BoxedAnyObject::new(c.clone()));
             }
             Some(store.upcast())
@@ -373,37 +374,14 @@ impl FileList {
                         name: f.path.rsplit('/').next().unwrap_or(&f.path).to_string(),
                         full: f.path.clone(),
                         file: Some(f.clone()),
-                        children: Vec::new(),
+                        children: RefCell::new(Vec::new()),
                     })
                 })
                 .collect();
             v.sort_by(|a, b| a.full.cmp(&b.full));
             v
         };
-        // Replace only the rows that changed so the list keeps its scroll
-        // position (e.g. when a file moves to the other list).
-        let old: Vec<Rc<FNode>> = (0..self.root.n_items())
-            .filter_map(|i| self.root.item(i))
-            .filter_map(|o| o.downcast::<glib::BoxedAnyObject>().ok())
-            .map(|b| b.borrow::<Rc<FNode>>().clone())
-            .collect();
-        let prefix = old.iter().zip(&nodes).take_while(|(a, b)| a == b).count();
-        let suffix = old[prefix..]
-            .iter()
-            .rev()
-            .zip(nodes[prefix..].iter().rev())
-            .take_while(|(a, b)| a == b)
-            .count();
-        let objs: Vec<glib::BoxedAnyObject> = nodes[prefix..nodes.len() - suffix]
-            .iter()
-            .cloned()
-            .map(glib::BoxedAnyObject::new)
-            .collect();
-        let removed = old.len() - prefix - suffix;
-        if removed > 0 {
-            self.keep_focus_outside(prefix as u32, (prefix + removed) as u32);
-        }
-        self.root.splice(prefix as u32, removed as u32, &objs);
+        self.sync(&self.root, None, &nodes);
         self.selection.unselect_all();
         for i in 0..self.model.n_items() {
             if let Some(n) = self.model.item(i).and_then(|o| node_of(&o))
@@ -419,19 +397,81 @@ impl FileList {
             }
     }
 
-    /// Moves keyboard focus off the rows of top-level items `start..end`
-    /// before they are removed. Otherwise the list view moves focus to its
-    /// first row and scrolls to the top (e.g. after clicking a checkbox,
-    /// which focuses its row and then moves the file to the other list).
-    fn keep_focus_outside(&self, start: u32, end: u32) {
+    /// Updates `store` (the children of `parent`, or the top level) to
+    /// `new`, replacing only the rows that changed and keeping folder rows
+    /// in place, so the list keeps its scroll position and expanded folders
+    /// (e.g. when a file moves to the other list).
+    fn sync(&self, store: &gio::ListStore, parent: Option<&gtk::TreeListRow>, new: &[Rc<FNode>]) {
+        let old: Vec<Rc<FNode>> = (0..store.n_items())
+            .filter_map(|i| store.item(i))
+            .filter_map(|o| o.downcast::<glib::BoxedAnyObject>().ok())
+            .map(|b| b.borrow::<Rc<FNode>>().clone())
+            .collect();
+        let keep = |a: &&Rc<FNode>, b: &&Rc<FNode>| {
+            a == b || (a.file.is_none() && b.file.is_none() && a.full == b.full && a.name == b.name)
+        };
+        let prefix = old.iter().zip(new).take_while(|(a, b)| keep(a, b)).count();
+        let suffix = old[prefix..]
+            .iter()
+            .rev()
+            .zip(new[prefix..].iter().rev())
+            .take_while(|(a, b)| keep(a, b))
+            .count();
+        let removed = old.len() - prefix - suffix;
+        let added = &new[prefix..new.len() - suffix];
+        if removed > 0 {
+            self.keep_focus_outside(parent, prefix as u32, (prefix + removed) as u32);
+        }
+        let objs: Vec<glib::BoxedAnyObject> = added.iter().cloned().map(glib::BoxedAnyObject::new).collect();
+        store.splice(prefix as u32, removed as u32, &objs);
+
+        // Kept folders whose content changed: update their children in place.
+        let kept = (0..prefix).chain(old.len() - suffix..old.len());
+        for i in kept {
+            let (a, b) = (&old[i], &new[if i < prefix { i } else { i + new.len() - old.len() }]);
+            if a == b {
+                continue;
+            }
+            let pos = if i < prefix { i } else { i + added.len() - removed } as u32;
+            let row = match parent {
+                Some(p) => p.child_row(pos),
+                None => self.model.child_row(pos),
+            };
+            let children = row.as_ref().and_then(|r| r.children()).and_downcast::<gio::ListStore>();
+            match children {
+                Some(child_store) => {
+                    self.sync(&child_store, row.as_ref(), &b.children.borrow());
+                    *a.children.borrow_mut() = b.children.borrow().clone();
+                }
+                // Collapsed: the children are read when it is expanded.
+                None => *a.children.borrow_mut() = b.children.borrow().clone(),
+            }
+        }
+    }
+
+    /// Moves keyboard focus off the rows of items `start..end` of `parent`
+    /// (or of the top level) before they are removed. Otherwise the list
+    /// view moves focus to its first row and scrolls to the top (e.g. after
+    /// clicking a checkbox, which focuses its row and then moves the file to
+    /// the other list).
+    fn keep_focus_outside(&self, parent: Option<&gtk::TreeListRow>, start: u32, end: u32) {
         let Some(focused) = self.focused_row() else { return };
-        // Rows of the flattened tree covered by the items being removed.
-        let row_of = |i: u32| self.model.child_row(i).map_or(self.model.n_items(), |r| r.position());
-        let (first, after) = (row_of(start), row_of(end));
+        let row_at = |i: u32| match parent {
+            Some(p) => p.child_row(i),
+            None => self.model.child_row(i),
+        };
+        let (Some(first), Some(last)) = (row_at(start), row_at(end - 1)) else { return };
+        // The removed rows span from `first` to the end of `last`'s subtree.
+        let n = self.model.n_items();
+        let mut after = last.position() + 1;
+        while after < n && self.model.row(after).is_some_and(|r| r.depth() > last.depth()) {
+            after += 1;
+        }
+        let first = first.position();
         if !(first..after).contains(&focused) {
             return;
         }
-        let target = if after < self.model.n_items() {
+        let target = if after < n {
             after
         } else if first > 0 {
             first - 1

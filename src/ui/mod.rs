@@ -126,8 +126,22 @@ pub async fn ask_text(
 
 /// Pops up a context menu at (x, y) relative to `widget`.
 pub fn popup_menu(widget: &impl IsA<gtk::Widget>, x: f64, y: f64, menu: &gio::Menu) {
+    // List rows are torn down whenever their model is replaced, which happens
+    // on every refresh (and opening the popover itself can trigger one via the
+    // window's is-active notification). A popover parented to a row dies with
+    // it, so hang the menu off the enclosing list instead.
+    let widget = widget.as_ref();
+    let (parent, x, y) = match widget.ancestor(gtk::ListBase::static_type()) {
+        Some(list) => {
+            let p = widget
+                .compute_point(&list, &gtk::graphene::Point::new(x as f32, y as f32))
+                .unwrap_or_else(|| gtk::graphene::Point::new(x as f32, y as f32));
+            (list, p.x() as f64, p.y() as f64)
+        }
+        None => (widget.clone(), x, y),
+    };
     let pop = gtk::PopoverMenu::from_model(Some(menu));
-    pop.set_parent(widget.as_ref());
+    pop.set_parent(&parent);
     pop.set_has_arrow(false);
     pop.set_halign(gtk::Align::Start);
     pop.set_pointing_to(Some(&gdk::Rectangle::new(x as i32, y as i32, 1, 1)));

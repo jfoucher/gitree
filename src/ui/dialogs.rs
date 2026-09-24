@@ -2,7 +2,7 @@
 //! Merge, Stash, Tag, Reset, ...). Every action is a `repo.<name>` GAction
 //! with a string parameter, dispatched through [`dispatch`].
 
-use super::file_status::{decode_target, Side};
+use super::staging::{decode_target, Side};
 use super::form::{combo_value, text_of, Form};
 use super::progress::OpOptions;
 use super::repo_view::{RepoView, View};

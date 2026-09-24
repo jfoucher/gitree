@@ -185,18 +185,25 @@ impl MainWindow {
         }
     }
 
-    /// Development aid: runs `GITREE_DEBUG_ACTIONS` ("name=arg;..."),
-    /// renders the window to a PNG and quits. Used with the broadway
-    /// backend to check the UI headlessly.
+    /// Development aid: runs `GITREE_DEBUG_ACTIONS` ("name=arg;..."; the
+    /// pseudo-action `wait=<ms>` pauses between actions), renders the
+    /// window to a PNG and quits. Used with the broadway backend to check
+    /// the UI headlessly.
     fn debug_screenshot(&self, path: String) {
         let win = self.window.clone();
         let w = self.weak();
-        glib::timeout_add_local_once(std::time::Duration::from_millis(1500), move || {
+        super::spawn(async move {
+            glib::timeout_future(std::time::Duration::from_millis(1500)).await;
             if let (Some(w), Ok(actions)) = (w.upgrade(), std::env::var("GITREE_DEBUG_ACTIONS"))
                 && let Some(rv) = w.current_repo() {
                     for a in actions.split(';').filter(|a| !a.is_empty()) {
                         let (name, arg) = a.split_once('=').unwrap_or((a, ""));
-                        super::dialogs::dispatch(&rv, name, arg.to_string());
+                        if name == "wait" {
+                            let ms = arg.parse().unwrap_or(500);
+                            glib::timeout_future(std::time::Duration::from_millis(ms)).await;
+                        } else {
+                            super::dialogs::dispatch(&rv, name, arg.to_string());
+                        }
                     }
                 }
             let delay = std::env::var("GITREE_SCREENSHOT_DELAY")

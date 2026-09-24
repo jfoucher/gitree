@@ -4,7 +4,8 @@
 use super::diff_view::{DiffContext, DiffKind, DiffView};
 use super::file_list::{FileItem, FileList};
 use super::graph_cell::{self, NodeStyle};
-use super::repo_view::{RepoView, View};
+use super::repo_view::{RepoView, Snapshot, View};
+use super::staging::StagingView;
 use super::{bg, format_time, format_time_full, menu_item_target, popup_menu, spawn};
 use crate::config;
 use crate::git::diff;
@@ -45,7 +46,11 @@ fn row_of(obj: &glib::Object) -> Option<Rc<LogRow>> {
 // Commit details pane
 
 pub struct CommitDetails {
-    pub widget: gtk::Paned,
+    /// Shows `commit_pane`, or the staging lists for uncommitted changes.
+    pub widget: gtk::Stack,
+    commit_pane: gtk::Paned,
+    /// Created the first time the uncommitted changes are selected.
+    staging: RefCell<Option<Rc<StagingView>>>,
     info: gtk::Box,
     files: Rc<FileList>,
     pub diff: Rc<DiffView>,
@@ -78,15 +83,19 @@ impl CommitDetails {
             .position(170)
             .build();
         let diff = DiffView::new();
-        let widget = gtk::Paned::builder()
+        let commit_pane = gtk::Paned::builder()
             .orientation(gtk::Orientation::Horizontal)
             .start_child(&left)
             .end_child(&diff.widget)
             .position(420)
             .shrink_start_child(false)
             .build();
+        let widget = gtk::Stack::new();
+        widget.add_named(&commit_pane, Some("commit"));
         let this = Rc::new(Self {
             widget,
+            commit_pane,
+            staging: RefCell::new(None),
             info,
             files,
             diff,
@@ -144,6 +153,7 @@ impl CommitDetails {
     }
 
     pub fn clear(&self) {
+        self.widget.set_visible_child_name("commit");
         while let Some(c) = self.info.first_child() {
             self.info.remove(&c);
         }
@@ -180,6 +190,7 @@ impl CommitDetails {
 
     /// Shows a single commit.
     pub fn show_commit(self: &Rc<Self>, c: &Commit, refs: &[RefInfo]) {
+        self.widget.set_visible_child_name("commit");
         while let Some(ch) = self.info.first_child() {
             self.info.remove(&ch);
         }
@@ -246,6 +257,7 @@ impl CommitDetails {
 
     /// Shows the difference between two commits.
     pub fn show_range(self: &Rc<Self>, from: &Commit, to: &Commit) {
+        self.widget.set_visible_child_name("commit");
         while let Some(ch) = self.info.first_child() {
             self.info.remove(&ch);
         }
@@ -260,6 +272,48 @@ impl CommitDetails {
         self.info.append(&Self::value_label(&format!("{} — {}", to.short(), to.subject)));
         *self.target.borrow_mut() = Some((Some(from.oid.clone()), to.oid.clone()));
         self.load_files();
+    }
+
+    /// Shows the staged and unstaged files, with the same staging controls
+    /// as the File Status view.
+    pub fn show_uncommitted(self: &Rc<Self>) {
+        let Some(rv) = self.rv.upgrade() else { return };
+        let staging = self.staging.borrow().clone();
+        let staging = staging.unwrap_or_else(|| {
+            let st = StagingView::new(self.rv.clone(), 110, true);
+            let pane = gtk::Paned::builder()
+                .orientation(gtk::Orientation::Horizontal)
+                .start_child(&st.lists)
+                .end_child(&st.diff.widget)
+                .shrink_start_child(false)
+                .build();
+            self.commit_pane
+                .bind_property("position", &pane, "position")
+                .bidirectional()
+                .sync_create()
+                .build();
+            self.widget.add_named(&pane, Some("uncommitted"));
+            *self.staging.borrow_mut() = Some(st.clone());
+            st
+        });
+        // Drop any commit still loading into the commit pane.
+        self.generation.set(self.generation.get() + 1);
+        *self.target.borrow_mut() = None;
+        self.widget.set_visible_child_name("uncommitted");
+        staging.update(&rv.snapshot(), |e, _| !e.ignored);
+        if !staging.has_selection() {
+            staging.select_first();
+        }
+    }
+
+    /// Refreshes the uncommitted changes after a status change, if shown.
+    pub fn update_uncommitted(self: &Rc<Self>, snap: &Snapshot) {
+        if self.widget.visible_child_name().as_deref() != Some("uncommitted") {
+            return;
+        }
+        if let Some(st) = self.staging.borrow().as_ref() {
+            st.update(snap, |e, _| !e.ignored);
+        }
     }
 
     fn load_files(self: &Rc<Self>) {
@@ -747,8 +801,7 @@ impl HistoryView {
             1 => {
                 let r = &rows[0];
                 if r.uncommitted {
-                    self.details.clear();
-                    self.details.diff.show_message("Uncommitted changes — double-click to open File Status");
+                    self.details.show_uncommitted();
                 } else {
                     self.details.show_commit(&r.commit, &r.refs);
                 }

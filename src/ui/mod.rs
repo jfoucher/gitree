@@ -16,6 +16,7 @@ pub mod rebase;
 pub mod repo_settings;
 pub mod repo_view;
 pub mod sidebar;
+pub mod staging;
 pub mod window;
 
 use adw::prelude::*;

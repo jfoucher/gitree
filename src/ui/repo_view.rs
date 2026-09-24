@@ -366,6 +366,7 @@ impl RepoView {
 
         self.sidebar.update(&s);
         self.file_status.update(&s);
+        self.history.details.update_uncommitted(&s);
 
         // Reload history only when refs or the dirty state changed.
         let key = format!("{}|{}", s.refs.signature(), s.has_changes());

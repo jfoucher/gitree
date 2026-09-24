@@ -16,7 +16,7 @@ pub struct FileItem {
     pub conflicted: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct FNode {
     name: String,
     /// File path, or directory path for folders.
@@ -380,8 +380,30 @@ impl FileList {
             v.sort_by(|a, b| a.full.cmp(&b.full));
             v
         };
-        let objs: Vec<glib::BoxedAnyObject> = nodes.into_iter().map(glib::BoxedAnyObject::new).collect();
-        self.root.splice(0, self.root.n_items(), &objs);
+        // Replace only the rows that changed so the list keeps its scroll
+        // position (e.g. when a file moves to the other list).
+        let old: Vec<Rc<FNode>> = (0..self.root.n_items())
+            .filter_map(|i| self.root.item(i))
+            .filter_map(|o| o.downcast::<glib::BoxedAnyObject>().ok())
+            .map(|b| b.borrow::<Rc<FNode>>().clone())
+            .collect();
+        let prefix = old.iter().zip(&nodes).take_while(|(a, b)| a == b).count();
+        let suffix = old[prefix..]
+            .iter()
+            .rev()
+            .zip(nodes[prefix..].iter().rev())
+            .take_while(|(a, b)| a == b)
+            .count();
+        let objs: Vec<glib::BoxedAnyObject> = nodes[prefix..nodes.len() - suffix]
+            .iter()
+            .cloned()
+            .map(glib::BoxedAnyObject::new)
+            .collect();
+        let removed = old.len() - prefix - suffix;
+        if removed > 0 {
+            self.keep_focus_outside(prefix as u32, (prefix + removed) as u32);
+        }
+        self.root.splice(prefix as u32, removed as u32, &objs);
         self.selection.unselect_all();
         for i in 0..self.model.n_items() {
             if let Some(n) = self.model.item(i).and_then(|o| node_of(&o))
@@ -395,6 +417,49 @@ impl FileList {
             && let Some(cb) = self.on_selection.borrow().as_ref() {
                 cb(self.selected_files());
             }
+    }
+
+    /// Moves keyboard focus off the rows of top-level items `start..end`
+    /// before they are removed. Otherwise the list view moves focus to its
+    /// first row and scrolls to the top (e.g. after clicking a checkbox,
+    /// which focuses its row and then moves the file to the other list).
+    fn keep_focus_outside(&self, start: u32, end: u32) {
+        let Some(focused) = self.focused_row() else { return };
+        // Rows of the flattened tree covered by the items being removed.
+        let row_of = |i: u32| self.model.child_row(i).map_or(self.model.n_items(), |r| r.position());
+        let (first, after) = (row_of(start), row_of(end));
+        if !(first..after).contains(&focused) {
+            return;
+        }
+        let target = if after < self.model.n_items() {
+            after
+        } else if first > 0 {
+            first - 1
+        } else {
+            return;
+        };
+        self.list.scroll_to(target, gtk::ListScrollFlags::FOCUS, None);
+    }
+
+    /// Position of the row that holds keyboard focus, if it is in this list.
+    fn focused_row(&self) -> Option<u32> {
+        let mut w = self.list.root()?.focus()?;
+        if !w.is_ancestor(&self.list) {
+            return None;
+        }
+        loop {
+            let expander = w
+                .downcast_ref::<gtk::TreeExpander>()
+                .cloned()
+                .or_else(|| w.first_child().and_downcast::<gtk::TreeExpander>());
+            if let Some(e) = expander {
+                return e.list_row().map(|r| r.position());
+            }
+            w = w.parent()?;
+            if w == *self.list.upcast_ref::<gtk::Widget>() {
+                return None;
+            }
+        }
     }
 
     pub fn unselect_all(&self) {

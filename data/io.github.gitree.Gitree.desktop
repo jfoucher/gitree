@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=Gitree
+GenericName=Git Client
+Comment=Visual Git client inspired by Sourcetree
+Exec=gitree %F
+Icon=io.github.gitree.Gitree
+Terminal=false
+Categories=Development;RevisionControl;GTK;GNOME;
+Keywords=git;version;control;commit;branch;merge;sourcetree;
+StartupNotify=true
+MimeType=inode/directory;
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=gitree

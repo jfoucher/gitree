@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.gitree.Gitree</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Gitree</name>
+  <summary>Visual Git client inspired by Sourcetree</summary>
+  <description>
+    <p>Gitree is a native GNOME Git client modelled on Sourcetree for macOS:
+    a repository browser, a commit graph, hunk and line staging, and dialogs for
+    every everyday Git operation.</p>
+    <ul>
+      <li>Commit history with branch graph, search and file log</li>
+      <li>Stage, unstage and discard files, hunks or individual lines</li>
+      <li>Pull, push, fetch, branch, merge, rebase, stash, tag and cherry-pick</li>
+      <li>Interactive rebase, conflict resolution and blame</li>
+      <li>Git-flow, Git LFS, submodules and subtrees</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.gitree.Gitree.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-09-24"/>
+  </releases>
+</component>

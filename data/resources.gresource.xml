@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/io/github/gitree/Gitree">
+    <file>style.css</file>
+    <file preprocess="xml-stripblanks">icons/scalable/apps/io.github.gitree.Gitree.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-branch-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-cherry-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-commit-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-discard-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-fetch-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-filestatus-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-flow-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-history-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-lfs-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-merge-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-pull-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-push-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-remote-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-repo-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-stash-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-submodule-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-tag-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">icons/scalable/actions/gitree-terminal-symbolic.svg</file>
+  </gresource>
+</gresources>

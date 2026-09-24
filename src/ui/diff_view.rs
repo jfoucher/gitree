@@ -1,0 +1,678 @@
+//! Diff viewer with per-hunk and per-line stage / unstage / discard buttons.
+
+use super::{bg, spawn};
+use crate::config;
+use crate::git::diff::{FileDiff, LineKind, Selection};
+use crate::git::Git;
+use adw::prelude::*;
+use gtk::{gdk, glib};
+use sourceview5::prelude::*;
+use std::cell::{Cell, RefCell};
+use std::collections::BTreeSet;
+use std::rc::{Rc, Weak};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiffKind {
+    Unstaged,
+    Staged,
+    ReadOnly,
+    /// A conflicted file: offers resolve actions instead of staging.
+    Conflict,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PatchAction {
+    Stage,
+    Unstage,
+    Discard,
+}
+
+/// Where the old/new versions of files come from (for image previews).
+#[derive(Debug, Clone)]
+pub struct DiffContext {
+    pub git: Git,
+    /// Revision prefix for the old side: "HEAD", "" (index), "abc^".
+    pub old_rev: Option<String>,
+    /// Revision for the new side; None = working tree file.
+    pub new_rev: Option<String>,
+}
+
+const LARGE_DIFF_LINES: usize = 6000;
+
+type PatchCb = RefCell<Option<Box<dyn Fn(PatchAction, FileDiff, Option<Selection>)>>>;
+type Callback<T> = RefCell<Option<Box<dyn Fn(T)>>>;
+
+pub struct DiffView {
+    pub widget: gtk::Box,
+    content: gtk::Box,
+    scrolled: gtk::ScrolledWindow,
+    title: gtk::Label,
+    kind: Cell<DiffKind>,
+    files: RefCell<Vec<FileDiff>>,
+    ctx: RefCell<Option<DiffContext>>,
+    force_large: Cell<bool>,
+    pub on_patch: PatchCb,
+    /// Called when diff options (whitespace / context) change.
+    pub on_options_changed: Callback<()>,
+    pub on_external: Callback<String>,
+    ignore_ws: gtk::ToggleButton,
+    context_spin: gtk::SpinButton,
+    external_btn: gtk::Button,
+    self_ref: RefCell<Weak<DiffView>>,
+}
+
+impl DiffView {
+    pub fn new() -> Rc<Self> {
+        let widget = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let bar = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        bar.add_css_class("pane-header");
+        let title = gtk::Label::builder()
+            .xalign(0.0)
+            .hexpand(true)
+            .ellipsize(gtk::pango::EllipsizeMode::Middle)
+            .build();
+        title.add_css_class("title");
+        bar.append(&title);
+
+        let external_btn = gtk::Button::from_icon_name("document-open-symbolic");
+        external_btn.set_tooltip_text(Some("Open in external diff tool"));
+        external_btn.add_css_class("flat");
+        external_btn.set_visible(false);
+        bar.append(&external_btn);
+
+        let ignore_ws = gtk::ToggleButton::builder()
+            .icon_name("format-justify-fill-symbolic")
+            .tooltip_text("Ignore whitespace")
+            .active(config::with(|s| s.diff_ignore_whitespace))
+            .build();
+        ignore_ws.add_css_class("flat");
+        bar.append(&ignore_ws);
+
+        let context_spin = gtk::SpinButton::with_range(0.0, 100.0, 1.0);
+        context_spin.set_value(config::with(|s| s.diff_context) as f64);
+        context_spin.set_tooltip_text(Some("Lines of context"));
+        context_spin.set_valign(gtk::Align::Center);
+        bar.append(&context_spin);
+        widget.append(&bar);
+
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let scrolled = gtk::ScrolledWindow::builder()
+            .child(&content)
+            .vexpand(true)
+            .hexpand(true)
+            .build();
+        widget.append(&scrolled);
+
+        let this = Rc::new(Self {
+            widget,
+            content,
+            scrolled,
+            title,
+            kind: Cell::new(DiffKind::ReadOnly),
+            files: RefCell::new(Vec::new()),
+            ctx: RefCell::new(None),
+            force_large: Cell::new(false),
+            on_patch: RefCell::new(None),
+            on_options_changed: RefCell::new(None),
+            on_external: RefCell::new(None),
+            ignore_ws,
+            context_spin,
+            external_btn,
+            self_ref: RefCell::new(Weak::new()),
+        });
+        *this.self_ref.borrow_mut() = Rc::downgrade(&this);
+
+        let w = Rc::downgrade(&this);
+        this.ignore_ws.connect_toggled(move |b| {
+            config::update(|s| s.diff_ignore_whitespace = b.is_active());
+            if let Some(d) = w.upgrade() {
+                d.options_changed();
+            }
+        });
+        let w = Rc::downgrade(&this);
+        this.context_spin.connect_value_changed(move |s| {
+            let v = s.value() as u32;
+            config::update(|c| c.diff_context = v);
+            if let Some(d) = w.upgrade() {
+                d.options_changed();
+            }
+        });
+        let w = Rc::downgrade(&this);
+        this.external_btn.connect_clicked(move |_| {
+            if let Some(d) = w.upgrade() {
+                let path = d.files.borrow().first().map(|f| f.path().to_string());
+                if let (Some(p), Some(cb)) = (path, d.on_external.borrow().as_ref()) {
+                    cb(p);
+                }
+            }
+        });
+        // Syntax/line colours depend on the theme: re-render on switches.
+        let w = Rc::downgrade(&this);
+        adw::StyleManager::default().connect_dark_notify(move |_| {
+            if let Some(d) = w.upgrade()
+                && !d.files.borrow().is_empty() {
+                    d.render();
+                }
+        });
+        this.show_message("No file selected");
+        this
+    }
+
+    /// Selects lines "hunk:from-to" in the first file's hunk views.
+    pub fn debug_select_lines(&self, spec: &str) {
+        let Some((h, range)) = spec.split_once(':') else { return };
+        let (Ok(h), Some((a, b))) = (h.parse::<usize>(), range.split_once('-')) else { return };
+        let (Ok(a), Ok(b)) = (a.parse::<i32>(), b.parse::<i32>()) else { return };
+        let mut n = 0;
+        let mut child = self.content.first_child();
+        while let Some(c) = child {
+            if let Some(body) = c.downcast_ref::<gtk::Box>()
+                && let Some(view) = body.last_child().and_downcast::<sourceview5::View>() {
+                    if n == h {
+                        let buf = view.buffer();
+                        if let (Some(s), Some(mut e)) = (buf.iter_at_line(a), buf.iter_at_line(b)) {
+                            e.forward_to_line_end();
+                            buf.select_range(&s, &e);
+                        }
+                        return;
+                    }
+                    n += 1;
+                }
+            child = c.next_sibling();
+        }
+    }
+
+    fn options_changed(&self) {
+        if let Some(cb) = self.on_options_changed.borrow().as_ref() {
+            cb(());
+        }
+    }
+
+    pub fn options(&self) -> crate::git::diff::DiffOptions {
+        crate::git::diff::DiffOptions {
+            context: self.context_spin.value() as u32,
+            ignore_whitespace: self.ignore_ws.is_active(),
+        }
+    }
+
+    fn clear(&self) {
+        while let Some(c) = self.content.first_child() {
+            self.content.remove(&c);
+        }
+    }
+
+    pub fn show_message(&self, msg: &str) {
+        self.clear();
+        self.files.borrow_mut().clear();
+        self.title.set_text("");
+        self.external_btn.set_visible(false);
+        let l = gtk::Label::new(Some(msg));
+        l.add_css_class("dim-label");
+        l.set_vexpand(true);
+        l.set_valign(gtk::Align::Center);
+        self.content.append(&l);
+    }
+
+    /// Displays `files`. Scroll position is kept when re-showing the same file.
+    pub fn show(&self, files: Vec<FileDiff>, kind: DiffKind, ctx: Option<DiffContext>) {
+        if !files.is_empty() && *self.files.borrow() == files && self.kind.get() == kind {
+            // Unchanged: keep the widgets (and any line selection).
+            *self.ctx.borrow_mut() = ctx;
+            return;
+        }
+        let same_file = {
+            let cur = self.files.borrow();
+            cur.len() == files.len()
+                && cur.iter().zip(&files).all(|(a, b)| a.path() == b.path())
+        };
+        let vpos = self.scrolled.vadjustment().value();
+        if !same_file {
+            self.force_large.set(false);
+        }
+        self.kind.set(kind);
+        *self.ctx.borrow_mut() = ctx;
+        *self.files.borrow_mut() = files;
+        self.render();
+        if same_file {
+            let adj = self.scrolled.vadjustment();
+            glib::idle_add_local_once(move || adj.set_value(vpos));
+        } else {
+            self.scrolled.vadjustment().set_value(0.0);
+        }
+    }
+
+    fn render(&self) {
+        self.clear();
+        let files = self.files.borrow().clone();
+        if files.is_empty() {
+            self.show_message("No changes");
+            return;
+        }
+        self.title.set_text(&if files.len() > 1 {
+            format!("{} files", files.len())
+        } else if self.kind.get() == DiffKind::ReadOnly {
+            files[0].path().to_string()
+        } else {
+            String::new()
+        });
+        self.external_btn
+            .set_visible(files.len() == 1 && self.on_external.borrow().is_some());
+        let total: usize = files.iter().map(|f| f.line_count()).sum();
+        if total > LARGE_DIFF_LINES && !self.force_large.get() {
+            let b = gtk::Box::new(gtk::Orientation::Vertical, 12);
+            b.set_valign(gtk::Align::Center);
+            b.set_vexpand(true);
+            let l = gtk::Label::new(Some(&format!("This diff is large ({total} lines).")));
+            l.add_css_class("dim-label");
+            let btn = gtk::Button::with_label("Show Diff Anyway");
+            btn.set_halign(gtk::Align::Center);
+            btn.add_css_class("pill");
+            let w = self.self_ref.borrow().clone();
+            btn.connect_clicked(move |_| {
+                if let Some(d) = w.upgrade() {
+                    d.force_large.set(true);
+                    d.render();
+                }
+            });
+            b.append(&l);
+            b.append(&btn);
+            self.content.append(&b);
+            return;
+        }
+        for (fi, f) in files.iter().enumerate() {
+            self.render_file(fi, f, files.len() > 1);
+        }
+    }
+
+    fn file_header(&self, f: &FileDiff) -> gtk::Box {
+        let hb = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        hb.add_css_class("diff-file-header");
+        let mut text = f.path().to_string();
+        if f.renamed {
+            text = format!("{} → {}", f.old_path.clone().unwrap_or_default(), f.path());
+        }
+        let mut tags = Vec::new();
+        if f.new_file {
+            tags.push("new file");
+        }
+        if f.deleted {
+            tags.push("deleted");
+        }
+        if f.mode_change {
+            tags.push("mode changed");
+        }
+        if f.binary {
+            tags.push("binary");
+        }
+        if !tags.is_empty() {
+            text.push_str(&format!("  ({})", tags.join(", ")));
+        }
+        let l = gtk::Label::builder()
+            .label(&text)
+            .xalign(0.0)
+            .hexpand(true)
+            .ellipsize(gtk::pango::EllipsizeMode::Middle)
+            .build();
+        l.add_css_class("heading");
+        hb.append(&l);
+        let kind = self.kind.get();
+        let add_btn = |label: &str, action: PatchAction, destructive: bool| {
+            let b = gtk::Button::with_label(label);
+            b.add_css_class("flat");
+            if destructive {
+                b.add_css_class("destructive-action");
+            }
+            let w = self.self_ref.borrow().clone();
+            let file = f.clone();
+            b.connect_clicked(move |_| {
+                if let Some(d) = w.upgrade()
+                    && let Some(cb) = d.on_patch.borrow().as_ref() {
+                        cb(action, file.clone(), None);
+                    }
+            });
+            hb.append(&b);
+        };
+        match kind {
+            DiffKind::Unstaged => {
+                add_btn("Discard File", PatchAction::Discard, true);
+                add_btn("Stage File", PatchAction::Stage, false);
+            }
+            DiffKind::Staged => add_btn("Unstage File", PatchAction::Unstage, false),
+            DiffKind::ReadOnly => {}
+            DiffKind::Conflict => {
+                let target = format!("U|{}", f.path());
+                for (label, action) in [
+                    ("Resolve Using Mine", "repo.file-resolve-mine"),
+                    ("Resolve Using Theirs", "repo.file-resolve-theirs"),
+                    ("Merge Tool", "repo.file-mergetool"),
+                    ("Mark Resolved", "repo.file-mark-resolved"),
+                ] {
+                    let b = gtk::Button::builder()
+                        .label(label)
+                        .action_name(action)
+                        .action_target(&target.to_variant())
+                        .build();
+                    b.add_css_class("flat");
+                    hb.append(&b);
+                }
+            }
+        }
+        hb
+    }
+
+    fn render_file(&self, _fi: usize, f: &FileDiff, multi: bool) {
+        if multi || f.binary || f.hunks.is_empty() || self.kind.get() != DiffKind::ReadOnly {
+            self.content.append(&self.file_header(f));
+        }
+        if f.binary {
+            self.render_binary(f);
+            return;
+        }
+        if f.hunks.is_empty() {
+            let l = gtk::Label::new(Some(if f.renamed {
+                "File renamed without changes"
+            } else if f.mode_change {
+                "File mode changed"
+            } else {
+                "No content changes"
+            }));
+            l.add_css_class("dim-label");
+            l.set_margin_top(12);
+            l.set_margin_bottom(12);
+            self.content.append(&l);
+            return;
+        }
+        let lang = sourceview5::LanguageManager::default()
+            .guess_language(Some(f.path()), None::<&str>);
+        for (hi, h) in f.hunks.iter().enumerate() {
+            self.render_hunk(f, hi, h, lang.as_ref());
+        }
+    }
+
+    fn render_binary(&self, f: &FileDiff) {
+        let path = f.path().to_string();
+        let lower = path.to_lowercase();
+        let is_image = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".svg", ".ico", ".tiff"]
+            .iter()
+            .any(|e| lower.ends_with(e));
+        let ctx = self.ctx.borrow().clone();
+        if !is_image || ctx.is_none() {
+            let l = gtk::Label::new(Some("Binary file — no text diff available"));
+            l.add_css_class("dim-label");
+            l.set_margin_top(12);
+            self.content.append(&l);
+            return;
+        }
+        let ctx = ctx.unwrap();
+        let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        row.set_margin_top(12);
+        row.set_margin_start(12);
+        row.set_margin_end(12);
+        row.set_homogeneous(true);
+        let mk = |title: &str| {
+            let b = gtk::Box::new(gtk::Orientation::Vertical, 6);
+            let l = gtk::Label::new(Some(title));
+            l.add_css_class("dim-label");
+            let pic = gtk::Picture::new();
+            pic.set_size_request(-1, 240);
+            pic.set_content_fit(gtk::ContentFit::ScaleDown);
+            b.append(&l);
+            b.append(&pic);
+            row.append(&b);
+            pic
+        };
+        let old_pic = mk("Before");
+        let new_pic = mk("After");
+        self.content.append(&row);
+        let old_path = f.old_path.clone().unwrap_or(path.clone());
+        let deleted = f.deleted;
+        let new_file = f.new_file;
+        spawn(async move {
+            let c2 = ctx.clone();
+            let (old, new) = bg(move || {
+                let old = if new_file {
+                    None
+                } else {
+                    c2.old_rev
+                        .as_ref()
+                        .and_then(|r| c2.git.run_bytes(&["show", &format!("{r}:{old_path}")]).ok())
+                };
+                let new = if deleted {
+                    None
+                } else {
+                    match &c2.new_rev {
+                        Some(r) => c2.git.run_bytes(&["show", &format!("{r}:{path}")]).ok(),
+                        None => std::fs::read(c2.git.workdir.join(&path)).ok(),
+                    }
+                };
+                (old, new)
+            })
+            .await;
+            let set = |pic: &gtk::Picture, data: Option<Vec<u8>>| {
+                if let Some(d) = data
+                    && let Ok(t) = gdk::Texture::from_bytes(&glib::Bytes::from_owned(d)) {
+                        pic.set_paintable(Some(&t));
+                    }
+            };
+            set(&old_pic, old);
+            set(&new_pic, new);
+        });
+    }
+
+    fn render_hunk(&self, f: &FileDiff, hi: usize, h: &crate::git::diff::Hunk, lang: Option<&sourceview5::Language>) {
+        let kind = self.kind.get();
+        // Header with buttons.
+        let header = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        header.add_css_class("hunk-header");
+        let last_new = h.new_start + h.new_count.saturating_sub(1);
+        let hl = gtk::Label::builder()
+            .label(format!(
+                "Hunk {}: Lines {}-{}   {}",
+                hi + 1,
+                h.new_start,
+                last_new.max(h.new_start),
+                h.header.find(" @@").map(|i| h.header[i + 3..].trim()).unwrap_or("")
+            ))
+            .xalign(0.0)
+            .hexpand(true)
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
+        header.append(&hl);
+
+        // Body: gutter (line numbers and +/-) and the code view.
+        let gutter_buf = gtk::TextBuffer::new(None);
+        let gutter = gtk::TextView::builder()
+            .buffer(&gutter_buf)
+            .editable(false)
+            .cursor_visible(false)
+            .monospace(true)
+            .top_margin(2)
+            .bottom_margin(2)
+            .left_margin(4)
+            .right_margin(4)
+            .build();
+        gutter.add_css_class("diff-gutter");
+
+        let buf = sourceview5::Buffer::new(None);
+        buf.set_highlight_matching_brackets(false);
+        if let Some(l) = lang {
+            buf.set_language(Some(l));
+            buf.set_highlight_syntax(true);
+        }
+        let scheme = if super::is_dark() { "Adwaita-dark" } else { "Adwaita" };
+        if let Some(s) = sourceview5::StyleSchemeManager::default().scheme(scheme) {
+            buf.set_style_scheme(Some(&s));
+        }
+        let view = sourceview5::View::builder()
+            .buffer(&buf)
+            .editable(false)
+            .cursor_visible(false)
+            .monospace(true)
+            .hexpand(true)
+            .top_margin(2)
+            .bottom_margin(2)
+            .left_margin(6)
+            .build();
+        view.add_css_class("diff-text");
+
+        let dark = super::is_dark();
+        let rgba = |s: &str| gdk::RGBA::parse(s).unwrap();
+        let add_tag = gtk::TextTag::builder()
+            .name("add")
+            .paragraph_background_rgba(&rgba(if dark { "rgba(46,160,67,0.28)" } else { "rgba(46,160,67,0.16)" }))
+            .build();
+        let del_tag = gtk::TextTag::builder()
+            .name("del")
+            .paragraph_background_rgba(&rgba(if dark { "rgba(248,81,73,0.28)" } else { "rgba(248,81,73,0.16)" }))
+            .build();
+        let nonl_tag = gtk::TextTag::builder()
+            .name("nonl")
+            .style(gtk::pango::Style::Italic)
+            .foreground_rgba(&rgba("rgba(128,128,128,0.9)"))
+            .build();
+        buf.tag_table().add(&add_tag);
+        buf.tag_table().add(&del_tag);
+        buf.tag_table().add(&nonl_tag);
+        let gadd = gtk::TextTag::builder().name("add").paragraph_background_rgba(&add_tag.paragraph_background_rgba().unwrap()).build();
+        let gdel = gtk::TextTag::builder().name("del").paragraph_background_rgba(&del_tag.paragraph_background_rgba().unwrap()).build();
+        gutter_buf.tag_table().add(&gadd);
+        gutter_buf.tag_table().add(&gdel);
+
+        let width = h
+            .lines
+            .iter()
+            .filter_map(|l| l.old_no.max(l.new_no))
+            .max()
+            .unwrap_or(1)
+            .to_string()
+            .len()
+            .max(3);
+        let mut text = String::new();
+        let mut gtext = String::new();
+        for (i, l) in h.lines.iter().enumerate() {
+            if i > 0 {
+                text.push('\n');
+                gtext.push('\n');
+            }
+            text.push_str(&l.text);
+            let num = |n: Option<u32>| n.map(|n| n.to_string()).unwrap_or_default();
+            let sign = match l.kind {
+                LineKind::Add => '+',
+                LineKind::Del => '-',
+                _ => ' ',
+            };
+            gtext.push_str(&format!(
+                "{:>w$} {:>w$} {sign}",
+                num(l.old_no),
+                num(l.new_no),
+                w = width
+            ));
+        }
+        buf.set_text(&text);
+        gutter_buf.set_text(&gtext);
+        super::set_mono_width(&gutter, width * 2 + 3);
+        for (i, l) in h.lines.iter().enumerate() {
+            let tag = match l.kind {
+                LineKind::Add => "add",
+                LineKind::Del => "del",
+                LineKind::NoNewline => "nonl",
+                LineKind::Context => continue,
+            };
+            let i = i as i32;
+            if let Some(s) = buf.iter_at_line(i) {
+                let mut e = s;
+                e.forward_line();
+                buf.apply_tag_by_name(tag, &s, &e);
+            }
+            if tag != "nonl"
+                && let Some(s) = gutter_buf.iter_at_line(i) {
+                    let mut e = s;
+                    e.forward_line();
+                    gutter_buf.apply_tag_by_name(tag, &s, &e);
+                }
+        }
+
+        // Clicking in the gutter selects whole lines (shift extends).
+        let anchor = Rc::new(Cell::new(0i32));
+        let click = gtk::GestureClick::new();
+        let (b2, g2, a2) = (buf.clone(), gutter.clone(), anchor.clone());
+        click.connect_pressed(move |g, _, x, y| {
+            let (bx, by) = g2.window_to_buffer_coords(gtk::TextWindowType::Widget, x as i32, y as i32);
+            let Some(it) = g2.iter_at_location(bx, by) else { return };
+            let line = it.line();
+            let shift = g
+                .current_event_state()
+                .contains(gdk::ModifierType::SHIFT_MASK);
+            let start_line = if shift { a2.get() } else { line };
+            if !shift {
+                a2.set(line);
+            }
+            let (lo, hi) = (start_line.min(line), start_line.max(line));
+            if let (Some(s), Some(mut e)) = (b2.iter_at_line(lo), b2.iter_at_line(hi)) {
+                if !e.ends_line() {
+                    e.forward_to_line_end();
+                }
+                b2.select_range(&s, &e);
+            }
+        });
+        gutter.add_controller(click);
+
+        if !matches!(kind, DiffKind::ReadOnly | DiffKind::Conflict) {
+            let mk_btn = |label: &str, destructive: bool| {
+                let b = gtk::Button::with_label(label);
+                b.add_css_class("flat");
+                if destructive {
+                    b.add_css_class("destructive-action");
+                }
+                header.append(&b);
+                b
+            };
+            let actions: Vec<(PatchAction, &str, &str, bool)> = match kind {
+                DiffKind::Unstaged => vec![
+                    (PatchAction::Discard, "Discard Hunk", "Discard Lines", true),
+                    (PatchAction::Stage, "Stage Hunk", "Stage Lines", false),
+                ],
+                DiffKind::Staged => vec![(PatchAction::Unstage, "Unstage Hunk", "Unstage Lines", false)],
+                DiffKind::ReadOnly | DiffKind::Conflict => vec![],
+            };
+            let mut btns = Vec::new();
+            for (action, hunk_label, lines_label, destructive) in actions {
+                let b = mk_btn(hunk_label, destructive);
+                let w = self.self_ref.borrow().clone();
+                let file = f.clone();
+                let b2 = buf.clone();
+                b.connect_clicked(move |_| {
+                    let Some(d) = w.upgrade() else { return };
+                    let lines = selected_lines(&b2);
+                    let sel: Selection = vec![(hi, lines)];
+                    if let Some(cb) = d.on_patch.borrow().as_ref() {
+                        cb(action, file.clone(), Some(sel));
+                    }
+                });
+                btns.push((b, hunk_label.to_string(), lines_label.to_string()));
+            }
+            buf.connect_has_selection_notify(move |b| {
+                let has = b.has_selection();
+                for (btn, hl, ll) in &btns {
+                    btn.set_label(if has { ll } else { hl });
+                }
+            });
+        }
+
+        let body = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        body.append(&gutter);
+        body.append(&view);
+        self.content.append(&header);
+        self.content.append(&body);
+    }
+}
+
+fn selected_lines(buf: &sourceview5::Buffer) -> Option<BTreeSet<usize>> {
+    let (s, e) = buf.selection_bounds()?;
+    let sl = s.line();
+    let mut el = e.line();
+    if e.line_offset() == 0 && el > sl {
+        el -= 1;
+    }
+    Some((sl..=el).map(|l| l as usize).collect())
+}

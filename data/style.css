@@ -1,0 +1,116 @@
+/* Sourcetree-style toolbar */
+.repo-toolbar {
+  padding: 4px 8px;
+  border-bottom: 1px solid alpha(currentColor, 0.12);
+  background: var(--headerbar-bg-color);
+}
+.repo-toolbar .tool {
+  padding: 3px 8px;
+  min-width: 52px;
+}
+.repo-toolbar separator {
+  margin: 6px 4px;
+}
+.count-badge {
+  background: var(--accent-bg-color);
+  color: var(--accent-fg-color);
+  border-radius: 999px;
+  font-size: 0.7em;
+  font-weight: bold;
+  padding: 0 5px;
+  min-width: 10px;
+}
+.count-badge.dim {
+  background: alpha(currentColor, 0.25);
+  color: inherit;
+}
+
+/* Sidebar */
+.repo-sidebar {
+  background: var(--sidebar-bg-color);
+}
+.sidebar-section {
+  font-size: 0.78em;
+  font-weight: bold;
+  opacity: 0.6;
+}
+.current-branch {
+  font-weight: bold;
+}
+
+/* Ref badges in history */
+.ref-badge {
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 0.8em;
+  margin-right: 3px;
+  border: 1px solid alpha(currentColor, 0.2);
+}
+.ref-badge.local { background: alpha(#3584e4, 0.22); }
+.ref-badge.head { background: #3584e4; color: white; font-weight: bold; }
+.ref-badge.remote { background: alpha(#9141ac, 0.22); }
+.ref-badge.tag { background: alpha(#e5a50a, 0.3); }
+.ref-badge.stash { background: alpha(#26a269, 0.25); }
+
+/* Commit list */
+columnview.history-list > listview > row { padding: 0; min-height: 0; }
+columnview.history-list > listview > row > cell { padding: 0 6px; min-height: 0; }
+columnview.history-list.with-graph > listview > row > cell:first-child { padding: 0; }
+.uncommitted { font-style: italic; opacity: 0.8; }
+.dim-label-2 { opacity: 0.55; }
+.mono { font-family: monospace; }
+
+/* Diff */
+.hunk-header {
+  background: alpha(currentColor, 0.06);
+  border-top: 1px solid alpha(currentColor, 0.12);
+  border-bottom: 1px solid alpha(currentColor, 0.12);
+  padding: 2px 8px;
+}
+.hunk-header label { font-family: monospace; font-size: 0.9em; }
+.diff-file-header {
+  padding: 6px 8px;
+  background: alpha(currentColor, 0.04);
+}
+.diff-gutter { color: alpha(currentColor, 0.5); background: alpha(currentColor, 0.03); }
+textview.diff-text, textview.diff-gutter { font-family: monospace; }
+
+/* Operation in progress banner */
+.op-banner {
+  background: alpha(#e5a50a, 0.25);
+  padding: 6px 12px;
+}
+.error-banner {
+  background: alpha(#e01b24, 0.2);
+  padding: 6px 12px;
+}
+
+/* File status lists */
+.pane-header {
+  padding: 4px 8px;
+  border-bottom: 1px solid alpha(currentColor, 0.1);
+  background: alpha(currentColor, 0.03);
+}
+.pane-header label.title { font-weight: bold; font-size: 0.9em; }
+.status-icon { font-weight: bold; font-family: monospace; min-width: 16px; border-radius: 3px; font-size: 0.8em; }
+.status-A { color: #26a269; }
+.status-M { color: #e5a50a; }
+.status-D { color: #e01b24; }
+.status-R, .status-C { color: #3584e4; }
+.status-U { color: #e01b24; background: alpha(#e01b24, 0.15); }
+.status-Q { color: #9141ac; }
+.status-I { opacity: 0.5; }
+
+.commit-box {
+  border-top: 1px solid alpha(currentColor, 0.12);
+  padding: 6px;
+}
+.commit-box textview { font-family: monospace; }
+
+/* Repository browser */
+.repo-browser row { padding: 6px 4px; }
+.repo-browser .repo-name { font-weight: bold; }
+.repo-browser .repo-path { font-size: 0.85em; opacity: 0.6; }
+.group-header { font-weight: bold; font-size: 0.85em; opacity: 0.6; padding: 10px 12px 4px 12px; }
+
+.blame-gutter { font-family: monospace; }

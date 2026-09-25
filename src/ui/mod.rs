@@ -228,7 +228,14 @@ pub fn open_terminal(dir: &Path) -> Result<(), String> {
         ("xterm".into(), vec![]),
     ]);
     for (prog, args) in candidates {
-        if Command::new(&prog).args(&args).current_dir(dir).spawn().is_ok() {
+        // Through flatpak-spawn, spawning succeeds even when the host lacks
+        // the program, so look it up first.
+        if crate::host::in_flatpak() && !crate::host::has_program(&prog) {
+            continue;
+        }
+        let mut cmd = Command::new(&prog);
+        cmd.args(&args).current_dir(dir);
+        if crate::host::wrap(cmd, false).spawn().is_ok() {
             return Ok(());
         }
     }
@@ -297,6 +304,19 @@ pub fn set_mono_width(tv: &gtk::TextView, chars: usize) {
     layout.set_font_description(Some(&gtk::pango::FontDescription::from_string("Monospace")));
     let (w, _) = layout.pixel_size();
     tv.set_size_request(w + tv.left_margin() + tv.right_margin() + 4, -1);
+}
+
+/// The sideways part of a scroll event, in pixels: a touchpad's horizontal
+/// swipe, or Shift+wheel. The flag is true when the event has no vertical
+/// part left, so the caller can stop it.
+pub fn horizontal_scroll(c: &gtk::EventControllerScroll, dx: f64, dy: f64) -> Option<(f64, bool)> {
+    let shift = c.current_event_state().contains(gtk::gdk::ModifierType::SHIFT_MASK);
+    let (dx, dy) = if shift && dx == 0.0 { (dy, 0.0) } else { (dx, dy) };
+    if dx == 0.0 {
+        return None;
+    }
+    let step = if c.unit() == gtk::gdk::ScrollUnit::Wheel { 50.0 } else { 1.0 };
+    Some((dx * step, dy == 0.0))
 }
 
 pub fn is_dark() -> bool {

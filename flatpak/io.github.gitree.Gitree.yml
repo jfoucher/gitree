@@ -1,0 +1,45 @@
+id: io.github.gitree.Gitree
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: gitree
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # Repositories can live anywhere, including /tmp (not covered by "host").
+  - --filesystem=host
+  - --filesystem=/tmp
+  # git, hooks, credential helpers, terminals and custom actions run on the
+  # host through flatpak-spawn (see src/host.rs).
+  - --talk-name=org.freedesktop.Flatpak
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/gitree/cargo
+    CARGO_NET_OFFLINE: 'true'
+modules:
+  - name: gitree
+    buildsystem: simple
+    build-commands:
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - cargo --offline build --release --verbose
+      - install -Dm755 target/release/gitree /app/bin/gitree
+      - install -Dm644 data/io.github.gitree.Gitree.desktop /app/share/applications/io.github.gitree.Gitree.desktop
+      - install -Dm644 data/io.github.gitree.Gitree.metainfo.xml /app/share/metainfo/io.github.gitree.Gitree.metainfo.xml
+      - install -Dm644 data/icons/scalable/apps/io.github.gitree.Gitree.svg /app/share/icons/hicolor/scalable/apps/io.github.gitree.Gitree.svg
+    sources:
+      - type: dir
+        path: ..
+        skip:
+          - .git
+          - target
+          - flatpak
+          - playground
+          - .flatpak-builder
+          - gitree.flatpak
+      # Regenerate after changing Cargo.lock: scripts/flatpak.sh does it.
+      - cargo-sources.json

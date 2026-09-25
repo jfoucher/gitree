@@ -58,12 +58,24 @@ impl Git {
 
     /// Builds a `git` command with the standard environment.
     pub fn command<S: AsRef<str>>(&self, args: &[S], prompt: Prompt) -> Command {
+        self.command_with_env(args, prompt, &[])
+    }
+
+    fn command_with_env<S: AsRef<str>>(
+        &self,
+        args: &[S],
+        prompt: Prompt,
+        extra_env: &[(String, String)],
+    ) -> Command {
         let mut cmd = base_command(prompt);
         cmd.current_dir(&self.workdir);
         for a in args {
             cmd.arg(a.as_ref());
         }
-        cmd
+        for (k, v) in extra_env {
+            cmd.env(k, v);
+        }
+        crate::host::wrap(cmd, true)
     }
 
     /// Runs git and returns stdout on success.
@@ -160,10 +172,7 @@ impl Git {
         handle: Arc<Mutex<Option<Child>>>,
         on_line: impl Fn(String) + Send + Clone + 'static,
     ) -> GitResult<String> {
-        let mut cmd = self.command(args, prompt);
-        for (k, v) in extra_env {
-            cmd.env(k, v);
-        }
+        let mut cmd = self.command_with_env(args, prompt, extra_env);
         cmd.stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .stdin(Stdio::null());
@@ -293,7 +302,8 @@ fn read_lines(mut r: impl Read, all: &mut Vec<u8>, mut f: impl FnMut(String)) {
 }
 
 /// A `git` command with Gitree's environment, not bound to a directory.
-pub fn base_command(prompt: Prompt) -> Command {
+/// Pass it through [`crate::host::wrap`] before spawning.
+fn base_command(prompt: Prompt) -> Command {
     let mut cmd = Command::new("git");
     cmd.args([
         "-c",
@@ -313,7 +323,7 @@ pub fn base_command(prompt: Prompt) -> Command {
     cmd.env_remove("GIT_WORK_TREE");
     match prompt {
         Prompt::Interactive => {
-            if let Ok(exe) = std::env::current_exe() {
+            if let Some(exe) = crate::host::askpass_program() {
                 cmd.env("GIT_ASKPASS", &exe);
                 cmd.env("SSH_ASKPASS", &exe);
                 cmd.env("SSH_ASKPASS_REQUIRE", "force");
@@ -335,7 +345,7 @@ pub fn run_global<S: AsRef<str>>(args: &[S]) -> GitResult<String> {
     for a in args {
         cmd.arg(a.as_ref());
     }
-    let out = cmd.output().map_err(|e| spawn_error(args, e))?;
+    let out = crate::host::wrap(cmd, true).output().map_err(|e| spawn_error(args, e))?;
     if out.status.success() {
         Ok(String::from_utf8_lossy(&out.stdout).into_owned())
     } else {

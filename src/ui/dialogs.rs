@@ -1257,7 +1257,12 @@ async fn custom_action(rv: &Rc<RepoView>, arg: &str) {
     let cmd = action.command.clone();
     let wd = rv.git.workdir.clone();
     let show = action.show_output;
-    let r = bg(move || std::process::Command::new(&cmd).args(&args).current_dir(wd).output()).await;
+    let r = bg(move || {
+        let mut c = std::process::Command::new(&cmd);
+        c.args(&args).current_dir(wd);
+        crate::host::wrap(c, true).output()
+    })
+    .await;
     match r {
         Ok(out) => {
             let text = format!(

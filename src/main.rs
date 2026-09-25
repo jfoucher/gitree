@@ -1,6 +1,7 @@
 mod askpass;
 mod config;
 mod git;
+mod host;
 mod ui;
 mod watch;
 

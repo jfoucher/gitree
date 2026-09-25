@@ -54,7 +54,6 @@ pub struct DiffView {
     /// Hunk views' horizontal adjustments, scrolled together by `hoffset`.
     hadjs: RefCell<Vec<gtk::Adjustment>>,
     hoffset: Cell<f64>,
-    syncing: Cell<bool>,
     pub on_patch: PatchCb,
     /// Called when diff options (whitespace / context) change.
     pub on_options_changed: Callback<()>,
@@ -118,7 +117,6 @@ impl DiffView {
             force_large: Cell::new(false),
             hadjs: RefCell::new(Vec::new()),
             hoffset: Cell::new(0.0),
-            syncing: Cell::new(false),
             on_patch: RefCell::new(None),
             on_options_changed: RefCell::new(None),
             on_external: RefCell::new(None),
@@ -160,11 +158,15 @@ impl DiffView {
         scroll.set_propagation_phase(gtk::PropagationPhase::Capture);
         let w = Rc::downgrade(&this);
         scroll.connect_scroll(move |c, dx, dy| {
-            let (Some(d), Some((dx, only))) = (w.upgrade(), super::horizontal_scroll(c, dx, dy)) else {
+            let Some(d) = w.upgrade() else { return glib::Propagation::Proceed };
+            let shift = c.current_event_state().contains(gdk::ModifierType::SHIFT_MASK);
+            let (dx, dy) = if shift && dx == 0.0 { (dy, 0.0) } else { (dx, dy) };
+            if dx == 0.0 {
                 return glib::Propagation::Proceed;
-            };
-            d.scroll_h(dx);
-            if only { glib::Propagation::Stop } else { glib::Propagation::Proceed }
+            }
+            let step = if c.unit() == gdk::ScrollUnit::Wheel { 50.0 } else { 1.0 };
+            d.scroll_h(dx * step);
+            if dy == 0.0 { glib::Propagation::Stop } else { glib::Propagation::Proceed }
         });
         this.scrolled.add_controller(scroll);
         // Syntax/line colours depend on the theme: re-render on switches.
@@ -188,7 +190,7 @@ impl DiffView {
         let mut child = self.content.first_child();
         while let Some(c) = child {
             if let Some(body) = c.downcast_ref::<gtk::Box>()
-                && let Some(view) = body.last_child().and_downcast::<gtk::ScrolledWindow>().and_then(|s| s.child()).and_then(|v| v.first_child()).and_downcast::<sourceview5::View>() {
+                && let Some(view) = body.last_child().and_downcast::<sourceview5::View>() {
                     if n == h {
                         let buf = view.buffer();
                         if let (Some(s), Some(mut e)) = (buf.iter_at_line(a), buf.iter_at_line(b)) {
@@ -217,22 +219,13 @@ impl DiffView {
     }
 
     fn scroll_h(&self, dx: f64) {
-        let max = self
-            .hadjs
-            .borrow()
-            .iter()
-            .map(|a| a.upper() - a.page_size())
-            .fold(0.0, f64::max);
-        self.set_hoffset((self.hoffset.get() + dx).clamp(0.0, max));
-    }
-
-    fn set_hoffset(&self, v: f64) {
+        let adjs = self.hadjs.borrow();
+        let max = adjs.iter().map(|a| a.upper() - a.page_size()).fold(0.0, f64::max);
+        let v = (self.hoffset.get() + dx).clamp(0.0, max);
         self.hoffset.set(v);
-        self.syncing.set(true);
-        for a in self.hadjs.borrow().iter() {
+        for a in adjs.iter() {
             a.set_value(v);
         }
-        self.syncing.set(false);
     }
 
     fn clear(&self) {
@@ -556,37 +549,14 @@ impl DiffView {
             .left_margin(6)
             .build();
         view.add_css_class("diff-text");
-        // The view is sized to its longest line inside a viewport (rather than
-        // scrolling itself) so line backgrounds span the whole width. Scroll
-        // events are handled by `DiffView`, which keeps all hunks in step.
-        let hview = gtk::ScrolledWindow::builder()
-            .child(&gtk::Viewport::builder().child(&view).build())
-            .vscrollbar_policy(gtk::PolicyType::Never)
-            .propagate_natural_height(true)
-            .hexpand(true)
-            .build();
-        let controllers = hview.observe_controllers();
-        for c in (0..controllers.n_items()).filter_map(|i| controllers.item(i)) {
-            if let Some(c) = c.downcast_ref::<gtk::EventControllerScroll>() {
-                c.set_propagation_phase(gtk::PropagationPhase::None);
-            }
-        }
-        let hadj = hview.hadjustment();
+        let hadj = gtk::Adjustment::default();
         let w = self.self_ref.borrow().clone();
         hadj.connect_changed(move |a| {
             if let Some(d) = w.upgrade() {
-                d.syncing.set(true);
                 a.set_value(d.hoffset.get());
-                d.syncing.set(false);
             }
         });
-        let w = self.self_ref.borrow().clone();
-        hadj.connect_value_changed(move |a| {
-            if let Some(d) = w.upgrade()
-                && !d.syncing.get() {
-                    d.set_hoffset(a.value());
-                }
-        });
+        view.set_hadjustment(Some(&hadj));
         self.hadjs.borrow_mut().push(hadj);
 
         let dark = super::is_dark();
@@ -644,9 +614,6 @@ impl DiffView {
         }
         buf.set_text(&text);
         gutter_buf.set_text(&gtext);
-        let layout = view.create_pango_layout(Some(&text));
-        layout.set_font_description(Some(&gtk::pango::FontDescription::from_string("Monospace")));
-        view.set_size_request(layout.pixel_size().0 + view.left_margin() + view.right_margin() + 16, -1);
         super::set_mono_width(&gutter, width * 2 + 3);
         for (i, l) in h.lines.iter().enumerate() {
             let tag = match l.kind {
@@ -738,7 +705,7 @@ impl DiffView {
 
         let body = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         body.append(&gutter);
-        body.append(&hview);
+        body.append(&view);
         self.content.append(&header);
         self.content.append(&body);
     }

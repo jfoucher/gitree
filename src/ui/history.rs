@@ -439,6 +439,9 @@ pub struct HistoryView {
     loading: Cell<bool>,
     done: Cell<bool>,
     max_lanes: Cell<u16>,
+    /// Horizontal scroll of the graph column, for graphs wider than it.
+    graph_offset: Rc<Cell<f64>>,
+    graph_areas: RefCell<Vec<glib::WeakRef<gtk::DrawingArea>>>,
     pending_select: RefCell<Option<String>>,
     selecting: Cell<bool>,
 }
@@ -542,6 +545,8 @@ impl HistoryView {
             loading: Cell::new(false),
             done: Cell::new(true),
             max_lanes: Cell::new(1),
+            graph_offset: Rc::new(Cell::new(0.0)),
+            graph_areas: RefCell::new(Vec::new()),
             pending_select: RefCell::new(None),
             selecting: Cell::new(false),
         });
@@ -578,8 +583,11 @@ impl HistoryView {
                 .build();
             let row: Rc<RefCell<Option<Rc<LogRow>>>> = Rc::new(RefCell::new(None));
             let r2 = row.clone();
+            let t = w.upgrade();
+            let offset = t.as_ref().map(|t| t.graph_offset.clone()).unwrap_or_default();
             area.set_draw_func(move |_, cr, _w, h| {
                 if let Some(r) = r2.borrow().as_ref() {
+                    cr.translate(-offset.get(), 0.0);
                     graph_cell::draw(
                         cr,
                         h as f64,
@@ -592,9 +600,22 @@ impl HistoryView {
                 }
             });
             item.set_child(Some(&area));
-            if let Some(t) = w.upgrade() {
+            if let Some(t) = t {
                 t.attach_menu(&area, item);
+                t.graph_areas.borrow_mut().push(area.downgrade());
             }
+            let scroll = gtk::EventControllerScroll::new(gtk::EventControllerScrollFlags::BOTH_AXES);
+            let w = w.clone();
+            scroll.connect_scroll(move |c, dx, dy| {
+                if let (Some(t), Some((dx, only))) = (w.upgrade(), super::horizontal_scroll(c, dx, dy))
+                    && t.scroll_graph(dx)
+                    && only
+                {
+                    return glib::Propagation::Stop;
+                }
+                glib::Propagation::Proceed
+            });
+            area.add_controller(scroll);
             unsafe { item.set_data("cell", Rc::new(GraphCell { area, row })) };
         });
         f.connect_bind(|_, obj| {
@@ -704,6 +725,24 @@ impl HistoryView {
         self.column_view.append_column(&text_col("Date", 170, |r| format_time(r.commit.author_time), false));
         self.column_view.append_column(&text_col("Author", 150, |r| r.commit.author_name.clone(), false));
         self.column_view.append_column(&text_col("Commit", 80, |r| r.commit.short().to_string(), true));
+    }
+
+    /// Scrolls the graph sideways by `dx`. Returns false when it all fits.
+    fn scroll_graph(&self, dx: f64) -> bool {
+        let max = (graph_cell::width_for(self.max_lanes.get()) - self.graph_col.fixed_width()).max(0) as f64;
+        let v = (self.graph_offset.get() + dx).clamp(0.0, max);
+        if max == 0.0 && v == self.graph_offset.get() {
+            return false;
+        }
+        self.graph_offset.set(v);
+        self.graph_areas.borrow_mut().retain(|a| match a.upgrade() {
+            Some(a) => {
+                a.queue_draw();
+                true
+            }
+            None => false,
+        });
+        true
     }
 
     fn connect_signals(self: &Rc<Self>) {
@@ -966,6 +1005,7 @@ impl HistoryView {
         self.loading.set(true);
         self.done.set(false);
         self.max_lanes.set(1);
+        self.graph_offset.set(0.0);
         let _ = req_tx.send(page);
         *self.req_tx.borrow_mut() = Some(req_tx);
         self.status_label.set_text("Loading…");

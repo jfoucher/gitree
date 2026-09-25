@@ -21,8 +21,43 @@ if [[ "${1:-}" == "--uninstall" ]]; then
   exit 0
 fi
 
+# The gtk-rs crates find GTK through pkg-config, which needs the distro's
+# development packages (headers + .pc files), not just the runtime libraries.
+check_build_deps() {
+  local missing=()
+  command -v pkg-config >/dev/null || missing+=(pkg-config)
+  command -v cc >/dev/null || missing+=(cc)
+  if command -v pkg-config >/dev/null; then
+    local mod
+    for mod in 'gtk4 >= 4.18' 'libadwaita-1 >= 1.7' 'gtksourceview-5'; do
+      pkg-config --exists "$mod" || missing+=("$mod")
+    done
+  fi
+  [[ ${#missing[@]} -eq 0 ]] && return 0
+
+  local ids="" cmd
+  [[ -r /etc/os-release ]] && ids=$(. /etc/os-release; echo "${ID:-} ${ID_LIKE:-}")
+  case " $ids " in
+    *" fedora "*|*" rhel "*)
+      cmd="sudo dnf install gcc pkgconf-pkg-config gtk4-devel libadwaita-devel gtksourceview5-devel" ;;
+    *" debian "*|*" ubuntu "*)
+      cmd="sudo apt install build-essential pkg-config libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev" ;;
+    *" arch "*)
+      cmd="sudo pacman -S --needed base-devel gtk4 libadwaita gtksourceview5" ;;
+    *" suse "*|*" opensuse "*)
+      cmd="sudo zypper install gcc pkgconf gtk4-devel libadwaita-devel gtksourceview5-devel" ;;
+    *)
+      cmd="install the development packages for GTK 4 (>= 4.18), libadwaita (>= 1.7) and GtkSourceView 5" ;;
+  esac
+  echo "Missing build dependencies: ${missing[*]}" >&2
+  echo "Install them with:" >&2
+  echo "  $cmd" >&2
+  exit 1
+}
+
 # Build as the normal user; under sudo reuse an existing release build.
 if [[ $EUID -ne 0 ]]; then
+  check_build_deps
   (cd "$ROOT" && cargo build --release)
 elif [[ ! -x "$ROOT/target/release/gitree" ]]; then
   echo "Run 'cargo build --release' as your user first." >&2

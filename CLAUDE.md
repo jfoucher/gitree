@@ -17,7 +17,7 @@ scripts/screenshot.sh /tmp/demo/work shot.png "show-status;debug-select-unstaged
 scripts/install.sh [--uninstall]    # installs to ~/.local (PREFIX overrides)
 ```
 
-System deps (Debian names): `libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev pkg-config`.
+System deps (Debian names): `libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev pkg-config`. On Fedora: `gtk4-devel libadwaita-devel gtksourceview5-devel`. `scripts/install.sh` checks for them and prints the right command for the distro.
 
 `screenshot.sh` runs `target/debug/gitree` (so `cargo build` first) inside a private headless GNOME Shell with a throwaway `XDG_CONFIG_HOME`, triggers the given `repo.*` actions (`name=arg;name2`; `wait=<ms>` pauses between them), saves a PNG of the newest visible window, and quits. This is the way to check UI changes visually. Set `GITREE_AUTO_ACCEPT=1` to auto-accept confirmation dialogs and `Form`s with their defaults so Push, Pull, Stash and similar flows run end to end.
 
@@ -29,7 +29,9 @@ Other dev env vars: `GITREE_DEBUG_REFRESH` (logs refreshes and watcher triggers)
 - `src/git/` is GTK-free. It shells out to git and parses machine-readable output (status, refs, log, graph lane layout, diffs and partial patches, blame, rebase todo, git-flow). Unit tests live next to the parsers. `integration_tests.rs` runs real git in `tempfile` repos.
 - `src/ui/` holds the GTK code. Views are plain Rust structs held in `Rc<...>` (no GObject subclassing), with `weak()` upgrades used in signal closures.
 
-**All git invocations go through `git::Git` / `base_command` (`src/git/runner.rs`).** It forces `LC_ALL=C.UTF-8`, `color.ui=false`, `core.quotepath=false`, `GIT_EDITOR=true` and `GIT_OPTIONAL_LOCKS=0`, and strips `GIT_DIR`/`GIT_WORK_TREE`, so output is stable to parse. Never spawn `git` directly. `Prompt::Interactive` sets `GIT_ASKPASS`/`SSH_ASKPASS` to Gitree's own executable. `Prompt::Never` (the default for `run`) disables prompting, which background fetches rely on.
+**All git invocations go through `git::Git` / `base_command` (`src/git/runner.rs`).** It forces `LC_ALL=C.UTF-8`, `color.ui=false`, `core.quotepath=false`, `GIT_EDITOR=true` and `GIT_OPTIONAL_LOCKS=0`, and strips `GIT_DIR`/`GIT_WORK_TREE`, so output is stable to parse. Never spawn `git` directly. `Prompt::Interactive` sets `GIT_ASKPASS`/`SSH_ASKPASS` to Gitree's own executable (`host::askpass_program`). `Prompt::Never` (the default for `run`) disables prompting, which background fetches rely on.
+
+**Flatpak:** `src/host.rs` detects the sandbox (`/.flatpak-info`). There, `host::wrap` rewrites a `Command` into `flatpak-spawn --host`, carrying over its env vars and working directory, so git, terminals and custom actions run on the host. Any new external process must go through `host::wrap`, called before setting stdio. Askpass then points at a script in the app's data dir that runs `flatpak run` back into the sandbox. The manifest is `flatpak/io.github.gitree.Gitree.yml`. `scripts/flatpak.sh [--bundle]` builds and installs it, and regenerates `flatpak/cargo-sources.json` when `Cargo.lock` changes.
 
 **Askpass re-entry:** when git launches the binary with `GITREE_ASKPASS` set, `main.rs` short-circuits into `askpass::run()` (a standalone credential dialog) before the GTK app starts.
 

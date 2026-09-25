@@ -47,11 +47,22 @@ Not included: hosting-service accounts (GitHub/Bitbucket/GitLab login, pull requ
 
 ## Building
 
-Requirements (Ubuntu/Debian names):
+Building needs the GTK 4 (>= 4.18), libadwaita (>= 1.7) and GtkSourceView 5
+development packages. Having the libraries installed isn't enough; pkg-config
+needs their `-dev`/`-devel` files. `scripts/install.sh` checks for them and prints
+the command for your distro.
 
 ```sh
-sudo apt install build-essential pkg-config libgtk-4-dev libadwaita-1-dev \
-    libgtksourceview-5-dev git   # optional: git-lfs meld
+# Debian / Ubuntu
+sudo apt install build-essential pkg-config libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev git
+# Fedora
+sudo dnf install gcc pkgconf-pkg-config gtk4-devel libadwaita-devel gtksourceview5-devel git
+# Arch
+sudo pacman -S --needed base-devel gtk4 libadwaita gtksourceview5 git
+# openSUSE
+sudo zypper install gcc pkgconf gtk4-devel libadwaita-devel gtksourceview5-devel git
+# optional everywhere: git-lfs meld
+
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # Rust toolchain
 ```
 
@@ -67,6 +78,23 @@ Install for the current user (binary in `~/.local/bin`, desktop entry and icon):
 scripts/install.sh               # or: sudo PREFIX=/usr/local scripts/install.sh
 scripts/install.sh --uninstall
 ```
+
+### Flatpak
+
+The Flatpak bundles GTK, libadwaita and GtkSourceView, so it runs on any distro
+that has Flatpak. You don't need the development packages or Rust installed:
+
+```sh
+scripts/flatpak.sh            # builds and installs for the current user
+scripts/flatpak.sh --bundle   # also writes gitree.flatpak to copy to other machines
+flatpak run io.github.gitree.Gitree
+```
+
+Inside the sandbox, Gitree runs `git`, your terminal and custom actions on the
+host through `flatpak-spawn --host`. Your own git, hooks, credential helpers,
+ssh/gpg agents and LFS work as they do natively, so the host still needs `git`.
+The Flatpak keeps its settings in `~/.var/app/io.github.gitree.Gitree/`,
+separate from a native install.
 
 Settings and bookmarks are stored in `~/.config/gitree/settings.json`.
 

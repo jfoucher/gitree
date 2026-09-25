@@ -4,6 +4,7 @@
 
 use super::diff_view::{DiffContext, DiffKind, DiffView, PatchAction};
 use super::file_list::{FileItem, FileList};
+use super::panes::{self, Keep};
 use super::progress::OpOptions;
 use super::repo_view::{RepoView, Snapshot};
 use super::{bg, menu_item_target, popup_menu, spawn};
@@ -77,8 +78,9 @@ fn pane(title: &str, list: &Rc<FileList>, buttons: &[&gtk::Button]) -> (gtk::Box
 }
 
 impl StagingView {
-    /// `staged_height` is the initial height of the staged list.
-    pub fn new(rv: Weak<RepoView>, staged_height: i32, collapse_staged: bool) -> Rc<Self> {
+    /// `staged_height` is the default height of the staged list, whose
+    /// size is remembered under `pane_key`.
+    pub fn new(rv: Weak<RepoView>, pane_key: &'static str, staged_height: i32, collapse_staged: bool) -> Rc<Self> {
         let staged = FileList::new(Some(true));
         let unstaged = FileList::new(Some(false));
         let unstage_all = gtk::Button::with_label("Unstage All");
@@ -93,9 +95,9 @@ impl StagingView {
             .orientation(gtk::Orientation::Vertical)
             .start_child(&staged_pane)
             .end_child(&unstaged_pane)
-            .position(staged_height)
             .vexpand(true)
             .build();
+        panes::remember(&lists, pane_key, Keep::Start, staged_height);
 
         let this = Rc::new(Self {
             lists,

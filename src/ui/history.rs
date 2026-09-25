@@ -4,6 +4,7 @@
 use super::diff_view::{DiffContext, DiffKind, DiffView};
 use super::file_list::{FileItem, FileList};
 use super::graph_cell::{self, NodeStyle};
+use super::panes::{self, Keep};
 use super::repo_view::{RepoView, Snapshot, View};
 use super::staging::StagingView;
 use super::{bg, format_time, format_time_full, menu_item_target, popup_menu, spawn};
@@ -80,16 +81,16 @@ impl CommitDetails {
             .orientation(gtk::Orientation::Vertical)
             .start_child(&info_sw)
             .end_child(&files.widget)
-            .position(170)
             .build();
+        panes::remember(&left, "commit-info", Keep::Start, 170);
         let diff = DiffView::new();
         let commit_pane = gtk::Paned::builder()
             .orientation(gtk::Orientation::Horizontal)
             .start_child(&left)
             .end_child(&diff.widget)
-            .position(420)
             .shrink_start_child(false)
             .build();
+        panes::remember(&commit_pane, "commit-files", Keep::Start, 420);
         let widget = gtk::Stack::new();
         widget.add_named(&commit_pane, Some("commit"));
         let this = Rc::new(Self {
@@ -280,11 +281,12 @@ impl CommitDetails {
         let Some(rv) = self.rv.upgrade() else { return };
         let staging = self.staging.borrow().clone();
         let staging = staging.unwrap_or_else(|| {
-            let st = StagingView::new(self.rv.clone(), 110, true);
+            let st = StagingView::new(self.rv.clone(), "uncommitted-staged-files", 110, true);
             let pane = gtk::Paned::builder()
                 .orientation(gtk::Orientation::Horizontal)
                 .start_child(&st.lists)
                 .end_child(&st.diff.widget)
+                .resize_start_child(false)
                 .shrink_start_child(false)
                 .build();
             self.commit_pane
@@ -514,9 +516,13 @@ impl HistoryView {
             .orientation(gtk::Orientation::Vertical)
             .start_child(&scrolled)
             .end_child(&details.widget)
-            .position(340)
             .vexpand(true)
             .build();
+        let key = match &mode {
+            HistoryMode::FileLog(_) => "file-log-list",
+            _ => "history-list",
+        };
+        panes::remember(&paned, key, Keep::Start, 340);
         widget.append(&paned);
 
         let graph_col = gtk::ColumnViewColumn::builder()

@@ -8,6 +8,7 @@ pub mod file_list;
 pub mod file_status;
 pub mod flow;
 pub mod form;
+pub mod panes;
 pub mod graph_cell;
 pub mod history;
 pub mod preferences;

@@ -2,6 +2,7 @@
 //! staging, and the commit box.
 
 use super::diff_view::DiffView;
+use super::panes::{self, Keep};
 use super::progress::OpOptions;
 use super::repo_view::{RepoView, Snapshot};
 use super::staging::StagingView;
@@ -52,7 +53,7 @@ pub struct FileStatusView {
 
 impl FileStatusView {
     pub fn new(rv: Weak<RepoView>) -> Rc<Self> {
-        let staging = StagingView::new(rv.clone(), 220, false);
+        let staging = StagingView::new(rv.clone(), "staged-files", 220, false);
         let lists = staging.lists.clone();
 
         // Filter bar
@@ -84,9 +85,9 @@ impl FileStatusView {
             .orientation(gtk::Orientation::Horizontal)
             .start_child(&left)
             .end_child(&diff.widget)
-            .position(380)
             .shrink_start_child(false)
             .build();
+        panes::remember(&top, "status-files", Keep::Start, 380);
 
         // Commit box
         let cbox = gtk::Box::new(gtk::Orientation::Vertical, 6);
@@ -161,20 +162,10 @@ impl FileStatusView {
             .orientation(gtk::Orientation::Vertical)
             .start_child(&top)
             .end_child(&cbox)
-            .resize_end_child(false)
             .shrink_end_child(false)
             .vexpand(true)
             .build();
-        // Place the commit box near the bottom once we know our height.
-        widget.connect_realize(|p| {
-            let p = p.clone();
-            glib::idle_add_local_once(move || {
-                let h = p.height();
-                if h > 300 {
-                    p.set_position(h - 170);
-                }
-            });
-        });
+        panes::remember(&widget, "commit-box", Keep::End, 170);
 
         let this = Rc::new(Self {
             widget,

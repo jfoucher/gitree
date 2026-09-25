@@ -1,5 +1,5 @@
-//! Repository browser (Sourcetree's bookmarks window): lists bookmarked
-//! local repositories and offers Clone / Add / Create / Scan.
+//! Repository browser: lists bookmarked local repositories and offers
+//! Clone / Add / Create / Scan.
 
 use super::form::Form;
 use super::progress::{self, OpOptions};

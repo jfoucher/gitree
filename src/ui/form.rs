@@ -1,5 +1,5 @@
 //! Small builder for option dialogs (Pull, Push, Branch, ...), mimicking
-//! Sourcetree's sheets with libadwaita preference rows.
+//! macOS-style sheets with libadwaita preference rows.
 
 use adw::prelude::*;
 use gtk::glib;

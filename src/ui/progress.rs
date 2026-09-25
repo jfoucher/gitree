@@ -1,4 +1,4 @@
-//! Runs git commands with a Sourcetree-like progress sheet: output is
+//! Runs git commands with a streaming progress sheet: output is
 //! streamed live, the operation can be cancelled, and failures keep the
 //! sheet open with the full output.
 

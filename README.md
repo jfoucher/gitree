@@ -1,13 +1,13 @@
 # Gitree
 
-A native GNOME Git client modelled on **Sourcetree for macOS**, written in Rust with
-GTK 4 and libadwaita. Like Sourcetree, Gitree drives the real `git` command line, so
-hooks, credential helpers, signing, LFS and your git config all behave exactly as in
-a terminal.
+A native GNOME Git client inspired by a source control tool on macOS, written in Rust
+with GTK 4 and libadwaita. It drives the real `git` command line, so hooks,
+credential helpers, signing, LFS and your git config all behave exactly as in a
+terminal.
 
-## Features (Sourcetree → Gitree)
+## Features
 
-| Sourcetree | Gitree |
+| Feature | Gitree |
 |---|---|
 | Repository browser: bookmarks, groups, search, New → Clone / Add / Create / Scan | “Repositories” tab (Ctrl+T) with the same actions, branch + change counts per repo |
 | Tabbed repository windows | One tab per repository; open tabs are restored on start |

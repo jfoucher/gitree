@@ -4,9 +4,9 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>Gitree</name>
-  <summary>Visual Git client inspired by Sourcetree</summary>
+  <summary>Visual Git client inspired by a source control tool on macOS</summary>
   <description>
-    <p>Gitree is a native GNOME Git client modelled on Sourcetree for macOS:
+    <p>Gitree is a native GNOME Git client inspired by a source control tool on macOS:
     a repository browser, a commit graph, hunk and line staging, and dialogs for
     every everyday Git operation.</p>
     <ul>

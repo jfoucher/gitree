@@ -1393,8 +1393,7 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
                 }
         }
         "file-resolve-mine" | "file-resolve-theirs" => {
-            // During a rebase "ours" is the upstream; follow Sourcetree and
-            // map Mine/Theirs to what the user sees.
+            // During a rebase "ours" is the upstream; map Mine/Theirs to what the user sees.
             let rebasing = matches!(snap.op, OpState::Rebase { .. });
             let mine = name == "file-resolve-mine";
             let which = if mine != rebasing { "--ours" } else { "--theirs" };

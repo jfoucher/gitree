@@ -55,7 +55,7 @@ pub fn setup_app(app: &adw::Application) {
             .application_name("Gitree")
             .application_icon(crate::APP_ID)
             .version(env!("CARGO_PKG_VERSION"))
-            .comments("A Git client for GNOME inspired by Sourcetree")
+            .comments("A Git client for GNOME inspired by a source control tool on macOS")
             .license_type(gtk::License::Gpl30)
             .build();
         d.present(a.active_window().as_ref());

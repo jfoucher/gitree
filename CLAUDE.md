@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Gitree is a native GNOME Git client modelled on Sourcetree for macOS: Rust (edition 2024), GTK 4 (`v4_18`), libadwaita (`v1_7`), GtkSourceView 5. It drives the real `git` CLI rather than a library, so hooks, credential helpers, signing and LFS behave as in a terminal.
+Gitree is a native GNOME Git client inspired by a source control tool on macOS: Rust (edition 2024), GTK 4 (`v4_18`), libadwaita (`v1_7`), GtkSourceView 5. It drives the real `git` CLI rather than a library, so hooks, credential helpers, signing and LFS behave as in a terminal.
 
 ## Commands
 

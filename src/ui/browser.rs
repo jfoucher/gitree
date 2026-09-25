@@ -1,5 +1,5 @@
-//! Repository browser (Sourcetree's bookmarks window): lists bookmarked
-//! local repositories and offers Clone / Add / Create / Scan.
+//! Repository browser: lists bookmarked local repositories and offers
+//! Clone / Add / Create / Scan.
 
 use super::form::Form;
 use super::progress::{self, OpOptions};
@@ -431,6 +431,7 @@ impl Browser {
         form.watch(&path);
         let p2 = path.clone();
         form.validate(move || !p2.text().trim().is_empty());
+        form.focus(&path);
         if !form.run(&self.widget).await {
             return;
         }
@@ -645,6 +646,7 @@ pub fn clone_dialog(parent: &gtk::Widget, url: &str, on_open: impl Fn(PathBuf) +
         if !url.is_empty() {
             src.emit_by_name::<()>("changed", &[]);
         }
+        form.focus(&src);
         if !form.run(&parent).await {
             return;
         }

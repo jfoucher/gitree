@@ -2,12 +2,12 @@
 Type=Application
 Name=Gitree
 GenericName=Git Client
-Comment=Visual Git client inspired by Sourcetree
+Comment=Visual Git client inspired by a source control tool on macOS
 Exec=gitree %F
 Icon=io.github.gitree.Gitree
 Terminal=false
 Categories=Development;RevisionControl;GTK;GNOME;
-Keywords=git;version;control;commit;branch;merge;sourcetree;
+Keywords=git;version;control;commit;branch;merge;
 StartupNotify=true
 MimeType=inode/directory;
 Actions=new-window;

@@ -204,6 +204,10 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
             d.set_extra_child(Some(&sw));
             d.add_responses(&[("cancel", "Cancel"), ("ok", "OK")]);
             d.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
+            let tv2 = tv.clone();
+            glib::idle_add_local_once(move || {
+                tv2.grab_focus();
+            });
             if d.choose_future(Some(&dlg)).await == "ok" {
                 let m = super::form::text_of(&tv);
                 if !m.trim().is_empty() {

@@ -69,6 +69,7 @@ async fn init(rv: &Rc<RepoView>) {
     let release = form.entry("Release", &d.release);
     let hotfix = form.entry("Hotfix", &d.hotfix);
     let versiontag = form.entry("Version tag prefix", "");
+    form.focus(&master);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -114,6 +115,7 @@ async fn start(rv: &Rc<RepoView>, cfg: &FlowConfig, kind: FlowKind) {
         let t = n2.text().trim().to_string();
         !t.is_empty() && git.check(&["check-ref-format", "--branch", &format!("{prefix}{t}")])
     });
+    form.focus(&name);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -138,6 +140,7 @@ pub async fn finish(rv: &Rc<RepoView>, branch: &str) {
     no_tag.set_visible(kind != FlowKind::Feature);
     let msg = form.text("Tag message", &format!("{} {name}", kind.label()), 50);
     if let Some(g) = msg.parent().and_then(|p| p.parent()) { g.set_visible(kind != FlowKind::Feature) }
+    form.focus_ok();
     if !form.run(&rv.widget).await {
         return;
     }

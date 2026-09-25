@@ -187,6 +187,7 @@ pub async fn edit_remote(rv: &Rc<RepoView>, name: Option<String>) {
     form.watch(&n);
     form.watch(&url);
     form.validate(move || !n2.text().trim().is_empty() && !u2.text().trim().is_empty());
+    form.focus(&url);
     if !form.run(&rv.widget).await {
         return;
     }

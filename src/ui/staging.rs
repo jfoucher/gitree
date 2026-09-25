@@ -187,7 +187,7 @@ impl StagingView {
                     }
                     return;
                 }
-                // Selecting in one list clears the other (like Sourcetree).
+                // Selecting in one list clears the other.
                 match side {
                     Side::Staged => t.unstaged.unselect_all(),
                     Side::Unstaged => t.staged.unselect_all(),

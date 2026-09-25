@@ -1,5 +1,5 @@
 //! Small builder for option dialogs (Pull, Push, Branch, ...), mimicking
-//! Sourcetree's sheets with libadwaita preference rows.
+//! macOS-style sheets with libadwaita preference rows.
 
 use adw::prelude::*;
 use gtk::glib;
@@ -11,6 +11,8 @@ pub struct Form {
     page: gtk::Box,
     group: RefCell<adw::PreferencesGroup>,
     pub ok: gtk::Button,
+    cancel: gtk::Button,
+    focus: RefCell<Option<gtk::Widget>>,
     tx: async_channel::Sender<bool>,
     rx: async_channel::Receiver<bool>,
     validators: RefCell<Vec<Rc<dyn Fn() -> bool>>>,
@@ -58,6 +60,8 @@ impl Form {
             page,
             group: RefCell::new(group),
             ok: ok.clone(),
+            cancel: cancel.clone(),
+            focus: RefCell::new(None),
             tx,
             rx,
             validators: RefCell::new(Vec::new()),
@@ -209,6 +213,22 @@ impl Form {
         });
     }
 
+    /// Widget that receives keyboard focus when the dialog opens. Without
+    /// one, focus goes to the first focusable row.
+    pub fn focus(&self, w: &impl IsA<gtk::Widget>) {
+        *self.focus.borrow_mut() = Some(w.clone().upcast());
+    }
+
+    /// Focus the OK button, so Enter confirms (option-only forms).
+    pub fn focus_ok(&self) {
+        self.focus(&self.ok.clone());
+    }
+
+    /// Focus Cancel, so Enter doesn't trigger a destructive action.
+    pub fn focus_cancel(&self) {
+        self.focus(&self.cancel.clone());
+    }
+
     /// Presents the dialog and resolves to true when OK was pressed.
     pub async fn run(&self, parent: &impl IsA<gtk::Widget>) -> bool {
         self.dialog.present(Some(parent));
@@ -221,9 +241,12 @@ impl Form {
                 }
             });
         }
+        let target = self.focus.borrow().clone();
         let first = self.page.first_child();
         glib::idle_add_local_once(move || {
-            if let Some(w) = first {
+            if let Some(w) = target {
+                w.grab_focus();
+            } else if let Some(w) = first {
                 w.child_focus(gtk::DirectionType::TabForward);
             }
         });

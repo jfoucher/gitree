@@ -52,6 +52,8 @@ pub struct Settings {
     pub window_maximized: bool,
     pub progress_width: i32,
     pub progress_height: i32,
+    /// Size of the fixed side of each split pane, keyed by pane name.
+    pub pane_sizes: HashMap<String, i32>,
 }
 
 impl Default for Settings {
@@ -78,6 +80,7 @@ impl Default for Settings {
             window_maximized: false,
             progress_width: 720,
             progress_height: 460,
+            pane_sizes: HashMap::new(),
         }
     }
 }

@@ -3,6 +3,7 @@
 
 use super::file_status::FileStatusView;
 use super::history::{HistoryMode, HistoryView};
+use super::panes::Keep;
 use super::progress::{self, OpOptions};
 use super::sidebar::Sidebar;
 use super::{bg, spawn};
@@ -178,11 +179,10 @@ impl RepoView {
                 .orientation(gtk::Orientation::Horizontal)
                 .start_child(&sidebar.widget)
                 .end_child(&stack)
-                .resize_start_child(false)
                 .shrink_start_child(false)
-                .position(230)
                 .vexpand(true)
                 .build();
+            super::panes::remember(&paned, "sidebar", Keep::Start, 230);
             let toast = adw::ToastOverlay::new();
             toast.set_child(Some(&paned));
             widget.append(&toast);

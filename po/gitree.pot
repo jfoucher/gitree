@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gitree 0.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/jfoucher/gitree/issues\n"
-"POT-Creation-Date: 2026-09-25 21:27+0200\n"
+"POT-Creation-Date: 2026-09-25 21:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -91,8 +91,8 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: src/askpass.rs:66 src/ui/browser.rs:269 src/ui/form.rs:32 src/ui/mod.rs:82
-#: src/ui/mod.rs:114 src/ui/progress.rs:135 src/ui/rebase.rs:67
+#: src/askpass.rs:66 src/ui/browser.rs:269 src/ui/form.rs:32 src/ui/mod.rs:83
+#: src/ui/mod.rs:115 src/ui/progress.rs:135 src/ui/rebase.rs:67
 #: src/ui/rebase.rs:209
 msgid "Cancel"
 msgstr ""
@@ -288,12 +288,12 @@ msgstr[1] ""
 msgid "Not a repository"
 msgstr ""
 
-#: src/ui/browser.rs:409 src/ui/staging.rs:477
+#: src/ui/browser.rs:409 src/ui/staging.rs:479
 msgid "Open"
 msgstr ""
 
-#: src/ui/browser.rs:410 src/ui/history.rs:140 src/ui/sidebar.rs:554
-#: src/ui/staging.rs:478 src/ui/window.rs:514
+#: src/ui/browser.rs:410 src/ui/history.rs:141 src/ui/sidebar.rs:554
+#: src/ui/staging.rs:480 src/ui/window.rs:514
 msgid "Show in Files"
 msgstr ""
 
@@ -536,7 +536,8 @@ msgid "No remotes"
 msgstr ""
 
 #: src/ui/dialogs.rs:147 src/ui/dialogs.rs:635 src/ui/dialogs.rs:735
-#: src/ui/repo_settings.rs:280 src/ui/repo_view.rs:471 src/ui/window.rs:505
+#: src/ui/file_status.rs:467 src/ui/repo_settings.rs:280
+#: src/ui/repo_view.rs:471 src/ui/window.rs:505
 msgid "Push"
 msgstr ""
 
@@ -722,7 +723,7 @@ msgstr ""
 msgid "Commit immediately"
 msgstr ""
 
-#: src/ui/dialogs.rs:412 src/ui/dialogs.rs:435 src/ui/history.rs:1166
+#: src/ui/dialogs.rs:412 src/ui/dialogs.rs:435 src/ui/history.rs:1172
 msgid "Cherry Pick"
 msgstr ""
 
@@ -904,7 +905,7 @@ msgid "New branch name"
 msgstr ""
 
 #: src/ui/dialogs.rs:780 src/ui/dialogs.rs:783 src/ui/dialogs.rs:927
-#: src/ui/dialogs.rs:930 src/ui/history.rs:727
+#: src/ui/dialogs.rs:930 src/ui/history.rs:733
 msgctxt "noun"
 msgid "Commit"
 msgstr ""
@@ -976,7 +977,7 @@ msgid "There are no local changes to discard"
 msgstr ""
 
 #: src/ui/dialogs.rs:889 src/ui/dialogs.rs:919 src/ui/dialogs.rs:1336
-#: src/ui/dialogs.rs:1370 src/ui/repo_view.rs:483 src/ui/staging.rs:397
+#: src/ui/dialogs.rs:1370 src/ui/repo_view.rs:483 src/ui/staging.rs:399
 #: src/ui/window.rs:511
 msgid "Discard"
 msgstr ""
@@ -1152,15 +1153,15 @@ msgstr ""
 msgid "Resolve the conflicted files and mark them resolved first."
 msgstr ""
 
-#: src/ui/dialogs.rs:1125 src/ui/file_status.rs:417
+#: src/ui/dialogs.rs:1125 src/ui/file_status.rs:408
 msgid "Unresolved conflicts"
 msgstr ""
 
-#: src/ui/dialogs.rs:1133 src/ui/rebase.rs:254 src/ui/repo_view.rs:145
+#: src/ui/dialogs.rs:1133 src/ui/rebase.rs:254 src/ui/repo_view.rs:146
 msgid "Continue"
 msgstr ""
 
-#: src/ui/dialogs.rs:1136 src/ui/repo_view.rs:149
+#: src/ui/dialogs.rs:1136 src/ui/repo_view.rs:150
 msgid "Skip"
 msgstr ""
 
@@ -1174,7 +1175,7 @@ msgstr ""
 msgid "Abort the {operation} in progress and restore the previous state?"
 msgstr ""
 
-#: src/ui/dialogs.rs:1143 src/ui/dialogs.rs:1150 src/ui/repo_view.rs:152
+#: src/ui/dialogs.rs:1143 src/ui/dialogs.rs:1150 src/ui/repo_view.rs:153
 msgid "Abort"
 msgstr ""
 
@@ -1230,7 +1231,7 @@ msgstr ""
 msgid "External diff failed"
 msgstr ""
 
-#: src/ui/dialogs.rs:1336 src/ui/staging.rs:395
+#: src/ui/dialogs.rs:1336 src/ui/staging.rs:397
 msgid "Discard Changes?"
 msgstr ""
 
@@ -1254,7 +1255,7 @@ msgstr ""
 msgid "Remove Files?"
 msgstr ""
 
-#: src/ui/dialogs.rs:1393 src/ui/staging.rs:458
+#: src/ui/dialogs.rs:1393 src/ui/staging.rs:460
 msgid "Stop Tracking"
 msgstr ""
 
@@ -1276,7 +1277,7 @@ msgstr ""
 msgid "Resolve"
 msgstr ""
 
-#: src/ui/dialogs.rs:1430 src/ui/diff_view.rs:391 src/ui/staging.rs:470
+#: src/ui/dialogs.rs:1430 src/ui/diff_view.rs:391 src/ui/staging.rs:472
 msgid "Mark Resolved"
 msgstr ""
 
@@ -1342,7 +1343,7 @@ msgstr ""
 msgid "Lines of context"
 msgstr ""
 
-#: src/ui/diff_view.rs:179 src/ui/history.rs:365 src/ui/staging.rs:185
+#: src/ui/diff_view.rs:179 src/ui/history.rs:367 src/ui/staging.rs:187
 msgid "No file selected"
 msgstr ""
 
@@ -1461,123 +1462,119 @@ msgstr ""
 msgid "Unstage Lines"
 msgstr ""
 
-#: src/ui/file_status.rs:27
+#: src/ui/file_status.rs:28
 msgid "Pending files"
 msgstr ""
 
-#: src/ui/file_status.rs:28
+#: src/ui/file_status.rs:29
 msgid "Conflicted files"
 msgstr ""
 
-#: src/ui/file_status.rs:29
+#: src/ui/file_status.rs:30
 msgid "Untracked files"
 msgstr ""
 
-#: src/ui/file_status.rs:30
+#: src/ui/file_status.rs:31
 msgid "Modified files"
 msgstr ""
 
-#: src/ui/file_status.rs:31
+#: src/ui/file_status.rs:32
 msgid "Ignored files"
 msgstr ""
 
-#: src/ui/file_status.rs:64
+#: src/ui/file_status.rs:65
 msgid "Show files"
 msgstr ""
 
-#: src/ui/file_status.rs:67
+#: src/ui/file_status.rs:68
 msgid "Filter files"
 msgstr ""
 
-#: src/ui/file_status.rs:73
+#: src/ui/file_status.rs:74
 msgid "Tree view"
 msgstr ""
 
-#: src/ui/file_status.rs:102
+#: src/ui/file_status.rs:103
 msgid "Amend last commit"
 msgstr ""
 
-#: src/ui/file_status.rs:103
+#: src/ui/file_status.rs:104
 msgid "Sign off"
 msgstr ""
 
-#: src/ui/file_status.rs:104
+#: src/ui/file_status.rs:105
 msgid "Bypass commit hooks"
 msgstr ""
 
-#: src/ui/file_status.rs:105
+#: src/ui/file_status.rs:106
 msgid "Sign commit (GPG)"
 msgstr ""
 
-#: src/ui/file_status.rs:117
+#: src/ui/file_status.rs:118
 msgid "Commit Options"
 msgstr ""
 
-#: src/ui/file_status.rs:124
+#: src/ui/file_status.rs:125
 msgid "Previous commit messages"
 msgstr ""
 
-#: src/ui/file_status.rs:148
+#: src/ui/file_status.rs:149
 msgid "Push changes immediately"
 msgstr ""
 
-#: src/ui/file_status.rs:152
+#: src/ui/file_status.rs:153
 msgid "Ctrl+Enter to commit"
 msgstr ""
 
-#: src/ui/file_status.rs:156 src/ui/file_status.rs:265
-#: src/ui/file_status.rs:466 src/ui/repo_view.rs:467 src/ui/window.rs:503
+#: src/ui/file_status.rs:157 src/ui/file_status.rs:256
+#: src/ui/file_status.rs:454 src/ui/repo_view.rs:467 src/ui/window.rs:503
 msgid "Commit"
 msgstr ""
 
-#: src/ui/file_status.rs:263
+#: src/ui/file_status.rs:254
 msgid "Amend Commit"
 msgstr ""
 
-#: src/ui/file_status.rs:286
+#: src/ui/file_status.rs:277
 msgid "No previous messages"
 msgstr ""
 
-#: src/ui/file_status.rs:358
+#: src/ui/file_status.rs:349
 msgid "Unknown user"
 msgstr ""
 
-#: src/ui/file_status.rs:376
+#: src/ui/file_status.rs:367
 #, rust-format
 msgid "Push changes immediately to {upstream}"
 msgstr ""
 
-#: src/ui/file_status.rs:380
+#: src/ui/file_status.rs:371
 msgid "Push changes immediately (no remote)"
 msgstr ""
 
-#: src/ui/file_status.rs:400
+#: src/ui/file_status.rs:391
 msgid "Please enter a commit message"
 msgstr ""
 
-#: src/ui/file_status.rs:409
+#: src/ui/file_status.rs:400
 msgid "Nothing to commit"
 msgstr ""
 
-#: src/ui/file_status.rs:410
+#: src/ui/file_status.rs:401
 msgid ""
 "Stage the changes you want to commit first (tick them in the Unstaged files "
 "list)."
 msgstr ""
 
-#: src/ui/file_status.rs:418
+#: src/ui/file_status.rs:409
 msgid "Resolve all conflicted files and mark them resolved before committing."
 msgstr ""
 
-#: src/ui/file_status.rs:424
+#: src/ui/file_status.rs:415
 msgid "Could not write commit message"
 msgstr ""
 
-#: src/ui/file_status.rs:466
-msgid "Commit and Push"
-msgstr ""
-
-#: src/ui/file_status.rs:479
+#: src/ui/file_status.rs:462
 msgid "Committed"
 msgstr ""
 
@@ -1641,7 +1638,7 @@ msgstr ""
 msgid "Hotfix name"
 msgstr ""
 
-#: src/ui/flow.rs:55 src/ui/mod.rs:67 src/ui/progress.rs:412
+#: src/ui/flow.rs:55 src/ui/mod.rs:68 src/ui/progress.rs:417
 msgid "Close"
 msgstr ""
 
@@ -1750,152 +1747,152 @@ msgstr ""
 msgid "Tag message"
 msgstr ""
 
-#: src/ui/history.rs:139
+#: src/ui/history.rs:140
 msgid "Open Current Version"
 msgstr ""
 
-#: src/ui/history.rs:141 src/ui/staging.rs:481
+#: src/ui/history.rs:142 src/ui/staging.rs:483
 msgid "Copy Path"
 msgstr ""
 
-#: src/ui/history.rs:144 src/ui/staging.rs:486
+#: src/ui/history.rs:145 src/ui/staging.rs:488
 msgid "Log Selected…"
 msgstr ""
 
-#: src/ui/history.rs:145 src/ui/staging.rs:487
+#: src/ui/history.rs:146 src/ui/staging.rs:489
 msgid "Blame Selected…"
 msgstr ""
 
-#: src/ui/history.rs:146
+#: src/ui/history.rs:147
 msgid "Blame at This Commit…"
 msgstr ""
 
-#: src/ui/history.rs:147
+#: src/ui/history.rs:148
 msgid "Reset File to This Commit…"
 msgstr ""
 
-#: src/ui/history.rs:148
+#: src/ui/history.rs:149
 msgid "Reset File to Parent Commit…"
 msgstr ""
 
-#: src/ui/history.rs:162
+#: src/ui/history.rs:163
 msgid "No commit selected"
 msgstr ""
 
-#: src/ui/history.rs:200
+#: src/ui/history.rs:201
 msgid "Commit:"
 msgstr ""
 
-#: src/ui/history.rs:217
+#: src/ui/history.rs:218
 msgid "Parent:"
 msgid_plural "Parents:"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/ui/history.rs:220
+#: src/ui/history.rs:221
 msgid "Author:"
 msgstr ""
 
-#: src/ui/history.rs:223
+#: src/ui/history.rs:224
 msgid "Date:"
 msgstr ""
 
-#: src/ui/history.rs:226
+#: src/ui/history.rs:227
 msgid "Committer:"
 msgstr ""
 
-#: src/ui/history.rs:232
+#: src/ui/history.rs:233
 msgid "Labels:"
 msgstr ""
 
-#: src/ui/history.rs:266
+#: src/ui/history.rs:267
 #, rust-format
 msgid "Showing changes from {from} to {to}"
 msgstr ""
 
-#: src/ui/history.rs:354 src/ui/staging.rs:168
+#: src/ui/history.rs:356 src/ui/staging.rs:170
 msgid "No file changes"
 msgstr ""
 
-#: src/ui/history.rs:456
+#: src/ui/history.rs:458
 msgid "All Branches"
 msgstr ""
 
-#: src/ui/history.rs:456
+#: src/ui/history.rs:458
 msgid "Current Branch"
 msgstr ""
 
-#: src/ui/history.rs:456
+#: src/ui/history.rs:458
 msgid "Local Branches"
 msgstr ""
 
-#: src/ui/history.rs:457
+#: src/ui/history.rs:459
 msgid "Ancestor Order"
 msgstr ""
 
-#: src/ui/history.rs:457
+#: src/ui/history.rs:459
 msgid "Date Order"
 msgstr ""
 
-#: src/ui/history.rs:458
+#: src/ui/history.rs:460
 msgid "Authors"
 msgstr ""
 
-#: src/ui/history.rs:458
+#: src/ui/history.rs:460
 msgid "Commit Messages"
 msgstr ""
 
-#: src/ui/history.rs:458
+#: src/ui/history.rs:460
 msgid "Commit SHA"
 msgstr ""
 
-#: src/ui/history.rs:458
+#: src/ui/history.rs:460
 msgid "File Changes"
 msgstr ""
 
-#: src/ui/history.rs:471
+#: src/ui/history.rs:473
 msgid "Jump to commit or ref"
 msgstr ""
 
-#: src/ui/history.rs:477 src/ui/sidebar.rs:89
+#: src/ui/history.rs:479 src/ui/sidebar.rs:89
 msgid "Search"
 msgstr ""
 
-#: src/ui/history.rs:484
+#: src/ui/history.rs:486
 #, rust-format
 msgid "History of {file}"
 msgstr ""
 
-#: src/ui/history.rs:523
+#: src/ui/history.rs:529
 msgid "Graph"
 msgstr ""
 
-#: src/ui/history.rs:686
+#: src/ui/history.rs:692
 msgid "Description"
 msgstr ""
 
-#: src/ui/history.rs:725
+#: src/ui/history.rs:731
 msgid "Date"
 msgstr ""
 
-#: src/ui/history.rs:726
+#: src/ui/history.rs:732
 msgid "Author"
 msgstr ""
 
-#: src/ui/history.rs:794
+#: src/ui/history.rs:800
 #, rust-format
 msgid "No commit or ref named “{query}”"
 msgstr ""
 
-#: src/ui/history.rs:952
+#: src/ui/history.rs:958
 msgid "Uncommitted changes"
 msgstr ""
 
-#: src/ui/history.rs:1011
+#: src/ui/history.rs:1017
 msgid "Loading…"
 msgstr ""
 
-#: src/ui/history.rs:1044
+#: src/ui/history.rs:1050
 #, rust-format
 msgid "{n} commit"
 msgid_plural "{n} commits"
@@ -1903,141 +1900,141 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. Translators: more commits exist beyond the {n} loaded so far.
-#: src/ui/history.rs:1047
+#: src/ui/history.rs:1053
 #, rust-format
 msgid "{n}+ commit"
 msgid_plural "{n}+ commits"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/ui/history.rs:1077 src/ui/history.rs:1134
+#: src/ui/history.rs:1083 src/ui/history.rs:1140
 msgid "That commit is not shown with the current branch filter"
 msgstr ""
 
-#: src/ui/history.rs:1153
+#: src/ui/history.rs:1159
 msgid "Checkout…"
 msgstr ""
 
-#: src/ui/history.rs:1154
+#: src/ui/history.rs:1160
 #, rust-format
 msgid "Merge into {branch}…"
 msgstr ""
 
-#: src/ui/history.rs:1155
+#: src/ui/history.rs:1161
 #, rust-format
 msgid "Rebase {branch} onto this…"
 msgstr ""
 
-#: src/ui/history.rs:1158
+#: src/ui/history.rs:1164
 msgid "Tag…"
 msgstr ""
 
-#: src/ui/history.rs:1159
+#: src/ui/history.rs:1165
 msgid "Branch…"
 msgstr ""
 
-#: src/ui/history.rs:1160
+#: src/ui/history.rs:1166
 msgid "Archive…"
 msgstr ""
 
-#: src/ui/history.rs:1161
+#: src/ui/history.rs:1167
 msgid "Create Patch…"
 msgstr ""
 
-#: src/ui/history.rs:1164
+#: src/ui/history.rs:1170
 #, rust-format
 msgid "Reset {branch} to this commit…"
 msgstr ""
 
-#: src/ui/history.rs:1165
+#: src/ui/history.rs:1171
 msgid "Reverse Commit…"
 msgstr ""
 
-#: src/ui/history.rs:1167
+#: src/ui/history.rs:1173
 #, rust-format
 msgid "Rebase children of {commit} interactively…"
 msgstr ""
 
-#: src/ui/history.rs:1170
+#: src/ui/history.rs:1176
 msgid "Copy SHA to Clipboard"
 msgstr ""
 
-#: src/ui/history.rs:1171
+#: src/ui/history.rs:1177
 msgid "Copy Commit Message"
 msgstr ""
 
-#: src/ui/history.rs:1179 src/ui/preferences.rs:179 src/ui/staging.rs:496
+#: src/ui/history.rs:1185 src/ui/preferences.rs:179 src/ui/staging.rs:498
 msgid "Custom Actions"
 msgstr ""
 
-#: src/ui/history.rs:1185
+#: src/ui/history.rs:1191
 #, rust-format
 msgid "Cherry Pick {n} Commit"
 msgid_plural "Cherry Pick {n} Commits"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/ui/history.rs:1186
+#: src/ui/history.rs:1192
 msgid "Copy SHAs to Clipboard"
 msgstr ""
 
-#: src/ui/history.rs:1196
+#: src/ui/history.rs:1202
 #, rust-format
 msgid "Log — {file}"
 msgstr ""
 
-#: src/ui/mod.rs:169
+#: src/ui/mod.rs:170
 #, rust-format
 msgid "Today at {time}"
 msgstr ""
 
 #. Translators: a chrono strftime format (%d day, %b month, %Y year, %H:%M time).
-#: src/ui/mod.rs:172
+#: src/ui/mod.rs:173
 msgid "%d %b %Y at %H:%M"
 msgstr ""
 
 #. Translators: a chrono strftime format; day and month names stay in English.
-#: src/ui/mod.rs:184
+#: src/ui/mod.rs:185
 msgid "%A %d %B %Y %H:%M:%S"
 msgstr ""
 
-#: src/ui/mod.rs:247
+#: src/ui/mod.rs:248
 msgid "No terminal emulator found. Set one in Preferences."
 msgstr ""
 
-#: src/ui/mod.rs:268
+#: src/ui/mod.rs:269
 msgid "Added"
 msgstr ""
 
-#: src/ui/mod.rs:269
+#: src/ui/mod.rs:270
 msgid "Modified"
 msgstr ""
 
-#: src/ui/mod.rs:270
+#: src/ui/mod.rs:271
 msgid "Deleted"
 msgstr ""
 
-#: src/ui/mod.rs:271
+#: src/ui/mod.rs:272
 msgid "Renamed"
 msgstr ""
 
-#: src/ui/mod.rs:272 src/ui/progress.rs:131
+#: src/ui/mod.rs:273 src/ui/progress.rs:131
 msgid "Copied"
 msgstr ""
 
-#: src/ui/mod.rs:273
+#: src/ui/mod.rs:274
 msgid "Type changed"
 msgstr ""
 
-#: src/ui/mod.rs:274
+#: src/ui/mod.rs:275
 msgid "Conflicted"
 msgstr ""
 
-#: src/ui/mod.rs:275
+#: src/ui/mod.rs:276
 msgid "Untracked"
 msgstr ""
 
-#: src/ui/mod.rs:276
+#: src/ui/mod.rs:277
 msgid "Ignored"
 msgstr ""
 
@@ -2193,25 +2190,25 @@ msgstr ""
 msgid "Copy Output"
 msgstr ""
 
-#: src/ui/progress.rs:233
+#: src/ui/progress.rs:236
 #, rust-format
 msgid "{command} failed (exit code {code})."
 msgstr ""
 
-#: src/ui/progress.rs:234
+#: src/ui/progress.rs:237
 #, rust-format
 msgid "{command} was interrupted."
 msgstr ""
 
-#: src/ui/progress.rs:291 src/ui/progress.rs:374
+#: src/ui/progress.rs:294 src/ui/progress.rs:379
 msgid "Worker ended unexpectedly"
 msgstr ""
 
-#: src/ui/progress.rs:396
+#: src/ui/progress.rs:401
 msgid "Cancelled"
 msgstr ""
 
-#: src/ui/progress.rs:398
+#: src/ui/progress.rs:403
 msgid "Completed with errors, see below."
 msgstr ""
 
@@ -2779,93 +2776,93 @@ msgstr ""
 msgid "Update All Submodules"
 msgstr ""
 
-#: src/ui/staging.rs:85
+#: src/ui/staging.rs:87
 msgid "Unstage All"
 msgstr ""
 
-#: src/ui/staging.rs:86
+#: src/ui/staging.rs:88
 msgid "Unstage Selected"
 msgstr ""
 
-#: src/ui/staging.rs:87
+#: src/ui/staging.rs:89
 msgid "Stage All"
 msgstr ""
 
-#: src/ui/staging.rs:88
+#: src/ui/staging.rs:90
 msgid "Stage Selected"
 msgstr ""
 
-#: src/ui/staging.rs:89
+#: src/ui/staging.rs:91
 msgid "Staged files"
 msgstr ""
 
-#: src/ui/staging.rs:90
+#: src/ui/staging.rs:92
 msgid "Unstaged files"
 msgstr ""
 
-#: src/ui/staging.rs:385
+#: src/ui/staging.rs:387
 msgid "Cannot stage partial changes"
 msgstr ""
 
-#: src/ui/staging.rs:386
+#: src/ui/staging.rs:388
 msgid ""
 "Turn off “Ignore whitespace” to stage, unstage or discard individual hunks "
 "or lines."
 msgstr ""
 
-#: src/ui/staging.rs:396
+#: src/ui/staging.rs:398
 msgid "The selected changes will be permanently lost."
 msgstr ""
 
-#: src/ui/staging.rs:416
+#: src/ui/staging.rs:418
 msgid "Could not apply the change"
 msgstr ""
 
-#: src/ui/staging.rs:452
+#: src/ui/staging.rs:454
 msgid "Stage"
 msgstr ""
 
-#: src/ui/staging.rs:453
+#: src/ui/staging.rs:455
 msgid "Unstage"
 msgstr ""
 
-#: src/ui/staging.rs:455
+#: src/ui/staging.rs:457
 msgid "Discard Changes…"
 msgstr ""
 
-#: src/ui/staging.rs:456
+#: src/ui/staging.rs:458
 msgid "Remove…"
 msgstr ""
 
-#: src/ui/staging.rs:461
+#: src/ui/staging.rs:463
 msgid "Ignore…"
 msgstr ""
 
-#: src/ui/staging.rs:467
+#: src/ui/staging.rs:469
 msgid "Resolve Using “Mine”"
 msgstr ""
 
-#: src/ui/staging.rs:468
+#: src/ui/staging.rs:470
 msgid "Resolve Using “Theirs”"
 msgstr ""
 
-#: src/ui/staging.rs:469
+#: src/ui/staging.rs:471
 msgid "Launch External Merge Tool"
 msgstr ""
 
-#: src/ui/staging.rs:471
+#: src/ui/staging.rs:473
 msgid "Restart Merge (Mark Unresolved)"
 msgstr ""
 
-#: src/ui/staging.rs:472
+#: src/ui/staging.rs:474
 msgid "Resolve Conflicts"
 msgstr ""
 
-#: src/ui/staging.rs:479
+#: src/ui/staging.rs:481
 msgid "External Diff"
 msgstr ""
 
-#: src/ui/staging.rs:541
+#: src/ui/staging.rs:543
 msgid "Resolve with the context menu or edit the file"
 msgstr ""
 

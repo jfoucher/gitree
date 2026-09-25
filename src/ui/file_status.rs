@@ -433,9 +433,8 @@ impl FileStatusView {
         if self.gpg.is_active() {
             cmd.push("-S".into());
         }
-        let mut cmds = vec![cmd];
-        let push = self.push_after.is_active() && self.push_after.is_sensitive();
-        if push
+        let mut push_cmd = None;
+        if self.push_after.is_active() && self.push_after.is_sensitive()
             && let (Some(branch), Some(remote)) = (snap.current_branch(), snap.default_remote()) {
                 let has_upstream = snap.refs.current().is_some_and(|r| r.upstream.is_some());
                 let mut p = vec!["push".to_string(), "--progress".to_string()];
@@ -447,27 +446,32 @@ impl FileStatusView {
                 }
                 p.push(remote);
                 p.push(branch.to_string());
-                cmds.push(p);
+                push_cmd = Some(p);
             }
         let this = self.clone();
         let key = rv.git.workdir.to_string_lossy().to_string();
         spawn(async move {
-            let ok = rv
-                .run_ops(
-                    &if push { gettext("Commit and Push") } else { gettext("Commit") },
-                    cmds,
+            let ok = rv.run_ops(&gettext("Commit"), vec![cmd], OpOptions::default()).await;
+            let _ = std::fs::remove_file(&msg_file);
+            if !ok {
+                return;
+            }
+            config::update(|s| s.remember_message(&key, msg.trim()));
+            this.message.buffer().set_text("");
+            this.amend.set_active(false);
+            rv.toast(&gettext("Committed"));
+            // Pushed separately so a rejected push (e.g. the remote has new
+            // commits) doesn't make the commit itself look failed.
+            if let Some(p) = push_cmd {
+                rv.run_ops(
+                    &gettext("Push"),
+                    vec![p],
                     OpOptions {
-                        network: push,
+                        network: true,
                         ..Default::default()
                     },
                 )
                 .await;
-            let _ = std::fs::remove_file(&msg_file);
-            if ok {
-                config::update(|s| s.remember_message(&key, msg.trim()));
-                this.message.buffer().set_text("");
-                this.amend.set_active(false);
-                rv.toast(&gettext("Committed"));
             }
         });
     }

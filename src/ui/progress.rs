@@ -159,9 +159,12 @@ fn build_sheet(parent: &gtk::Widget, title: &str) -> Sheet {
     });
     // Escape closes once the operation has finished.
     let keys = gtk::EventControllerKey::new();
-    let w2 = window.clone();
+    let w2 = window.downgrade();
     keys.connect_key_pressed(move |_, k, _, _| {
-        if k == gtk::gdk::Key::Escape && w2.is_deletable() {
+        if k == gtk::gdk::Key::Escape
+            && let Some(w2) = w2.upgrade()
+            && w2.is_deletable()
+        {
             w2.close();
             return glib::Propagation::Stop;
         }
@@ -305,10 +308,12 @@ pub async fn run(
         let handle = handle.clone();
         let cancelled = cancelled.clone();
         let finished = finished.clone();
-        let window = sheet.window.clone();
+        let window = sheet.window.downgrade();
         sheet.button.connect_clicked(move |b| {
             if finished.get() {
-                window.close();
+                if let Some(w) = window.upgrade() {
+                    w.close();
+                }
             } else {
                 cancelled.store(true, Ordering::SeqCst);
                 if let Some(c) = handle.lock().unwrap().as_mut() {
@@ -412,12 +417,20 @@ pub async fn run(
             sheet.button.set_label(&gettext("Close"));
             sheet.button.set_sensitive(true);
             sheet.window.set_deletable(true);
+            // Wait for the sheet to be dismissed. "hide" rather than
+            // "destroy": the window is only disposed once every reference
+            // is gone, and this future still holds one.
             let (ctx, crx) = async_channel::bounded::<()>(1);
-            sheet.window.connect_destroy(move |_| {
+            sheet.window.connect_hide(move |_| {
                 let _ = ctx.try_send(());
             });
             if was_cancelled {
-                sheet.window.close();
+                if presented.get() {
+                    sheet.window.close();
+                } else {
+                    sheet.window.destroy();
+                    return result;
+                }
             } else if !presented.get() {
                 presented.set(true);
                 sheet.window.present();

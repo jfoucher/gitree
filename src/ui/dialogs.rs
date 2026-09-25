@@ -86,6 +86,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             form.description(&format!("Apply {arg} to the working copy?"));
             let del = form.switch("Delete after applying", "", false);
             let idx = form.switch("Also restore the staged state (--index)", "", false);
+            form.focus_ok();
             if form.run(&parent).await {
                 let mut c = s(&["stash", if del.is_active() { "pop" } else { "apply" }]);
                 if idx.is_active() {
@@ -127,6 +128,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             remote.set_visible(!remotes.is_empty());
             remote_sw.set_visible(!remotes.is_empty());
             form.ok.add_css_class("destructive-action");
+            form.focus_cancel();
             if form.run(&parent).await {
                 let mut cmds = vec![s(&["tag", "-d", &arg])];
                 if remote_sw.is_active() {
@@ -143,6 +145,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             }
             let form = Form::new(if arg.is_empty() { "Push All Tags" } else { "Push Tag" }, "Push");
             let remote = form.combo("Push to repository", &remotes, rv.snapshot().default_remote().as_deref());
+            form.focus_ok();
             if form.run(&parent).await {
                 let r = combo_value(&remote);
                 let c = if arg.is_empty() {
@@ -183,6 +186,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             });
             form.watch(&url);
             form.validate(move || !u2.text().trim().is_empty());
+            form.focus(&url);
             if form.run(&parent).await {
                 let mut c = s(&["submodule", "add", "--progress"]);
                 if !branch.text().trim().is_empty() {
@@ -287,6 +291,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             let dirs = form.switch("Include untracked directories", "", true);
             let ignored = form.switch("Also remove ignored files", "e.g. build output", false);
             form.ok.add_css_class("destructive-action");
+            form.focus_cancel();
             if form.run(&parent).await {
                 let mut c = s(&["clean", "-f"]);
                 if dirs.is_active() {
@@ -340,6 +345,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             let form = Form::new("Track Remote Branch", "OK");
             form.description(&format!("Choose the remote branch “{arg}” should track."));
             let c = form.combo("Remote branch", &remotes, cur.as_deref());
+            form.focus(&c);
             if form.run(&parent).await {
                 let v = combo_value(&c);
                 let cmd = if v == "(none)" {
@@ -376,6 +382,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             let form = Form::new("Reverse Commit", "Reverse");
             form.description(&format!("Create a new commit that undoes the changes of {short}."));
             let commit_now = form.switch("Commit immediately", "", true);
+            form.focus_ok();
             if form.run(&parent).await {
                 let git = rv.git.clone();
                 let a2 = arg.clone();
@@ -401,6 +408,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             ));
             let commit_now = form.switch("Commit immediately", "", true);
             let x = form.switch("Append “cherry picked from” line", "", false);
+            form.focus_ok();
             if form.run(&parent).await {
                 let mut c = s(&["cherry-pick"]);
                 if !commit_now.is_active() {
@@ -579,6 +587,7 @@ async fn pull_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
     let b3 = branch.clone();
     form.validate(move || b3.selected_item().is_some());
     form.watch_combo(&branch);
+    form.focus_ok();
     if !form.run(&rv.widget).await {
         return;
     }
@@ -665,6 +674,7 @@ async fn push_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
             f.revalidate();
         }
     });
+    form.focus_ok();
     if !form.run(&rv.widget).await {
         return;
     }
@@ -721,6 +731,7 @@ async fn fetch_dialog(rv: &Rc<RepoView>) {
     let all = form.switch("Fetch from all remotes", "", true);
     let prune = form.switch("Prune tracking branches no longer present on remote(s)", "", true);
     let tags = form.switch("Fetch and store all tags locally", "", true);
+    form.focus_ok();
     if !form.run(&rv.widget).await {
         return;
     }
@@ -767,6 +778,7 @@ async fn branch_dialog(rv: &Rc<RepoView>, at: &str) {
         let t = n2.text().trim().to_string();
         valid_ref_name(&git, &t) && !existing.contains(&t)
     });
+    form.focus(&name);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -804,6 +816,7 @@ async fn merge_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
     let log = form.switch("Include messages from commits being merged in merge commit", "", false);
     let no_ff = form.switch("Create a new commit even if fast-forward is possible", "", false);
     let squash = form.switch("Squash (merge changes as a single commit)", "", false);
+    form.focus(&from);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -835,6 +848,7 @@ async fn stash_dialog(rv: &Rc<RepoView>) {
     let msg = form.entry("Message", "");
     let keep = form.switch("Keep staged changes", "", false);
     let untracked = form.switch("Include untracked files", "", true);
+    form.focus(&msg);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -877,6 +891,7 @@ async fn discard_dialog(rv: &Rc<RepoView>) {
             f.revalidate();
         }
     });
+    form.focus_cancel();
     if !form.run(&rv.widget).await {
         return;
     }
@@ -918,6 +933,7 @@ async fn tag_dialog(rv: &Rc<RepoView>, at: &str) {
         let t = n2.text().trim().to_string();
         !t.is_empty() && git.check(&["check-ref-format", &format!("refs/tags/{t}")])
     });
+    form.focus(&name);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -961,6 +977,7 @@ async fn reset_dialog(rv: &Rc<RepoView>, oid: &str) {
         "Hard — discard all working copy changes".to_string(),
     ];
     let mode = form.combo("Using mode", &modes, Some(&modes[1]));
+    form.focus(&mode);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -991,6 +1008,7 @@ async fn delete_branch(rv: &Rc<RepoView>, name: &str) {
     );
     remote.set_visible(upstream.is_some());
     form.ok.add_css_class("destructive-action");
+    form.focus_cancel();
     if !form.run(&rv.widget).await {
         return;
     }
@@ -1015,6 +1033,7 @@ async fn checkout_ref(rv: &Rc<RepoView>, full: &str) {
         let form = Form::new("Checkout", "Checkout");
         form.description(&format!("Local branch “{}” already tracks {remote_ref}.", local.name));
         let pull = form.switch("Pull after checkout (fast-forward only)", "", true);
+        form.focus_ok();
         if form.run(&rv.widget).await {
             let mut cmds = vec![s(&["checkout", &local.name])];
             if pull.is_active() {
@@ -1036,6 +1055,7 @@ async fn checkout_ref(rv: &Rc<RepoView>, full: &str) {
         let t = n2.text().trim().to_string();
         valid_ref_name(&git, &t) && !existing.contains(&t)
     });
+    form.focus(&name);
     if form.run(&rv.widget).await {
         let n = name.text().trim().to_string();
         let c = s(&["checkout", "-b", &n, if track.is_active() { "--track" } else { "--no-track" }, remote_ref]);
@@ -1061,6 +1081,7 @@ async fn checkout_commit(rv: &Rc<RepoView>, oid: &str) {
         "Checking out a branch is recommended over a detached HEAD."
     });
     let clean = form.switch("Discard local changes", "", false);
+    form.focus(&choice);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -1121,6 +1142,7 @@ async fn subtree_dialog(rv: &Rc<RepoView>) {
     form.watch(&url);
     form.watch(&prefix);
     form.validate(move || !u2.text().trim().is_empty() && !p2.text().trim().is_empty());
+    form.focus(&url);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -1153,6 +1175,7 @@ async fn apply_patch_dialog(rv: &Rc<RepoView>) {
         "Import as commits (git am)".to_string(),
     ];
     let mode = form.combo("Apply to", &modes, None);
+    form.focus(&mode);
     if !form.run(&rv.widget).await {
         return;
     }
@@ -1436,6 +1459,7 @@ async fn ignore_dialog(rv: &Rc<RepoView>, paths: &[String]) {
         ".git/info/exclude (this copy only)".to_string(),
     ];
     let into = form.combo("Add this ignore entry to", &files, None);
+    form.focus(&what);
     if !form.run(&rv.widget).await {
         return;
     }

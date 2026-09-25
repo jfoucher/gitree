@@ -200,6 +200,7 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
             form.watch(&name);
             form.watch(&cmd);
             form.validate(move || !n2.text().trim().is_empty() && !c2.text().trim().is_empty());
+            form.focus(&name);
             if form.run(&d3).await {
                 config::update(|s| {
                     s.custom_actions.push(CustomAction {

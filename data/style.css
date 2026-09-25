@@ -4,7 +4,8 @@
   border-bottom: 1px solid alpha(currentColor, 0.12);
   background: var(--headerbar-bg-color);
 }
-.repo-toolbar .tool {
+.repo-toolbar button.tool,
+.repo-toolbar menubutton.tool > button {
   padding: 3px 8px;
   min-width: 52px;
 }

@@ -3,6 +3,7 @@
 use super::browser::Browser;
 use super::repo_view::RepoView;
 use crate::config;
+use crate::i18n::{gettext, N_};
 use adw::prelude::*;
 use gtk::{gio, glib};
 use std::cell::RefCell;
@@ -55,7 +56,9 @@ pub fn setup_app(app: &adw::Application) {
             .application_name("Gitree")
             .application_icon(crate::APP_ID)
             .version(env!("CARGO_PKG_VERSION"))
-            .comments("A Git client for GNOME inspired by a source control tool on macOS")
+            .comments(gettext("A Git client for GNOME inspired by a source control tool on macOS"))
+            // Translators: replace with your name(s), one per line, e.g. "Jane Doe <jane@example.com>".
+            .translator_credits(gettext("translator-credits"))
             .license_type(gtk::License::Gpl30)
             .build();
         d.present(a.active_window().as_ref());
@@ -123,26 +126,26 @@ impl MainWindow {
         header.set_title_widget(Some(&title));
 
         let new_tab = gtk::Button::from_icon_name("tab-new-symbolic");
-        new_tab.set_tooltip_text(Some("New Tab (Ctrl+T)"));
+        new_tab.set_tooltip_text(Some(&gettext("New Tab (Ctrl+T)")));
         new_tab.set_action_name(Some("win.new-tab"));
         header.pack_start(&new_tab);
 
         let menu = gio::Menu::new();
         let s1 = gio::Menu::new();
-        s1.append(Some("New Tab"), Some("win.new-tab"));
-        s1.append(Some("Open Repository…"), Some("win.open"));
-        s1.append(Some("Clone Repository…"), Some("win.clone"));
+        s1.append(Some(&gettext("New Tab")), Some("win.new-tab"));
+        s1.append(Some(&gettext("Open Repository…")), Some("win.open"));
+        s1.append(Some(&gettext("Clone Repository…")), Some("win.clone"));
         menu.append_section(None, &s1);
         let s2 = gio::Menu::new();
-        s2.append(Some("Preferences"), Some("app.preferences"));
-        s2.append(Some("Keyboard Shortcuts"), Some("win.shortcuts"));
-        s2.append(Some("About Gitree"), Some("app.about"));
+        s2.append(Some(&gettext("Preferences")), Some("app.preferences"));
+        s2.append(Some(&gettext("Keyboard Shortcuts")), Some("win.shortcuts"));
+        s2.append(Some(&gettext("About Gitree")), Some("app.about"));
         menu.append_section(None, &s2);
         let menu_btn = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
             .menu_model(&menu)
             .primary(true)
-            .tooltip_text("Main Menu")
+            .tooltip_text(gettext("Main Menu"))
             .build();
         header.pack_end(&menu_btn);
 
@@ -378,7 +381,7 @@ impl MainWindow {
             }
             None => {
                 self.title.set_title("Gitree");
-                self.title.set_subtitle("Repositories");
+                self.title.set_subtitle(&gettext("Repositories"));
                 if let Some(page) = self.tabs.selected_page()
                     && let Some((_, PageKind::Browser(b))) =
                         self.pages.borrow().iter().find(|(p, _)| *p == page)
@@ -405,7 +408,7 @@ impl MainWindow {
             }
         }));
         let page = self.tabs.append(&browser.widget);
-        page.set_title("Repositories");
+        page.set_title(&gettext("Repositories"));
         page.set_icon(Some(&gio::ThemedIcon::new("view-list-symbolic")));
         self.pages
             .borrow_mut()
@@ -423,7 +426,7 @@ impl MainWindow {
             }
             None => super::show_error(
                 &self.window,
-                "Not a Git repository",
+                &gettext("Not a Git repository"),
                 &path.to_string_lossy(),
             ),
         }
@@ -492,33 +495,33 @@ impl MainWindow {
 
 fn show_shortcuts(parent: &adw::ApplicationWindow) {
     let rows: &[(&str, &str)] = &[
-        ("New tab", "Ctrl+T"),
-        ("Close tab", "Ctrl+W"),
-        ("Open repository", "Ctrl+O"),
-        ("Clone repository", "Ctrl+Shift+N"),
-        ("File status / History / Search", "Ctrl+1 / Ctrl+2 / Ctrl+3"),
-        ("Commit", "Ctrl+Shift+C"),
-        ("Pull", "Ctrl+Shift+L"),
-        ("Push", "Ctrl+Shift+P"),
-        ("Fetch", "Ctrl+Shift+F"),
-        ("New branch", "Ctrl+Shift+B"),
-        ("Merge", "Ctrl+Shift+M"),
-        ("Stash", "Ctrl+Shift+S"),
-        ("Tag", "Ctrl+Shift+T"),
-        ("Discard", "Ctrl+Shift+R"),
-        ("Refresh", "Ctrl+R / F5"),
-        ("Open terminal", "Ctrl+Alt+T"),
-        ("Show in Files", "Ctrl+Alt+O"),
-        ("Repository settings", "Ctrl+Shift+,"),
-        ("Preferences", "Ctrl+,"),
+        (N_("New tab"), "Ctrl+T"),
+        (N_("Close tab"), "Ctrl+W"),
+        (N_("Open repository"), "Ctrl+O"),
+        (N_("Clone repository"), "Ctrl+Shift+N"),
+        (N_("File status / History / Search"), "Ctrl+1 / Ctrl+2 / Ctrl+3"),
+        (N_("Commit"), "Ctrl+Shift+C"),
+        (N_("Pull"), "Ctrl+Shift+L"),
+        (N_("Push"), "Ctrl+Shift+P"),
+        (N_("Fetch"), "Ctrl+Shift+F"),
+        (N_("New branch"), "Ctrl+Shift+B"),
+        (N_("Merge"), "Ctrl+Shift+M"),
+        (N_("Stash"), "Ctrl+Shift+S"),
+        (N_("Tag"), "Ctrl+Shift+T"),
+        (N_("Discard"), "Ctrl+Shift+R"),
+        (N_("Refresh"), "Ctrl+R / F5"),
+        (N_("Open terminal"), "Ctrl+Alt+T"),
+        (N_("Show in Files"), "Ctrl+Alt+O"),
+        (N_("Repository settings"), "Ctrl+Shift+,"),
+        (N_("Preferences"), "Ctrl+,"),
     ];
     let d = adw::Dialog::builder()
-        .title("Keyboard Shortcuts")
+        .title(gettext("Keyboard Shortcuts"))
         .content_width(460)
         .build();
     let group = adw::PreferencesGroup::new();
     for (name, keys) in rows {
-        let r = adw::ActionRow::builder().title(*name).build();
+        let r = adw::ActionRow::builder().title(gettext(*name)).build();
         let l = gtk::Label::new(Some(keys));
         l.add_css_class("dim-label");
         r.add_suffix(&l);

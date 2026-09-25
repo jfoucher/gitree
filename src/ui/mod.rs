@@ -19,6 +19,7 @@ pub mod sidebar;
 pub mod staging;
 pub mod window;
 
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use std::future::Future;
@@ -63,7 +64,7 @@ pub fn show_error(parent: &impl IsA<gtk::Widget>, heading: &str, details: &str) 
     if !details.trim().is_empty() {
         d.set_extra_child(Some(&mono_text(details.trim())));
     }
-    d.add_response("close", "Close");
+    d.add_response("close", &gettext("Close"));
     d.set_default_response(Some("close"));
     d.set_close_response("close");
     d.present(Some(parent));
@@ -78,7 +79,7 @@ pub async fn confirm(
     destructive: bool,
 ) -> bool {
     let d = adw::AlertDialog::new(Some(heading), Some(body));
-    d.add_response("cancel", "Cancel");
+    d.add_response("cancel", &gettext("Cancel"));
     d.add_response("ok", ok_label);
     d.set_response_appearance(
         "ok",
@@ -110,7 +111,7 @@ pub async fn ask_text(
         .activates_default(true)
         .build();
     d.set_extra_child(Some(&entry));
-    d.add_response("cancel", "Cancel");
+    d.add_response("cancel", &gettext("Cancel"));
     d.add_response("ok", ok_label);
     d.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
     d.set_default_response(Some("ok"));
@@ -165,9 +166,10 @@ pub fn format_time(ts: i64) -> String {
         chrono::LocalResult::Single(t) => {
             let now = Local::now();
             if t.date_naive() == now.date_naive() {
-                format!("Today at {}", t.format("%H:%M"))
+                gettext_f("Today at {time}", &[("time", &t.format("%H:%M").to_string())])
             } else {
-                t.format("%d %b %Y at %H:%M").to_string()
+                // Translators: a chrono strftime format (%d day, %b month, %Y year, %H:%M time).
+                t.format(&gettext("%d %b %Y at %H:%M")).to_string()
             }
         }
         _ => String::new(),
@@ -177,7 +179,10 @@ pub fn format_time(ts: i64) -> String {
 pub fn format_time_full(ts: i64) -> String {
     use chrono::{Local, TimeZone};
     match Local.timestamp_opt(ts, 0) {
-        chrono::LocalResult::Single(t) => t.format("%A %d %B %Y %H:%M:%S").to_string(),
+        chrono::LocalResult::Single(t) => {
+            // Translators: a chrono strftime format; day and month names stay in English.
+            t.format(&gettext("%A %d %B %Y %H:%M:%S")).to_string()
+        }
         _ => String::new(),
     }
 }
@@ -239,7 +244,7 @@ pub fn open_terminal(dir: &Path) -> Result<(), String> {
             return Ok(());
         }
     }
-    Err("No terminal emulator found. Set one in Preferences.".into())
+    Err(gettext("No terminal emulator found. Set one in Preferences."))
 }
 
 /// Letter shown for a file status plus its CSS class suffix.
@@ -258,18 +263,18 @@ pub fn status_badge(code: char) -> (String, &'static str) {
     }
 }
 
-pub fn status_tooltip(code: char) -> &'static str {
+pub fn status_tooltip(code: char) -> String {
     match code {
-        'A' => "Added",
-        'M' => "Modified",
-        'D' => "Deleted",
-        'R' => "Renamed",
-        'C' => "Copied",
-        'T' => "Type changed",
-        'U' => "Conflicted",
-        '?' => "Untracked",
-        '!' => "Ignored",
-        _ => "",
+        'A' => gettext("Added"),
+        'M' => gettext("Modified"),
+        'D' => gettext("Deleted"),
+        'R' => gettext("Renamed"),
+        'C' => gettext("Copied"),
+        'T' => gettext("Type changed"),
+        'U' => gettext("Conflicted"),
+        '?' => gettext("Untracked"),
+        '!' => gettext("Ignored"),
+        _ => String::new(),
     }
 }
 

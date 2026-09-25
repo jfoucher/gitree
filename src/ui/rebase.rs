@@ -6,6 +6,7 @@ use super::repo_view::RepoView;
 use super::{bg, show_error};
 use crate::git::log;
 use crate::git::rebase::{self, RebaseAction, RebaseItem};
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use gtk::{gdk, glib};
 use std::cell::{Cell, RefCell};
@@ -20,7 +21,7 @@ struct State {
 
 pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
     if !rv.snapshot().op.is_none() {
-        show_error(&rv.widget, "Operation in progress", "Finish or abort the current operation first.");
+        show_error(&rv.widget, &gettext("Operation in progress"), &gettext("Finish or abort the current operation first."));
         return;
     }
     let git = rv.git.clone();
@@ -28,19 +29,19 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
     let commits = match bg(move || log::range_oldest_first(&git, b2.as_deref())).await {
         Ok(c) => c,
         Err(e) => {
-            show_error(&rv.widget, "Could not list commits", &e.to_string());
+            show_error(&rv.widget, &gettext("Could not list commits"), &e.to_string());
             return;
         }
     };
     if commits.is_empty() {
-        rv.toast("There are no commits to rebase after that commit");
+        rv.toast(&gettext("There are no commits to rebase after that commit"));
         return;
     }
     if commits.iter().any(|c| c.parents.len() > 1) {
         show_error(
             &rv.widget,
-            "Merge commits in range",
-            "The selected range contains merge commits, which interactive rebase would flatten. Pick a later base commit.",
+            &gettext("Merge commits in range"),
+            &gettext("The selected range contains merge commits, which interactive rebase would flatten. Pick a later base commit."),
         );
         return;
     }
@@ -55,7 +56,7 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
         .collect();
 
     let dialog = adw::Dialog::builder()
-        .title("Interactive Rebase")
+        .title(gettext("Interactive Rebase"))
         .content_width(760)
         .content_height(560)
         .build();
@@ -63,8 +64,8 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
         .show_start_title_buttons(false)
         .show_end_title_buttons(false)
         .build();
-    let cancel = gtk::Button::with_label("Cancel");
-    let ok = gtk::Button::with_label("Start Rebase");
+    let cancel = gtk::Button::with_label(&gettext("Cancel"));
+    let ok = gtk::Button::with_label(&gettext("Start Rebase"));
     ok.add_css_class("suggested-action");
     header.pack_start(&cancel);
     header.pack_end(&ok);
@@ -75,10 +76,13 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
     vbox.set_margin_start(12);
     vbox.set_margin_end(12);
     let hint = gtk::Label::builder()
-        .label(format!(
-            "Commits are applied from top to bottom on top of {}. Drag rows to reorder.",
-            base.as_deref().map(|b| &b[..b.len().min(12)]).unwrap_or("the root")
-        ))
+        .label(match base.as_deref() {
+            Some(b) => gettext_f(
+                "Commits are applied from top to bottom on top of {base}. Drag rows to reorder.",
+                &[("base", &b[..b.len().min(12)])],
+            ),
+            None => gettext("Commits are applied from top to bottom on top of the root. Drag rows to reorder."),
+        })
         .xalign(0.0)
         .wrap(true)
         .build();
@@ -97,14 +101,14 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
 
     let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     let up = gtk::Button::from_icon_name("go-up-symbolic");
-    up.set_tooltip_text(Some("Move up"));
+    up.set_tooltip_text(Some(&gettext("Move up")));
     let down = gtk::Button::from_icon_name("go-down-symbolic");
-    down.set_tooltip_text(Some("Move down"));
-    let squash = gtk::Button::with_label("Squash with Previous");
-    let edit_msg = gtk::Button::with_label("Edit Message…");
-    let delete = gtk::Button::with_label("Delete");
+    down.set_tooltip_text(Some(&gettext("Move down")));
+    let squash = gtk::Button::with_label(&gettext("Squash with Previous"));
+    let edit_msg = gtk::Button::with_label(&gettext("Edit Message…"));
+    let delete = gtk::Button::with_label(&gettext("Delete"));
     delete.add_css_class("destructive-action");
-    let reset = gtk::Button::with_label("Reset");
+    let reset = gtk::Button::with_label(&gettext("Reset"));
     for b in [&up, &down, &squash, &edit_msg, &delete] {
         buttons.append(b);
     }
@@ -185,7 +189,7 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
                 Some(m) => m,
                 None => log::message(&git, &oid).unwrap_or_default().trim().to_string(),
             };
-            let d = adw::AlertDialog::new(Some("Edit Commit Message"), None);
+            let d = adw::AlertDialog::new(Some(&gettext("Edit Commit Message")), None);
             let tv = gtk::TextView::builder()
                 .wrap_mode(gtk::WrapMode::WordChar)
                 .top_margin(6)
@@ -202,7 +206,7 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
                 .build();
             sw.add_css_class("card");
             d.set_extra_child(Some(&sw));
-            d.add_responses(&[("cancel", "Cancel"), ("ok", "OK")]);
+            d.add_responses(&[("cancel", &gettext("Cancel")), ("ok", &gettext("OK"))]);
             d.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
             let tv2 = tv.clone();
             glib::idle_add_local_once(move || {
@@ -243,11 +247,11 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
     let items = state.items.borrow().clone();
     if let Some(first) = items.iter().find(|i| i.action != RebaseAction::Drop)
         && matches!(first.action, RebaseAction::Squash | RebaseAction::Fixup) {
-            show_error(&rv.widget, "Invalid rebase", "The first commit can't be squashed: there is nothing before it to squash into.");
+            show_error(&rv.widget, &gettext("Invalid rebase"), &gettext("The first commit can't be squashed: there is nothing before it to squash into."));
             return;
         }
     if items.iter().all(|i| i.action == RebaseAction::Drop)
-        && !super::confirm(&rv.widget, "Drop All Commits?", "Every commit in the range will be removed.", "Continue", true).await
+        && !super::confirm(&rv.widget, &gettext("Drop All Commits?"), &gettext("Every commit in the range will be removed."), &gettext("Continue"), true).await
     {
         return;
     }
@@ -256,7 +260,7 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
     let todo = match rebase::write_todo(&items, &dir) {
         Ok(t) => t,
         Err(e) => {
-            show_error(&rv.widget, "Could not prepare rebase", &e.to_string());
+            show_error(&rv.widget, &gettext("Could not prepare rebase"), &e.to_string());
             return;
         }
     };
@@ -266,7 +270,7 @@ pub async fn show(rv: &Rc<RepoView>, base: Option<String>) {
         None => cmd.push("--root".into()),
     }
     rv.run_ops(
-        "Interactive Rebase",
+        &gettext("Interactive Rebase"),
         vec![cmd],
         OpOptions {
             env: vec![("GIT_SEQUENCE_EDITOR".into(), rebase::sequence_editor(&todo))],
@@ -296,8 +300,8 @@ fn rebuild(state: &Rc<State>) {
         }
         let handle = gtk::Image::from_icon_name("list-drag-handle-symbolic");
         row.add_prefix(&handle);
-        let names: Vec<&str> = RebaseAction::ALL.iter().map(|a| a.label()).collect();
-        let dd = gtk::DropDown::from_strings(&names);
+        let names: Vec<String> = RebaseAction::ALL.iter().map(|a| gettext(a.label())).collect();
+        let dd = gtk::DropDown::from_strings(&names.iter().map(String::as_str).collect::<Vec<_>>());
         dd.set_valign(gtk::Align::Center);
         dd.set_selected(RebaseAction::ALL.iter().position(|a| *a == it.action).unwrap_or(0) as u32);
         let st = state.clone();

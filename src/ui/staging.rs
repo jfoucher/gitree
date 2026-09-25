@@ -11,6 +11,7 @@ use crate::config;
 use crate::git::diff::{self, FileDiff, Hunk, LineKind};
 use crate::git::status::StatusEntry;
 use crate::git::Git;
+use crate::i18n::gettext;
 use adw::prelude::*;
 use gtk::gio;
 use std::cell::{Cell, RefCell};
@@ -81,12 +82,12 @@ impl StagingView {
     pub fn new(rv: Weak<RepoView>, staged_height: i32, collapse_staged: bool) -> Rc<Self> {
         let staged = FileList::new(Some(true));
         let unstaged = FileList::new(Some(false));
-        let unstage_all = gtk::Button::with_label("Unstage All");
-        let unstage_sel = gtk::Button::with_label("Unstage Selected");
-        let stage_all = gtk::Button::with_label("Stage All");
-        let stage_sel = gtk::Button::with_label("Stage Selected");
-        let (staged_pane, staged_count) = pane("Staged files", &staged, &[&unstage_all, &unstage_sel]);
-        let (unstaged_pane, unstaged_count) = pane("Unstaged files", &unstaged, &[&stage_all, &stage_sel]);
+        let unstage_all = gtk::Button::with_label(&gettext("Unstage All"));
+        let unstage_sel = gtk::Button::with_label(&gettext("Unstage Selected"));
+        let stage_all = gtk::Button::with_label(&gettext("Stage All"));
+        let stage_sel = gtk::Button::with_label(&gettext("Stage Selected"));
+        let (staged_pane, staged_count) = pane(&gettext("Staged files"), &staged, &[&unstage_all, &unstage_sel]);
+        let (unstaged_pane, unstaged_count) = pane(&gettext("Unstaged files"), &unstaged, &[&stage_all, &stage_sel]);
         staged_pane.set_visible(!collapse_staged);
 
         let lists = gtk::Paned::builder()
@@ -164,7 +165,7 @@ impl StagingView {
         } else if !self.staged.all_files().is_empty() {
             self.staged.select_first();
         } else {
-            self.diff.show_message("No file changes");
+            self.diff.show_message(&gettext("No file changes"));
         }
     }
 
@@ -181,7 +182,7 @@ impl StagingView {
                     let still = t.selected.borrow().as_ref().is_some_and(|(s, _)| *s == side);
                     if still {
                         *t.selected.borrow_mut() = None;
-                        t.diff.show_message("No file selected");
+                        t.diff.show_message(&gettext("No file selected"));
                     }
                     return;
                 }
@@ -381,8 +382,8 @@ impl StagingView {
         if self.diff.options().ignore_whitespace {
             super::show_error(
                 &self.lists,
-                "Cannot stage partial changes",
-                "Turn off “Ignore whitespace” to stage, unstage or discard individual hunks or lines.",
+                &gettext("Cannot stage partial changes"),
+                &gettext("Turn off “Ignore whitespace” to stage, unstage or discard individual hunks or lines."),
             );
             return;
         }
@@ -391,9 +392,9 @@ impl StagingView {
             if action == PatchAction::Discard
                 && !super::confirm(
                     &this.lists,
-                    "Discard Changes?",
-                    "The selected changes will be permanently lost.",
-                    "Discard",
+                    &gettext("Discard Changes?"),
+                    &gettext("The selected changes will be permanently lost."),
+                    &gettext("Discard"),
                     true,
                 )
                 .await
@@ -412,7 +413,7 @@ impl StagingView {
             })
             .await;
             if let Err(e) = r {
-                super::show_error(&this.lists, "Could not apply the change", &e.to_string());
+                super::show_error(&this.lists, &gettext("Could not apply the change"), &e.to_string());
             }
             rv.refresh();
         });
@@ -448,42 +449,42 @@ impl StagingView {
 
         let s1 = gio::Menu::new();
         match side {
-            Side::Unstaged => menu_item_target(&s1, "Stage", "repo.file-stage", &t),
-            Side::Staged => menu_item_target(&s1, "Unstage", "repo.file-unstage", &t),
+            Side::Unstaged => menu_item_target(&s1, &gettext("Stage"), "repo.file-stage", &t),
+            Side::Staged => menu_item_target(&s1, &gettext("Unstage"), "repo.file-unstage", &t),
         }
-        menu_item_target(&s1, "Discard Changes…", "repo.file-discard", &t);
-        menu_item_target(&s1, "Remove…", "repo.file-remove", &t);
+        menu_item_target(&s1, &gettext("Discard Changes…"), "repo.file-discard", &t);
+        menu_item_target(&s1, &gettext("Remove…"), "repo.file-remove", &t);
         if files.iter().all(|f| !f.untracked) {
-            menu_item_target(&s1, "Stop Tracking", "repo.file-stop-tracking", &t);
+            menu_item_target(&s1, &gettext("Stop Tracking"), "repo.file-stop-tracking", &t);
         }
         if files.iter().any(|f| f.untracked) {
-            menu_item_target(&s1, "Ignore…", "repo.file-ignore", &t);
+            menu_item_target(&s1, &gettext("Ignore…"), "repo.file-ignore", &t);
         }
         menu.append_section(None, &s1);
 
         if files.iter().any(|f| f.conflicted) {
             let s = gio::Menu::new();
-            menu_item_target(&s, "Resolve Using “Mine”", "repo.file-resolve-mine", &t);
-            menu_item_target(&s, "Resolve Using “Theirs”", "repo.file-resolve-theirs", &t);
-            menu_item_target(&s, "Launch External Merge Tool", "repo.file-mergetool", &t);
-            menu_item_target(&s, "Mark Resolved", "repo.file-mark-resolved", &t);
-            menu_item_target(&s, "Restart Merge (Mark Unresolved)", "repo.file-mark-unresolved", &t);
-            menu.append_submenu(Some("Resolve Conflicts"), &s);
+            menu_item_target(&s, &gettext("Resolve Using “Mine”"), "repo.file-resolve-mine", &t);
+            menu_item_target(&s, &gettext("Resolve Using “Theirs”"), "repo.file-resolve-theirs", &t);
+            menu_item_target(&s, &gettext("Launch External Merge Tool"), "repo.file-mergetool", &t);
+            menu_item_target(&s, &gettext("Mark Resolved"), "repo.file-mark-resolved", &t);
+            menu_item_target(&s, &gettext("Restart Merge (Mark Unresolved)"), "repo.file-mark-unresolved", &t);
+            menu.append_submenu(Some(&gettext("Resolve Conflicts")), &s);
         }
 
         let s2 = gio::Menu::new();
         if single {
-            menu_item_target(&s2, "Open", "repo.file-open", &paths[0]);
-            menu_item_target(&s2, "Show in Files", "repo.file-show", &paths[0]);
-            menu_item_target(&s2, "External Diff", "repo.file-difftool", &t);
+            menu_item_target(&s2, &gettext("Open"), "repo.file-open", &paths[0]);
+            menu_item_target(&s2, &gettext("Show in Files"), "repo.file-show", &paths[0]);
+            menu_item_target(&s2, &gettext("External Diff"), "repo.file-difftool", &t);
         }
-        menu_item_target(&s2, "Copy Path", "repo.copy-text", &paths.join("\n"));
+        menu_item_target(&s2, &gettext("Copy Path"), "repo.copy-text", &paths.join("\n"));
         menu.append_section(None, &s2);
 
         if single && !files[0].untracked {
             let s3 = gio::Menu::new();
-            menu_item_target(&s3, "Log Selected…", "repo.file-log", &paths[0]);
-            menu_item_target(&s3, "Blame Selected…", "repo.file-blame", &paths[0]);
+            menu_item_target(&s3, &gettext("Log Selected…"), "repo.file-log", &paths[0]);
+            menu_item_target(&s3, &gettext("Blame Selected…"), "repo.file-blame", &paths[0]);
             menu.append_section(None, &s3);
         }
         let actions = config::with(|s| s.custom_actions.clone());
@@ -492,7 +493,7 @@ impl StagingView {
             for (i, a) in actions.iter().enumerate() {
                 menu_item_target(&s4, &a.name, "repo.custom-action", &format!("{i}||{}", paths[0]));
             }
-            menu.append_submenu(Some("Custom Actions"), &s4);
+            menu.append_submenu(Some(&gettext("Custom Actions")), &s4);
         }
         popup_menu(widget, x, y, &menu);
     }
@@ -537,7 +538,7 @@ fn conflict_view(git: &Git, path: &str) -> Vec<FileDiff> {
             old_count: n,
             new_start: 1,
             new_count: n,
-            header: "@@ conflicted file @@ Resolve with the context menu or edit the file".into(),
+            header: format!("@@ conflicted file @@ {}", gettext("Resolve with the context menu or edit the file")),
             lines,
         }],
         ..Default::default()

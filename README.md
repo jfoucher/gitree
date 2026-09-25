@@ -47,20 +47,20 @@ Not included: hosting-service accounts (GitHub/Bitbucket/GitLab login, pull requ
 
 ## Building
 
-Building needs the GTK 4 (>= 4.18), libadwaita (>= 1.7) and GtkSourceView 5
-development packages. Having the libraries installed isn't enough; pkg-config
+Building needs gettext and the GTK 4 (>= 4.18), libadwaita (>= 1.7) and
+GtkSourceView 5 development packages. Having the libraries installed isn't enough; pkg-config
 needs their `-dev`/`-devel` files. `scripts/install.sh` checks for them and prints
 the command for your distro.
 
 ```sh
 # Debian / Ubuntu
-sudo apt install build-essential pkg-config libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev git
+sudo apt install build-essential pkg-config gettext libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev git
 # Fedora
-sudo dnf install gcc pkgconf-pkg-config gtk4-devel libadwaita-devel gtksourceview5-devel git
+sudo dnf install gcc pkgconf-pkg-config gettext gtk4-devel libadwaita-devel gtksourceview5-devel git
 # Arch
-sudo pacman -S --needed base-devel gtk4 libadwaita gtksourceview5 git
+sudo pacman -S --needed base-devel gettext gtk4 libadwaita gtksourceview5 git
 # openSUSE
-sudo zypper install gcc pkgconf gtk4-devel libadwaita-devel gtksourceview5-devel git
+sudo zypper install gcc pkgconf gettext-tools gtk4-devel libadwaita-devel gtksourceview5-devel git
 # optional everywhere: git-lfs meld
 
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # Rust toolchain
@@ -112,6 +112,25 @@ triggering the given repository actions (any `repo.*` action name, `name=argumen
 separated by `;`). With `GITREE_AUTO_ACCEPT=1`, option dialogs are accepted with their
 defaults, which makes it possible to exercise Push, Pull, Stash, … end to end.
 
+### Translations
+
+User-visible strings go through gettext (`src/i18n.rs`); the catalogs live in `po/`
+with the text domain `gitree`. Wrap new strings in `gettext("…")`, and use
+`gettext_f("Delete {branch}?", &[("branch", &name)])` or `ngettext_f` rather than
+`format!`, so translators see whole sentences with named placeholders.
+
+```sh
+scripts/i18n.sh pot       # regenerate po/gitree.pot (needs gettext >= 0.24 for Rust)
+scripts/i18n.sh update    # regenerate the template and merge it into every po/<lang>.po
+```
+
+To add a language, run `msginit -i po/gitree.pot -o po/<lang>.po -l <lang>` and add
+its code to `po/LINGUAS`. `scripts/install.sh` and the Flatpak compile the catalogs
+and merge the translations into the desktop entry and metainfo. To try one from the
+source tree, run `scripts/i18n.sh build target`, then `LANGUAGE=<lang> cargo run`.
+New source files with strings go in `po/POTFILES.in`; `scripts/i18n.sh check`
+lists any that are missing.
+
 ### Layout
 
 - `src/git/` — git CLI wrapper and parsers (status, refs, log, graph lanes, diff and
@@ -121,3 +140,4 @@ defaults, which makes it possible to exercise Push, Pull, Stash, … end to end.
 - `src/askpass.rs` — credential prompt used when git runs Gitree as `GIT_ASKPASS`.
 - `src/watch.rs` — file watcher driving auto refresh.
 - `data/` — stylesheet, icons, desktop entry and metainfo.
+- `po/` — translation template (`gitree.pot`), translations and `POTFILES.in`.

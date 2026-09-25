@@ -4,6 +4,7 @@
 //! environment (C locale, no terminal prompts, our own askpass helper) so
 //! output can be parsed reliably.
 
+use crate::i18n::{gettext, gettext_f};
 use std::fmt;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -213,7 +214,7 @@ impl Git {
             Err(GitError {
                 command: describe(args),
                 stderr: if code.is_none() {
-                    format!("{stderr}\nCancelled.")
+                    format!("{stderr}\n{}", gettext("Cancelled."))
                 } else {
                     stderr
                 },
@@ -252,7 +253,7 @@ impl Output {
 fn spawn_error<S: AsRef<str>>(args: &[S], e: std::io::Error) -> GitError {
     GitError {
         command: describe(args),
-        stderr: format!("Failed to run git: {e}"),
+        stderr: gettext_f("Failed to run git: {error}", &[("error", &e.to_string())]),
         stdout: String::new(),
         code: None,
     }

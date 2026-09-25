@@ -1,6 +1,7 @@
 //! Streaming `git log` reader.
 
 use super::{Git, GitError, GitResult, Prompt};
+use crate::i18n::gettext;
 use std::io::{BufRead, BufReader};
 use std::process::{Child, ChildStdout, Stdio};
 
@@ -183,7 +184,7 @@ pub fn commit(git: &Git, rev: &str) -> GitResult<Commit> {
     let out = git.run(&["show", "-s", &FMT.replace("%x1e", ""), rev])?;
     parse_record(out.trim_end()).ok_or_else(|| GitError {
         command: format!("git show {rev}"),
-        stderr: "Could not parse commit".into(),
+        stderr: gettext("Could not parse commit"),
         stdout: out,
         code: None,
     })

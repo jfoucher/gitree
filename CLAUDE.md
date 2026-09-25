@@ -15,13 +15,14 @@ cargo clippy
 scripts/make-test-repo.sh /tmp/demo [--conflict]   # repo with branches, tags, stash, submodule, bare "origin"
 scripts/screenshot.sh /tmp/demo/work shot.png "show-status;debug-select-unstaged=0" [delay-ms]
 scripts/install.sh [--uninstall]    # installs to ~/.local (PREFIX overrides)
+scripts/i18n.sh pot|update|check|build <prefix>   # translation template, merge, POTFILES check, compile
 ```
 
-System deps (Debian names): `libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev pkg-config`. On Fedora: `gtk4-devel libadwaita-devel gtksourceview5-devel`. `scripts/install.sh` checks for them and prints the right command for the distro.
+System deps (Debian names): `libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev pkg-config gettext`. On Fedora: `gtk4-devel libadwaita-devel gtksourceview5-devel gettext`. `scripts/install.sh` checks for them and prints the right command for the distro.
 
 `screenshot.sh` runs `target/debug/gitree` (so `cargo build` first) inside a private headless GNOME Shell with a throwaway `XDG_CONFIG_HOME`, triggers the given `repo.*` actions (`name=arg;name2`; `wait=<ms>` pauses between them), saves a PNG of the newest visible window, and quits. This is the way to check UI changes visually. Set `GITREE_AUTO_ACCEPT=1` to auto-accept confirmation dialogs and `Form`s with their defaults so Push, Pull, Stash and similar flows run end to end.
 
-Other dev env vars: `GITREE_DEBUG_REFRESH` (logs refreshes and watcher triggers), `GITREE_KEEP_OPEN` (don't quit after a screenshot), `GITREE_TEST_CONFIG` (config dir for `screenshot.sh`).
+Other dev env vars: `GITREE_LOCALEDIR` (message catalog dir), `GITREE_DEBUG_REFRESH` (logs refreshes and watcher triggers), `GITREE_KEEP_OPEN` (don't quit after a screenshot), `GITREE_TEST_CONFIG` (config dir for `screenshot.sh`).
 
 ## Architecture
 
@@ -42,6 +43,8 @@ Other dev env vars: `GITREE_DEBUG_REFRESH` (logs refreshes and watcher triggers)
 - History reloads only when the refs signature or dirty state changes (`last_log_key`). Call `invalidate_log()` to force a reload.
 - Refreshes are coalesced through the `refreshing`/`busy`/`refresh_pending` flags. Triggers are the file watcher (`src/watch.rs`, which ignores gitignored paths), window focus and a periodic fetch.
 - Mutating operations should use `rv.run_ops(title, cmds, OpOptions)`, which shows the streaming, cancellable progress sheet (`ui/progress.rs`) and refreshes afterwards.
+
+**Translations:** every user-visible string goes through `crate::i18n` (gettext-rs, text domain `gitree`, catalogs in `po/`). Use `gettext("…")`. For strings with runtime values, use `gettext_f("Delete {branch}?", &[("branch", &name)])` or `ngettext_f(singular, plural, n, args)` (`{n}` is filled in), never `format!` around a translated fragment. Use `pgettext("noun", …)` where an English word is ambiguous, and `N_("…")` to mark strings in `const` tables that are translated where they are displayed. Don't translate action names, CSS classes, icon names, git arguments or text written into the repository (commit/tag messages). Never compare a displayed combo value against a literal; use the selected index. Files with strings must be listed in `po/POTFILES.in` (`scripts/i18n.sh check`); run `scripts/i18n.sh pot` after changing strings. `i18n::init()` resolves catalogs from `$GITREE_LOCALEDIR` or `<exe>/../share/locale`, so `scripts/i18n.sh build target` makes them available to `target/debug/gitree`.
 
 **Actions:** toolbar buttons, context menus, keyboard shortcuts and `GITREE_DEBUG_ACTIONS` all go through `repo.<name>` actions that take a string argument. To add one, register its name in `ACTIONS` and add a match arm in `handle()`, both in `src/ui/dialogs.rs`. `dispatch()` is the entry point. Option dialogs are built with the `ui/form.rs` `Form` helper.
 

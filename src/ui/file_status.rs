@@ -8,6 +8,7 @@ use super::staging::StagingView;
 use super::{bg, spawn};
 use crate::config;
 use crate::git::state::OpState;
+use crate::i18n::{gettext, gettext_f, N_};
 use adw::prelude::*;
 use gtk::glib;
 use std::cell::RefCell;
@@ -23,11 +24,11 @@ enum Filter {
 }
 
 const FILTERS: [(&str, Filter); 5] = [
-    ("Pending files", Filter::Pending),
-    ("Conflicted files", Filter::Conflicted),
-    ("Untracked files", Filter::Untracked),
-    ("Modified files", Filter::Modified),
-    ("Ignored files", Filter::Ignored),
+    (N_("Pending files"), Filter::Pending),
+    (N_("Conflicted files"), Filter::Conflicted),
+    (N_("Untracked files"), Filter::Untracked),
+    (N_("Modified files"), Filter::Modified),
+    (N_("Ignored files"), Filter::Ignored),
 ];
 
 pub struct FileStatusView {
@@ -58,18 +59,18 @@ impl FileStatusView {
         // Filter bar
         let bar = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         bar.add_css_class("pane-header");
-        let names: Vec<&str> = FILTERS.iter().map(|(n, _)| *n).collect();
-        let filter = gtk::DropDown::from_strings(&names);
-        filter.set_tooltip_text(Some("Show files"));
+        let names: Vec<String> = FILTERS.iter().map(|(n, _)| gettext(*n)).collect();
+        let filter = gtk::DropDown::from_strings(&names.iter().map(String::as_str).collect::<Vec<_>>());
+        filter.set_tooltip_text(Some(&gettext("Show files")));
         bar.append(&filter);
         let search = gtk::SearchEntry::builder()
-            .placeholder_text("Filter files")
+            .placeholder_text(gettext("Filter files"))
             .hexpand(true)
             .build();
         bar.append(&search);
         let tree_btn = gtk::ToggleButton::builder()
             .icon_name("view-list-bullet-symbolic")
-            .tooltip_text("Tree view")
+            .tooltip_text(gettext("Tree view"))
             .active(config::with(|s| s.file_tree_view))
             .build();
         tree_btn.add_css_class("flat");
@@ -98,10 +99,10 @@ impl FileStatusView {
         crow.append(&avatar);
         crow.append(&author);
 
-        let amend = gtk::CheckButton::with_label("Amend last commit");
-        let signoff = gtk::CheckButton::with_label("Sign off");
-        let no_verify = gtk::CheckButton::with_label("Bypass commit hooks");
-        let gpg = gtk::CheckButton::with_label("Sign commit (GPG)");
+        let amend = gtk::CheckButton::with_label(&gettext("Amend last commit"));
+        let signoff = gtk::CheckButton::with_label(&gettext("Sign off"));
+        let no_verify = gtk::CheckButton::with_label(&gettext("Bypass commit hooks"));
+        let gpg = gtk::CheckButton::with_label(&gettext("Sign commit (GPG)"));
         let opts_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
         opts_box.set_margin_top(6);
         opts_box.set_margin_bottom(6);
@@ -113,14 +114,14 @@ impl FileStatusView {
         opts_box.append(&gpg);
         let opts_pop = gtk::Popover::builder().child(&opts_box).build();
         let opts_btn = gtk::MenuButton::builder()
-            .label("Commit Options")
+            .label(gettext("Commit Options"))
             .popover(&opts_pop)
             .build();
         opts_btn.add_css_class("flat");
         crow.append(&opts_btn);
         let history_btn = gtk::MenuButton::builder()
             .icon_name("document-open-recent-symbolic")
-            .tooltip_text("Previous commit messages")
+            .tooltip_text(gettext("Previous commit messages"))
             .build();
         history_btn.add_css_class("flat");
         crow.append(&history_btn);
@@ -144,15 +145,15 @@ impl FileStatusView {
         cbox.append(&msg_sw);
 
         let brow = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        let push_after = gtk::CheckButton::with_label("Push changes immediately");
+        let push_after = gtk::CheckButton::with_label(&gettext("Push changes immediately"));
         push_after.set_active(config::with(|s| s.push_after_commit));
         push_after.set_hexpand(true);
         brow.append(&push_after);
-        let hint = gtk::Label::new(Some("Ctrl+Enter to commit"));
+        let hint = gtk::Label::new(Some(&gettext("Ctrl+Enter to commit")));
         hint.add_css_class("dim-label");
         hint.add_css_class("caption");
         brow.append(&hint);
-        let commit_btn = gtk::Button::with_label("Commit");
+        let commit_btn = gtk::Button::with_label(&gettext("Commit"));
         commit_btn.add_css_class("suggested-action");
         brow.append(&commit_btn);
         cbox.append(&brow);
@@ -259,9 +260,9 @@ impl FileStatusView {
                     && let Ok(m) = rv.git.run(&["log", "-1", "--format=%B"]) {
                         buf.set_text(m.trim_end());
                     }
-                t.commit_btn.set_label("Amend Commit");
+                t.commit_btn.set_label(&gettext("Amend Commit"));
             } else {
-                t.commit_btn.set_label("Commit");
+                t.commit_btn.set_label(&gettext("Commit"));
             }
         });
         let w = Rc::downgrade(self);
@@ -282,7 +283,7 @@ impl FileStatusView {
             let list = gtk::ListBox::new();
             list.add_css_class("navigation-sidebar");
             if msgs.is_empty() {
-                let l = gtk::Label::new(Some("No previous messages"));
+                let l = gtk::Label::new(Some(&gettext("No previous messages")));
                 l.set_margin_top(12);
                 l.set_margin_bottom(12);
                 l.add_css_class("dim-label");
@@ -354,7 +355,7 @@ impl FileStatusView {
             spawn(async move {
                 let (n, e) = bg(move || {
                     (
-                        crate::git::config_get(Some(&git), "user.name").unwrap_or_else(|| "Unknown user".into()),
+                        crate::git::config_get(Some(&git), "user.name").unwrap_or_else(|| gettext("Unknown user")),
                         crate::git::config_get(Some(&git), "user.email").unwrap_or_default(),
                     )
                 })
@@ -372,11 +373,11 @@ impl FileStatusView {
                 });
             match target {
                 Some(t) => {
-                    self.push_after.set_label(Some(&format!("Push changes immediately to {t}")));
+                    self.push_after.set_label(Some(&gettext_f("Push changes immediately to {upstream}", &[("upstream", &t)])));
                     self.push_after.set_sensitive(true);
                 }
                 None => {
-                    self.push_after.set_label(Some("Push changes immediately (no remote)"));
+                    self.push_after.set_label(Some(&gettext("Push changes immediately (no remote)")));
                     self.push_after.set_sensitive(false);
                 }
             }
@@ -396,7 +397,7 @@ impl FileStatusView {
         let msg = super::form::text_of(&self.message);
         let snap = rv.snapshot();
         if msg.trim().is_empty() {
-            rv.toast("Please enter a commit message");
+            rv.toast(&gettext("Please enter a commit message"));
             self.message.grab_focus();
             return;
         }
@@ -405,22 +406,22 @@ impl FileStatusView {
         if !amend && !has_staged && !matches!(snap.op, OpState::Merge) {
             super::show_error(
                 &self.widget,
-                "Nothing to commit",
-                "Stage the changes you want to commit first (tick them in the Unstaged files list).",
+                &gettext("Nothing to commit"),
+                &gettext("Stage the changes you want to commit first (tick them in the Unstaged files list)."),
             );
             return;
         }
         if snap.status.has_conflicts() {
             super::show_error(
                 &self.widget,
-                "Unresolved conflicts",
-                "Resolve all conflicted files and mark them resolved before committing.",
+                &gettext("Unresolved conflicts"),
+                &gettext("Resolve all conflicted files and mark them resolved before committing."),
             );
             return;
         }
         let msg_file = rv.git_dir.join("GITREE_COMMIT_MSG");
         if let Err(e) = std::fs::write(&msg_file, &msg) {
-            super::show_error(&self.widget, "Could not write commit message", &e.to_string());
+            super::show_error(&self.widget, &gettext("Could not write commit message"), &e.to_string());
             return;
         }
         let mut cmd = vec![
@@ -462,7 +463,7 @@ impl FileStatusView {
         spawn(async move {
             let ok = rv
                 .run_ops(
-                    if push { "Commit and Push" } else { "Commit" },
+                    &if push { gettext("Commit and Push") } else { gettext("Commit") },
                     cmds,
                     OpOptions {
                         network: push,
@@ -475,7 +476,7 @@ impl FileStatusView {
                 config::update(|s| s.remember_message(&key, msg.trim()));
                 this.message.buffer().set_text("");
                 this.amend.set_active(false);
-                rv.toast("Committed");
+                rv.toast(&gettext("Committed"));
             }
         });
     }

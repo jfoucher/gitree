@@ -256,7 +256,7 @@ impl FileList {
                     cell.badge.set_text(&txt);
                     cell.badge.add_css_class(&format!("status-{cls}"));
                     cell.badge.set_visible(true);
-                    cell.badge.set_tooltip_text(Some(status_tooltip(f.code)));
+                    cell.badge.set_tooltip_text(Some(&status_tooltip(f.code)));
                     cell.name.set_text(&node.name);
                     let tree = row.as_ref().is_some_and(|r| r.depth() > 0)
                         || !f.path.contains('/');

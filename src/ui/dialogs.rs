@@ -10,6 +10,7 @@ use super::{ask_text, bg, confirm, copy_to_clipboard, show_error, spawn};
 use crate::config;
 use crate::git::state::OpState;
 use crate::git::{self, Git};
+use crate::i18n::{gettext, gettext_f, ngettext_f, pgettext};
 use adw::prelude::*;
 use gtk::gio;
 use std::path::PathBuf;
@@ -65,27 +66,27 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
         "push-branch" => push_dialog(rv, Some(arg)).await,
         "fetch" => fetch_dialog(rv).await,
         "remote-fetch" => {
-            rv.run_ops("Fetch", vec![s(&["fetch", "--progress", "--prune", &arg])], net())
+            rv.run_ops(&gettext("Fetch"), vec![s(&["fetch", "--progress", "--prune", &arg])], net())
                 .await;
         }
         "remote-prune" => {
-            rv.run_ops("Prune", vec![s(&["remote", "prune", &arg])], net()).await;
+            rv.run_ops(&gettext("Prune"), vec![s(&["remote", "prune", &arg])], net()).await;
         }
         "branch" => branch_dialog(rv, &arg).await,
         "merge" => merge_dialog(rv, None).await,
         "merge-ref" => merge_dialog(rv, Some(arg)).await,
         "merge-commit" => {
             let short = &arg[..arg.len().min(10)];
-            if confirm(&parent, "Merge Commit", &format!("Merge commit {short} into the current branch?"), "Merge", false).await {
-                rv.run_ops("Merge", vec![s(&["merge", "--no-edit", &arg])], OpOptions::default()).await;
+            if confirm(&parent, &gettext("Merge Commit"), &gettext_f("Merge commit {commit} into the current branch?", &[("commit", short)]), &gettext("Merge"), false).await {
+                rv.run_ops(&gettext("Merge"), vec![s(&["merge", "--no-edit", &arg])], OpOptions::default()).await;
             }
         }
         "stash" => stash_dialog(rv).await,
         "stash-apply" => {
-            let form = Form::new("Apply Stash", "Apply");
-            form.description(&format!("Apply {arg} to the working copy?"));
-            let del = form.switch("Delete after applying", "", false);
-            let idx = form.switch("Also restore the staged state (--index)", "", false);
+            let form = Form::new(&gettext("Apply Stash"), &gettext("Apply"));
+            form.description(&gettext_f("Apply {stash} to the working copy?", &[("stash", &arg)]));
+            let del = form.switch(&gettext("Delete after applying"), "", false);
+            let idx = form.switch(&gettext("Also restore the staged state (--index)"), "", false);
             form.focus_ok();
             if form.run(&parent).await {
                 let mut c = s(&["stash", if del.is_active() { "pop" } else { "apply" }]);
@@ -93,38 +94,38 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                     c.push("--index".into());
                 }
                 c.push(arg);
-                rv.run_ops("Apply Stash", vec![c], OpOptions::default()).await;
+                rv.run_ops(&gettext("Apply Stash"), vec![c], OpOptions::default()).await;
             }
         }
         "stash-pop" => {
-            rv.run_ops("Pop Stash", vec![s(&["stash", "pop", &arg])], OpOptions::default()).await;
+            rv.run_ops(&gettext("Pop Stash"), vec![s(&["stash", "pop", &arg])], OpOptions::default()).await;
         }
         "stash-drop" => {
-            if confirm(&parent, "Delete Stash?", &format!("{arg} will be permanently deleted."), "Delete", true).await {
-                rv.run_ops("Delete Stash", vec![s(&["stash", "drop", &arg])], OpOptions::default()).await;
+            if confirm(&parent, &gettext("Delete Stash?"), &gettext_f("{stash} will be permanently deleted.", &[("stash", &arg)]), &gettext("Delete"), true).await {
+                rv.run_ops(&gettext("Delete Stash"), vec![s(&["stash", "drop", &arg])], OpOptions::default()).await;
             }
         }
         "stash-show" => {
             let git = rv.git.clone();
             let a = arg.clone();
             match bg(move || git::log::commit(&git, &a)).await {
-                Ok(c) => super::history::commit_window(rv, &format!("Stash {arg}"), c),
-                Err(e) => show_error(&parent, "Could not show stash", &e.to_string()),
+                Ok(c) => super::history::commit_window(rv, &gettext_f("Stash {stash}", &[("stash", &arg)]), c),
+                Err(e) => show_error(&parent, &gettext("Could not show stash"), &e.to_string()),
             }
         }
         "stash-branch" => {
-            if let Some(b) = ask_text(&parent, "Create Branch from Stash", "The stash is applied on a new branch created from the commit it was based on.", "", "Create").await {
-                rv.run_ops("Stash Branch", vec![s(&["stash", "branch", &b, &arg])], OpOptions::default()).await;
+            if let Some(b) = ask_text(&parent, &gettext("Create Branch from Stash"), &gettext("The stash is applied on a new branch created from the commit it was based on."), "", &gettext("Create")).await {
+                rv.run_ops(&gettext("Stash Branch"), vec![s(&["stash", "branch", &b, &arg])], OpOptions::default()).await;
             }
         }
         "discard" => discard_dialog(rv).await,
         "tag" => tag_dialog(rv, &arg).await,
         "delete-tag" => {
-            let form = Form::new("Delete Tag", "Delete");
-            form.description(&format!("Delete tag “{arg}”?"));
+            let form = Form::new(&gettext("Delete Tag"), &gettext("Delete"));
+            form.description(&gettext_f("Delete tag “{tag}”?", &[("tag", &arg)]));
             let remotes: Vec<String> = rv.snapshot().remotes.iter().map(|r| r.name.clone()).collect();
-            let remote_sw = form.switch("Also remove the tag from the remote", "", false);
-            let remote = form.combo("Remote", &remotes, rv.snapshot().default_remote().as_deref());
+            let remote_sw = form.switch(&gettext("Also remove the tag from the remote"), "", false);
+            let remote = form.combo(&gettext("Remote"), &remotes, rv.snapshot().default_remote().as_deref());
             remote.set_visible(!remotes.is_empty());
             remote_sw.set_visible(!remotes.is_empty());
             form.ok.add_css_class("destructive-action");
@@ -134,17 +135,17 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                 if remote_sw.is_active() {
                     cmds.push(s(&["push", "--progress", &combo_value(&remote), &format!(":refs/tags/{arg}")]));
                 }
-                rv.run_ops("Delete Tag", cmds, OpOptions { network: remote_sw.is_active(), ..Default::default() }).await;
+                rv.run_ops(&gettext("Delete Tag"), cmds, OpOptions { network: remote_sw.is_active(), ..Default::default() }).await;
             }
         }
         "push-tag" => {
             let remotes: Vec<String> = rv.snapshot().remotes.iter().map(|r| r.name.clone()).collect();
             if remotes.is_empty() {
-                show_error(&parent, "No remotes", "Add a remote in Repository Settings first.");
+                show_error(&parent, &gettext("No remotes"), &gettext("Add a remote in Repository Settings first."));
                 return;
             }
-            let form = Form::new(if arg.is_empty() { "Push All Tags" } else { "Push Tag" }, "Push");
-            let remote = form.combo("Push to repository", &remotes, rv.snapshot().default_remote().as_deref());
+            let form = Form::new(&if arg.is_empty() { gettext("Push All Tags") } else { gettext("Push Tag") }, &gettext("Push"));
+            let remote = form.combo(&gettext("Push to repository"), &remotes, rv.snapshot().default_remote().as_deref());
             form.focus_ok();
             if form.run(&parent).await {
                 let r = combo_value(&remote);
@@ -153,14 +154,14 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                 } else {
                     s(&["push", "--progress", &r, &format!("refs/tags/{arg}")])
                 };
-                rv.run_ops("Push Tag", vec![c], net()).await;
+                rv.run_ops(&gettext("Push Tag"), vec![c], net()).await;
             }
         }
         "flow" => super::flow::show(rv).await,
         "flow-finish" => super::flow::finish(rv, &arg).await,
         "terminal" => {
             if let Err(e) = super::open_terminal(&rv.git.workdir) {
-                show_error(&parent, "Could not open terminal", &e);
+                show_error(&parent, &gettext("Could not open terminal"), &e);
             }
         }
         "files" => super::open_folder(&rv.git.workdir),
@@ -174,10 +175,10 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
         "show-search" => rv.show_view(View::Search),
         "lfs" => super::repo_settings::lfs_dialog(rv).await,
         "add-submodule" => {
-            let form = Form::new("Add Submodule", "Add");
-            let url = form.entry("Source URL", "");
-            let path = form.entry("Local relative path", "");
-            let branch = form.entry("Branch (optional)", "");
+            let form = Form::new(&gettext("Add Submodule"), &gettext("Add"));
+            let url = form.entry(&gettext("Source URL"), "");
+            let path = form.entry(&gettext("Local relative path"), "");
+            let branch = form.entry(&gettext("Branch (optional)"), "");
             let (u2, p2) = (url.clone(), path.clone());
             url.connect_changed(move |e| {
                 if p2.text().is_empty() || !p2.has_focus() {
@@ -197,7 +198,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                 if !path.text().trim().is_empty() {
                     c.push(path.text().trim().to_string());
                 }
-                rv.run_ops("Add Submodule", vec![c], net()).await;
+                rv.run_ops(&gettext("Add Submodule"), vec![c], net()).await;
             }
         }
         "update-submodule" => {
@@ -206,25 +207,25 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                 c.push("--".into());
                 c.push(arg);
             }
-            rv.run_ops("Update Submodules", vec![c], net()).await;
+            rv.run_ops(&gettext("Update Submodules"), vec![c], net()).await;
         }
         "sync-submodule" => {
-            rv.run_ops("Sync Submodule", vec![s(&["submodule", "sync", "--recursive", "--", &arg])], OpOptions::default()).await;
+            rv.run_ops(&gettext("Sync Submodule"), vec![s(&["submodule", "sync", "--recursive", "--", &arg])], OpOptions::default()).await;
         }
         "open-submodule" => {
             let p = rv.git.workdir.join(&arg);
             if p.join(".git").exists() {
                 (rv.open_repo)(p);
             } else {
-                show_error(&parent, "Submodule not initialised", "Use “Update” to initialise the submodule first.");
+                show_error(&parent, &gettext("Submodule not initialised"), &gettext("Use “Update” to initialise the submodule first."));
             }
         }
         "remove-submodule" => {
-            if confirm(&parent, "Remove Submodule?", &format!("Remove submodule “{arg}” from the repository?"), "Remove", true).await {
+            if confirm(&parent, &gettext("Remove Submodule?"), &gettext_f("Remove submodule “{path}” from the repository?", &[("path", &arg)]), &gettext("Remove"), true).await {
                 let gd = rv.git_dir.join("modules").join(&arg);
                 let ok = rv
                     .run_ops(
-                        "Remove Submodule",
+                        &gettext("Remove Submodule"),
                         vec![s(&["submodule", "deinit", "-f", "--", &arg]), s(&["rm", "-f", "--", &arg])],
                         OpOptions::default(),
                     )
@@ -238,18 +239,22 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
         "subtree-pull" | "subtree-push" => {
             let st = rv.snapshot().subtrees.iter().find(|x| x.prefix == arg).cloned();
             let Some(st) = st else { return };
-            let verb = if name == "subtree-pull" { "pull" } else { "push" };
+            let (verb, title) = if name == "subtree-pull" {
+                ("pull", gettext("Subtree Pull"))
+            } else {
+                ("push", gettext("Subtree Push"))
+            };
             let mut c = s(&["subtree", verb, &format!("--prefix={}", st.prefix), &st.url, &st.branch]);
             if verb == "pull" {
                 c.push("--squash".into());
                 c.push("-m".into());
                 c.push(format!("Merge subtree {}", st.prefix));
             }
-            rv.run_ops(&format!("Subtree {verb}"), vec![c], net()).await;
+            rv.run_ops(&title, vec![c], net()).await;
         }
         "subtree-unlink" => {
             rv.run_ops(
-                "Unlink Subtree",
+                &gettext("Unlink Subtree"),
                 vec![s(&["config", "--remove-section", &format!("gitree.subtree.{arg}")])],
                 OpOptions::default(),
             )
@@ -286,10 +291,10 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
         }
         "rebase-interactive" => super::rebase::show(rv, Some(arg)).await,
         "clean" => {
-            let form = Form::new("Remove Untracked Files", "Remove");
-            form.description("Permanently deletes files that are not tracked by Git.");
-            let dirs = form.switch("Include untracked directories", "", true);
-            let ignored = form.switch("Also remove ignored files", "e.g. build output", false);
+            let form = Form::new(&gettext("Remove Untracked Files"), &gettext("Remove"));
+            form.description(&gettext("Permanently deletes files that are not tracked by Git."));
+            let dirs = form.switch(&gettext("Include untracked directories"), "", true);
+            let ignored = form.switch(&gettext("Also remove ignored files"), &gettext("e.g. build output"), false);
             form.ok.add_css_class("destructive-action");
             form.focus_cancel();
             if form.run(&parent).await {
@@ -300,11 +305,11 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                 if ignored.is_active() {
                     c.push("-x".into());
                 }
-                rv.run_ops("Clean", vec![c], OpOptions::default()).await;
+                rv.run_ops(&gettext("Clean"), vec![c], OpOptions::default()).await;
             }
         }
         "gc" => {
-            rv.run_ops("Garbage Collect", vec![s(&["gc", "--progress"])], net()).await;
+            rv.run_ops(&gettext("Garbage Collect"), vec![s(&["gc", "--progress"])], net()).await;
         }
         "op-continue" | "op-abort" | "op-skip" => op_control(rv, name).await,
         "checkout-ref" => checkout_ref(rv, &arg).await,
@@ -314,46 +319,49 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             let short = if git::looks_like_oid(&arg) { &arg[..arg.len().min(10)] } else { &arg };
             if confirm(
                 &parent,
-                "Rebase",
-                &format!("Rebase “{cur}” onto “{short}”?\n\nThis rewrites the commits of {cur}. Don't rebase commits that have already been pushed and shared."),
-                "Rebase",
+                &gettext("Rebase"),
+                &gettext_f(
+                    "Rebase “{branch}” onto “{onto}”?\n\nThis rewrites the commits of {branch}. Don't rebase commits that have already been pushed and shared.",
+                    &[("branch", &cur), ("onto", short)],
+                ),
+                &gettext("Rebase"),
                 false,
             )
             .await
             {
-                rv.run_ops("Rebase", vec![s(&["rebase", &arg])], OpOptions::default()).await;
+                rv.run_ops(&gettext("Rebase"), vec![s(&["rebase", &arg])], OpOptions::default()).await;
             }
         }
         "delete-branch" => delete_branch(rv, &arg).await,
         "delete-remote-branch" => {
             let (remote, branch) = arg.split_once('/').unwrap_or(("origin", &arg));
-            if confirm(&parent, "Delete Remote Branch?", &format!("Delete “{branch}” from {remote}?"), "Delete", true).await {
-                rv.run_ops("Delete Remote Branch", vec![s(&["push", "--progress", remote, "--delete", branch])], net()).await;
+            if confirm(&parent, &gettext("Delete Remote Branch?"), &gettext_f("Delete “{branch}” from {remote}?", &[("branch", branch), ("remote", remote)]), &gettext("Delete"), true).await {
+                rv.run_ops(&gettext("Delete Remote Branch"), vec![s(&["push", "--progress", remote, "--delete", branch])], net()).await;
             }
         }
         "rename-branch" => {
-            if let Some(n) = ask_text(&parent, "Rename Branch", &format!("New name for “{arg}”"), &arg, "Rename").await
+            if let Some(n) = ask_text(&parent, &gettext("Rename Branch"), &gettext_f("New name for “{branch}”", &[("branch", &arg)]), &arg, &gettext("Rename")).await
                 && n != arg {
-                    rv.run_ops("Rename Branch", vec![s(&["branch", "-m", &arg, &n])], OpOptions::default()).await;
+                    rv.run_ops(&gettext("Rename Branch"), vec![s(&["branch", "-m", &arg, &n])], OpOptions::default()).await;
                 }
         }
         "track" => {
             let snap = rv.snapshot();
-            let mut remotes: Vec<String> = vec!["(none)".into()];
+            let mut remotes: Vec<String> = vec![gettext("(none)")];
             remotes.extend(snap.refs.remotes().map(|r| r.name.clone()));
             let cur = snap.refs.find_local(&arg).and_then(|r| r.upstream.clone());
-            let form = Form::new("Track Remote Branch", "OK");
-            form.description(&format!("Choose the remote branch “{arg}” should track."));
-            let c = form.combo("Remote branch", &remotes, cur.as_deref());
+            let form = Form::new(&gettext("Track Remote Branch"), &gettext("OK"));
+            form.description(&gettext_f("Choose the remote branch “{branch}” should track.", &[("branch", &arg)]));
+            let c = form.combo(&gettext("Remote branch"), &remotes, cur.as_deref());
             form.focus(&c);
             if form.run(&parent).await {
                 let v = combo_value(&c);
-                let cmd = if v == "(none)" {
+                let cmd = if c.selected() == 0 {
                     s(&["branch", "--unset-upstream", &arg])
                 } else {
                     s(&["branch", &format!("--set-upstream-to={v}"), &arg])
                 };
-                rv.run_ops("Track", vec![cmd], OpOptions::default()).await;
+                rv.run_ops(&gettext("Track"), vec![cmd], OpOptions::default()).await;
             }
         }
         "diff-ref" => {
@@ -362,26 +370,26 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
             let r = bg(move || Ok::<_, git::GitError>((git::log::commit(&git, "HEAD")?, git::log::commit(&git, &a)?))).await;
             match r {
                 Ok((head, other)) => range_window(rv, &format!("HEAD ↔ {arg}"), head, other),
-                Err(e) => show_error(&parent, "Could not compare", &e.to_string()),
+                Err(e) => show_error(&parent, &gettext("Could not compare"), &e.to_string()),
             }
         }
         "copy-text" => {
             copy_to_clipboard(&arg);
-            rv.toast("Copied to clipboard");
+            rv.toast(&gettext("Copied to clipboard"));
         }
         "copy-message" => {
             let git = rv.git.clone();
             if let Ok(m) = bg(move || git::log::message(&git, &arg)).await {
                 copy_to_clipboard(m.trim());
-                rv.toast("Commit message copied");
+                rv.toast(&gettext("Commit message copied"));
             }
         }
         "reset-to" => reset_dialog(rv, &arg).await,
         "revert" => {
             let short = &arg[..arg.len().min(10)];
-            let form = Form::new("Reverse Commit", "Reverse");
-            form.description(&format!("Create a new commit that undoes the changes of {short}."));
-            let commit_now = form.switch("Commit immediately", "", true);
+            let form = Form::new(&gettext("Reverse Commit"), &gettext("Reverse"));
+            form.description(&gettext_f("Create a new commit that undoes the changes of {commit}.", &[("commit", short)]));
+            let commit_now = form.switch(&gettext("Commit immediately"), "", true);
             form.focus_ok();
             if form.run(&parent).await {
                 let git = rv.git.clone();
@@ -396,18 +404,24 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                     c.push("1".into());
                 }
                 c.push(arg);
-                rv.run_ops("Reverse Commit", vec![c], OpOptions::default()).await;
+                rv.run_ops(&gettext("Reverse Commit"), vec![c], OpOptions::default()).await;
             }
         }
         "cherry-pick" => {
             let oids: Vec<&str> = arg.split_whitespace().collect();
-            let form = Form::new("Cherry Pick", "Cherry Pick");
-            form.description(&format!(
-                "Apply {} onto the current branch.",
-                if oids.len() == 1 { format!("commit {}", &oids[0][..oids[0].len().min(10)]) } else { format!("{} commits", oids.len()) }
-            ));
-            let commit_now = form.switch("Commit immediately", "", true);
-            let x = form.switch("Append “cherry picked from” line", "", false);
+            let form = Form::new(&gettext("Cherry Pick"), &gettext("Cherry Pick"));
+            form.description(&if oids.len() == 1 {
+                gettext_f("Apply commit {commit} onto the current branch.", &[("commit", &oids[0][..oids[0].len().min(10)])])
+            } else {
+                ngettext_f(
+                    "Apply {n} commit onto the current branch.",
+                    "Apply {n} commits onto the current branch.",
+                    oids.len() as u32,
+                    &[],
+                )
+            });
+            let commit_now = form.switch(&gettext("Commit immediately"), "", true);
+            let x = form.switch(&gettext("Append “cherry picked from” line"), "", false);
             form.focus_ok();
             if form.run(&parent).await {
                 let mut c = s(&["cherry-pick"]);
@@ -418,12 +432,12 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                     c.push("-x".into());
                 }
                 c.extend(oids.iter().map(|o| o.to_string()));
-                rv.run_ops("Cherry Pick", vec![c], OpOptions::default()).await;
+                rv.run_ops(&gettext("Cherry Pick"), vec![c], OpOptions::default()).await;
             }
         }
         "archive" => {
             let fd = gtk::FileDialog::builder()
-                .title("Archive")
+                .title(gettext("Archive"))
                 .initial_name(format!("{}-{}.zip", rv.name, &arg[..arg.len().min(7)]))
                 .build();
             let win = parent.root().and_downcast::<gtk::Window>();
@@ -437,13 +451,13 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                     } else {
                         "zip"
                     };
-                    rv.run_ops("Archive", vec![s(&["archive", &format!("--format={fmt}"), "-o", &ps, &arg])], OpOptions::default()).await;
-                    rv.toast("Archive created");
+                    rv.run_ops(&gettext("Archive"), vec![s(&["archive", &format!("--format={fmt}"), "-o", &ps, &arg])], OpOptions::default()).await;
+                    rv.toast(&gettext("Archive created"));
                 }
         }
         "patch" => {
             let fd = gtk::FileDialog::builder()
-                .title("Create Patch")
+                .title(gettext("Create Patch"))
                 .initial_name(format!("{}.patch", &arg[..arg.len().min(10)]))
                 .build();
             let win = parent.root().and_downcast::<gtk::Window>();
@@ -462,8 +476,8 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                     })
                     .await;
                     match r {
-                        Ok(()) => rv.toast("Patch created"),
-                        Err(e) => show_error(&parent, "Could not create patch", &e.to_string()),
+                        Ok(()) => rv.toast(&gettext("Patch created")),
+                        Err(e) => show_error(&parent, &gettext("Could not create patch"), &e.to_string()),
                     }
                 }
         }
@@ -472,14 +486,14 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
         "remote-add" => super::repo_settings::edit_remote(rv, None).await,
         "remote-edit" => super::repo_settings::edit_remote(rv, Some(arg)).await,
         "remote-remove" => {
-            if confirm(&parent, "Remove Remote?", &format!("Remove remote “{arg}” and its remote-tracking branches?"), "Remove", true).await {
-                rv.run_ops("Remove Remote", vec![s(&["remote", "remove", &arg])], OpOptions::default()).await;
+            if confirm(&parent, &gettext("Remove Remote?"), &gettext_f("Remove remote “{remote}” and its remote-tracking branches?", &[("remote", &arg)]), &gettext("Remove"), true).await {
+                rv.run_ops(&gettext("Remove Remote"), vec![s(&["remote", "remove", &arg])], OpOptions::default()).await;
             }
         }
         "remote-copy-url" => {
             if let Some(r) = rv.snapshot().remotes.iter().find(|r| r.name == arg) {
                 copy_to_clipboard(&r.fetch_url);
-                rv.toast("URL copied");
+                rv.toast(&gettext("URL copied"));
             }
         }
         "open-remote" => {
@@ -490,7 +504,7 @@ async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
                     let l = gtk::UriLauncher::new(&url);
                     l.launch(parent.root().and_downcast_ref::<gtk::Window>(), None::<&gio::Cancellable>, |_| {});
                 }
-                None => rv.toast("No web URL for this remote"),
+                None => rv.toast(&gettext("No web URL for this remote")),
             }
         }
         // Development aids used by scripts/screenshot.sh.
@@ -534,11 +548,11 @@ pub fn web_url(url: &str) -> Option<String> {
 async fn pull_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
     let snap = rv.snapshot();
     if snap.remotes.is_empty() {
-        show_error(&rv.widget, "No remotes", "This repository has no remotes. Add one in Repository Settings.");
+        show_error(&rv.widget, &gettext("No remotes"), &gettext("This repository has no remotes. Add one in Repository Settings."));
         return;
     }
     let Some(current) = snap.current_branch().map(String::from) else {
-        show_error(&rv.widget, "Detached HEAD", "Check out a branch before pulling.");
+        show_error(&rv.widget, &gettext("Detached HEAD"), &gettext("Check out a branch before pulling."));
         return;
     };
     let remotes: Vec<String> = snap.remotes.iter().map(|r| r.name.clone()).collect();
@@ -556,9 +570,9 @@ async fn pull_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
         }
     };
 
-    let form = Form::new("Pull", "Pull");
+    let form = Form::new(&gettext("Pull"), &gettext("Pull"));
     form.group("");
-    let remote = form.combo("Pull from repository", &remotes, pre_remote.as_deref());
+    let remote = form.combo(&gettext("Pull from repository"), &remotes, pre_remote.as_deref());
     let branches_for = {
         let snap = snap.clone();
         move |r: &str| -> Vec<String> {
@@ -570,8 +584,8 @@ async fn pull_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
         }
     };
     let rb = branches_for(&combo_value(&remote));
-    let branch = form.combo("Remote branch to pull", &rb, pre_branch.as_deref());
-    form.info("Pull into local branch", &current);
+    let branch = form.combo(&gettext("Remote branch to pull"), &rb, pre_branch.as_deref());
+    form.info(&gettext("Pull into local branch"), &current);
     let bf = branches_for.clone();
     let b2 = branch.clone();
     remote.connect_selected_notify(move |c| {
@@ -579,11 +593,11 @@ async fn pull_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
         let refs: Vec<&str> = list.iter().map(|s| s.as_str()).collect();
         b2.set_model(Some(&gtk::StringList::new(&refs)));
     });
-    form.group("Options");
-    let commit_now = form.switch("Commit merged changes immediately", "", true);
-    let log = form.switch("Include messages from commits being merged in merge commit", "", false);
-    let no_ff = form.switch("Create new commit even if fast-forward merge", "", false);
-    let rebase = form.switch("Rebase instead of merge", "Warning: make sure you haven't pushed your changes", false);
+    form.group(&gettext("Options"));
+    let commit_now = form.switch(&gettext("Commit merged changes immediately"), "", true);
+    let log = form.switch(&gettext("Include messages from commits being merged in merge commit"), "", false);
+    let no_ff = form.switch(&gettext("Create new commit even if fast-forward merge"), "", false);
+    let rebase = form.switch(&gettext("Rebase instead of merge"), &gettext("Warning: make sure you haven't pushed your changes"), false);
     let b3 = branch.clone();
     form.validate(move || b3.selected_item().is_some());
     form.watch_combo(&branch);
@@ -608,19 +622,19 @@ async fn pull_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
     }
     c.push(combo_value(&remote));
     c.push(combo_value(&branch));
-    rv.run_ops("Pull", vec![c], net()).await;
+    rv.run_ops(&gettext("Pull"), vec![c], net()).await;
 }
 
 async fn push_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
     let snap = rv.snapshot();
     if snap.remotes.is_empty() {
-        show_error(&rv.widget, "No remotes", "This repository has no remotes. Add one in Repository Settings.");
+        show_error(&rv.widget, &gettext("No remotes"), &gettext("This repository has no remotes. Add one in Repository Settings."));
         return;
     }
     let remotes: Vec<String> = snap.remotes.iter().map(|r| r.name.clone()).collect();
-    let form = Form::new("Push", "Push");
-    let remote = form.combo("Push to repository", &remotes, snap.default_remote().as_deref());
-    form.group("Branches to push");
+    let form = Form::new(&gettext("Push"), &gettext("Push"));
+    let remote = form.combo(&gettext("Push to repository"), &remotes, snap.default_remote().as_deref());
+    form.group(&gettext("Branches to push"));
     let mut rows: Vec<(String, gtk::CheckButton, gtk::Entry, gtk::CheckButton, bool)> = Vec::new();
     let pre = preselect.clone().or_else(|| snap.current_branch().map(String::from));
     for b in snap.refs.locals() {
@@ -639,24 +653,24 @@ async fn push_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
             .text(&remote_name)
             .valign(gtk::Align::Center)
             .width_chars(16)
-            .tooltip_text("Remote branch name")
+            .tooltip_text(gettext("Remote branch name"))
             .build();
         row.add_suffix(&entry);
-        let track = gtk::CheckButton::with_label("Track");
+        let track = gtk::CheckButton::with_label(&gettext("Track"));
         track.set_active(b.upstream.is_none());
-        track.set_tooltip_text(Some("Set as upstream (-u)"));
+        track.set_tooltip_text(Some(&gettext("Set as upstream (-u)")));
         row.add_suffix(&track);
         if b.ahead > 0 {
-            row.set_subtitle(&format!("{} commit(s) ahead", b.ahead));
+            row.set_subtitle(&ngettext_f("{n} commit ahead", "{n} commits ahead", b.ahead, &[]));
         } else if b.upstream.is_none() {
-            row.set_subtitle("Not yet pushed");
+            row.set_subtitle(&gettext("Not yet pushed"));
         }
         form.add(&row);
         rows.push((b.name.clone(), check, entry, track, b.upstream.is_some()));
     }
-    form.group("Options");
-    let tags = form.switch("Push all tags", "", false);
-    let force = form.switch("Force push (with lease)", "Overwrites remote commits; use with care", false);
+    form.group(&gettext("Options"));
+    let tags = form.switch(&gettext("Push all tags"), "", false);
+    let force = form.switch(&gettext("Force push (with lease)"), &gettext("Overwrites remote commits; use with care"), false);
     let checks: Vec<gtk::CheckButton> = rows.iter().map(|r| r.1.clone()).collect();
     for c in &checks {
         let f = Rc::downgrade(&form);
@@ -718,19 +732,19 @@ async fn push_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
     if tags.is_active() {
         cmds.push(s(&["push", "--progress", &r, "--tags"]));
     }
-    rv.run_ops("Push", cmds, net()).await;
+    rv.run_ops(&gettext("Push"), cmds, net()).await;
 }
 
 async fn fetch_dialog(rv: &Rc<RepoView>) {
     let snap = rv.snapshot();
     if snap.remotes.is_empty() {
-        show_error(&rv.widget, "No remotes", "This repository has no remotes.");
+        show_error(&rv.widget, &gettext("No remotes"), &gettext("This repository has no remotes."));
         return;
     }
-    let form = Form::new("Fetch", "OK");
-    let all = form.switch("Fetch from all remotes", "", true);
-    let prune = form.switch("Prune tracking branches no longer present on remote(s)", "", true);
-    let tags = form.switch("Fetch and store all tags locally", "", true);
+    let form = Form::new(&gettext("Fetch"), &gettext("OK"));
+    let all = form.switch(&gettext("Fetch from all remotes"), "", true);
+    let prune = form.switch(&gettext("Prune tracking branches no longer present on remote(s)"), "", true);
+    let tags = form.switch(&gettext("Fetch and store all tags locally"), "", true);
     form.focus_ok();
     if !form.run(&rv.widget).await {
         return;
@@ -749,7 +763,7 @@ async fn fetch_dialog(rv: &Rc<RepoView>) {
         && let Some(r) = snap.default_remote() {
             c.push(r);
         }
-    rv.run_ops("Fetch", vec![c], net()).await;
+    rv.run_ops(&gettext("Fetch"), vec![c], net()).await;
 }
 
 fn valid_ref_name(git: &Git, name: &str) -> bool {
@@ -758,18 +772,18 @@ fn valid_ref_name(git: &Git, name: &str) -> bool {
 
 async fn branch_dialog(rv: &Rc<RepoView>, at: &str) {
     let snap = rv.snapshot();
-    let form = Form::new("New Branch", "Create Branch");
-    let current = snap.current_branch().unwrap_or("detached HEAD").to_string();
-    form.info("Current branch", &current);
-    let name = form.entry("New branch name", "");
+    let form = Form::new(&gettext("New Branch"), &gettext("Create Branch"));
+    let current = snap.current_branch().map(String::from).unwrap_or_else(|| gettext("detached HEAD"));
+    form.info(&gettext("Current branch"), &current);
+    let name = form.entry(&gettext("New branch name"), "");
     let from = if at.is_empty() {
-        form.info("Commit", "Working copy parent (HEAD)");
+        form.info(&pgettext("noun", "Commit"), &gettext("Working copy parent (HEAD)"));
         None
     } else {
-        form.info("Commit", &format!("Specified commit: {}", &at[..at.len().min(10)]));
+        form.info(&pgettext("noun", "Commit"), &gettext_f("Specified commit: {commit}", &[("commit", &at[..at.len().min(10)])]));
         Some(at.to_string())
     };
-    let checkout = form.switch("Checkout new branch", "", true);
+    let checkout = form.switch(&gettext("Checkout new branch"), "", true);
     let git = rv.git.clone();
     let existing: Vec<String> = snap.refs.locals().map(|r| r.name.clone()).collect();
     let n2 = name.clone();
@@ -791,7 +805,7 @@ async fn branch_dialog(rv: &Rc<RepoView>, at: &str) {
     if let Some(f) = from {
         c.push(f);
     }
-    rv.run_ops("New Branch", vec![c], OpOptions::default()).await;
+    rv.run_ops(&gettext("New Branch"), vec![c], OpOptions::default()).await;
 }
 
 async fn merge_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
@@ -805,17 +819,17 @@ async fn merge_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
         .collect();
     candidates.extend(snap.refs.remotes().map(|r| r.name.clone()));
     if candidates.is_empty() {
-        show_error(&rv.widget, "Nothing to merge", "There are no other branches.");
+        show_error(&rv.widget, &gettext("Nothing to merge"), &gettext("There are no other branches."));
         return;
     }
-    let form = Form::new("Merge", "Merge");
-    form.info("Merge into", &current);
-    let from = form.combo("Branch to merge", &candidates, preselect.as_deref());
-    form.group("Options");
-    let commit_now = form.switch("Commit merged changes immediately", "", true);
-    let log = form.switch("Include messages from commits being merged in merge commit", "", false);
-    let no_ff = form.switch("Create a new commit even if fast-forward is possible", "", false);
-    let squash = form.switch("Squash (merge changes as a single commit)", "", false);
+    let form = Form::new(&gettext("Merge"), &gettext("Merge"));
+    form.info(&gettext("Merge into"), &current);
+    let from = form.combo(&gettext("Branch to merge"), &candidates, preselect.as_deref());
+    form.group(&gettext("Options"));
+    let commit_now = form.switch(&gettext("Commit merged changes immediately"), "", true);
+    let log = form.switch(&gettext("Include messages from commits being merged in merge commit"), "", false);
+    let no_ff = form.switch(&gettext("Create a new commit even if fast-forward is possible"), "", false);
+    let squash = form.switch(&gettext("Squash (merge changes as a single commit)"), "", false);
     form.focus(&from);
     if !form.run(&rv.widget).await {
         return;
@@ -835,19 +849,19 @@ async fn merge_dialog(rv: &Rc<RepoView>, preselect: Option<String>) {
         }
     }
     c.push(combo_value(&from));
-    rv.run_ops("Merge", vec![c], OpOptions::default()).await;
+    rv.run_ops(&gettext("Merge"), vec![c], OpOptions::default()).await;
 }
 
 async fn stash_dialog(rv: &Rc<RepoView>) {
     if !rv.snapshot().has_changes() {
-        rv.toast("There are no local changes to stash");
+        rv.toast(&gettext("There are no local changes to stash"));
         return;
     }
-    let form = Form::new("Stash", "Stash");
-    form.description("Stash all local changes so you can reapply them later.");
-    let msg = form.entry("Message", "");
-    let keep = form.switch("Keep staged changes", "", false);
-    let untracked = form.switch("Include untracked files", "", true);
+    let form = Form::new(&gettext("Stash"), &gettext("Stash"));
+    form.description(&gettext("Stash all local changes so you can reapply them later."));
+    let msg = form.entry(&gettext("Message"), "");
+    let keep = form.switch(&gettext("Keep staged changes"), "", false);
+    let untracked = form.switch(&gettext("Include untracked files"), "", true);
     form.focus(&msg);
     if !form.run(&rv.widget).await {
         return;
@@ -863,19 +877,19 @@ async fn stash_dialog(rv: &Rc<RepoView>) {
     if untracked.is_active() {
         c.push("--include-untracked".into());
     }
-    rv.run_ops("Stash", vec![c], OpOptions::default()).await;
+    rv.run_ops(&gettext("Stash"), vec![c], OpOptions::default()).await;
 }
 
 async fn discard_dialog(rv: &Rc<RepoView>) {
     let snap = rv.snapshot();
     if !snap.has_changes() {
-        rv.toast("There are no local changes to discard");
+        rv.toast(&gettext("There are no local changes to discard"));
         return;
     }
-    let form = Form::new("Discard Changes", "Discard");
-    form.description("Discard local changes. This cannot be undone.");
-    let tracked = form.switch("Reset all tracked files to HEAD", "Staged and unstaged changes are lost", true);
-    let untracked = form.switch("Remove untracked files", "", false);
+    let form = Form::new(&gettext("Discard Changes"), &gettext("Discard"));
+    form.description(&gettext("Discard local changes. This cannot be undone."));
+    let tracked = form.switch(&gettext("Reset all tracked files to HEAD"), &gettext("Staged and unstaged changes are lost"), true);
+    let untracked = form.switch(&gettext("Remove untracked files"), "", false);
     form.ok.add_css_class("destructive-action");
     let (t2, u2) = (tracked.clone(), untracked.clone());
     form.validate(move || t2.is_active() || u2.is_active());
@@ -902,30 +916,30 @@ async fn discard_dialog(rv: &Rc<RepoView>) {
     if untracked.is_active() {
         cmds.push(s(&["clean", "-fd"]));
     }
-    rv.run_ops("Discard", cmds, OpOptions::default()).await;
+    rv.run_ops(&gettext("Discard"), cmds, OpOptions::default()).await;
 }
 
 async fn tag_dialog(rv: &Rc<RepoView>, at: &str) {
     let snap = rv.snapshot();
-    let form = Form::new("Add Tag", "Add");
-    let name = form.entry("Tag name", "");
+    let form = Form::new(&gettext("Add Tag"), &gettext("Add"));
+    let name = form.entry(&gettext("Tag name"), "");
     let target = if at.is_empty() {
-        form.info("Commit", "Working copy parent (HEAD)");
+        form.info(&pgettext("noun", "Commit"), &gettext("Working copy parent (HEAD)"));
         "HEAD".to_string()
     } else {
-        form.info("Commit", &format!("Specified commit: {}", &at[..at.len().min(10)]));
+        form.info(&pgettext("noun", "Commit"), &gettext_f("Specified commit: {commit}", &[("commit", &at[..at.len().min(10)])]));
         at.to_string()
     };
     let remotes: Vec<String> = snap.remotes.iter().map(|r| r.name.clone()).collect();
-    let push = form.switch("Push tag", "", false);
-    let remote = form.combo("Remote", &remotes, snap.default_remote().as_deref());
+    let push = form.switch(&gettext("Push tag"), "", false);
+    let remote = form.combo(&gettext("Remote"), &remotes, snap.default_remote().as_deref());
     push.set_visible(!remotes.is_empty());
     remote.set_visible(!remotes.is_empty());
-    form.group("Advanced");
-    let light = form.switch("Lightweight tag (no message)", "", false);
-    let sign = form.switch("Sign tag (GPG)", "", false);
-    let force = form.switch("Move existing tag (force)", "", false);
-    let msg = form.text("Message", "", 60);
+    form.group(&gettext("Advanced"));
+    let light = form.switch(&gettext("Lightweight tag (no message)"), "", false);
+    let sign = form.switch(&gettext("Sign tag (GPG)"), "", false);
+    let force = form.switch(&gettext("Move existing tag (force)"), "", false);
+    let msg = form.text(&gettext("Message"), "", 60);
     let git = rv.git.clone();
     let n2 = name.clone();
     form.watch(&name);
@@ -964,19 +978,19 @@ async fn tag_dialog(rv: &Rc<RepoView>, at: &str) {
         p.push(format!("refs/tags/{n}"));
         cmds.push(p);
     }
-    rv.run_ops("Tag", cmds, OpOptions { network: push.is_active(), ..Default::default() }).await;
+    rv.run_ops(&gettext("Tag"), cmds, OpOptions { network: push.is_active(), ..Default::default() }).await;
 }
 
 async fn reset_dialog(rv: &Rc<RepoView>, oid: &str) {
     let cur = rv.snapshot().current_branch().unwrap_or("HEAD").to_string();
-    let form = Form::new("Reset to Commit", "Reset");
-    form.description(&format!("Reset “{cur}” to commit {}.", &oid[..oid.len().min(10)]));
+    let form = Form::new(&gettext("Reset to Commit"), &gettext("Reset"));
+    form.description(&gettext_f("Reset “{branch}” to commit {commit}.", &[("branch", &cur), ("commit", &oid[..oid.len().min(10)])]));
     let modes = vec![
-        "Soft — keep all local changes (staged)".to_string(),
-        "Mixed — keep working copy but reset index".to_string(),
-        "Hard — discard all working copy changes".to_string(),
+        gettext("Soft — keep all local changes (staged)"),
+        gettext("Mixed — keep working copy but reset index"),
+        gettext("Hard — discard all working copy changes"),
     ];
-    let mode = form.combo("Using mode", &modes, Some(&modes[1]));
+    let mode = form.combo(&gettext("Using mode"), &modes, Some(&modes[1]));
     form.focus(&mode);
     if !form.run(&rv.widget).await {
         return;
@@ -988,21 +1002,24 @@ async fn reset_dialog(rv: &Rc<RepoView>, oid: &str) {
     };
     if flag == "--hard"
         && config::with(|s| s.confirm_dangerous)
-        && !confirm(&rv.widget, "Hard Reset?", "All uncommitted changes will be permanently lost.", "Reset", true).await
+        && !confirm(&rv.widget, &gettext("Hard Reset?"), &gettext("All uncommitted changes will be permanently lost."), &gettext("Reset"), true).await
     {
         return;
     }
-    rv.run_ops("Reset", vec![s(&["reset", flag, oid])], OpOptions::default()).await;
+    rv.run_ops(&gettext("Reset"), vec![s(&["reset", flag, oid])], OpOptions::default()).await;
 }
 
 async fn delete_branch(rv: &Rc<RepoView>, name: &str) {
     let snap = rv.snapshot();
     let upstream = snap.refs.find_local(name).and_then(|r| r.upstream.clone());
-    let form = Form::new("Delete Branch", "Delete");
-    form.description(&format!("Delete local branch “{name}”?"));
-    let force = form.switch("Force delete regardless of merge status", "", false);
+    let form = Form::new(&gettext("Delete Branch"), &gettext("Delete"));
+    form.description(&gettext_f("Delete local branch “{branch}”?", &[("branch", name)]));
+    let force = form.switch(&gettext("Force delete regardless of merge status"), "", false);
     let remote = form.switch(
-        &format!("Also delete the remote branch{}", upstream.as_ref().map(|u| format!(" ({u})")).unwrap_or_default()),
+        &match &upstream {
+            Some(u) => gettext_f("Also delete the remote branch ({branch})", &[("branch", u)]),
+            None => gettext("Also delete the remote branch"),
+        },
         "",
         false,
     );
@@ -1017,36 +1034,36 @@ async fn delete_branch(rv: &Rc<RepoView>, name: &str) {
         && let Some((r, b)) = upstream.as_deref().and_then(|u| u.split_once('/')) {
             cmds.push(s(&["push", "--progress", r, "--delete", b]));
         }
-    rv.run_ops("Delete Branch", cmds, OpOptions { network: remote.is_active(), ..Default::default() }).await;
+    rv.run_ops(&gettext("Delete Branch"), cmds, OpOptions { network: remote.is_active(), ..Default::default() }).await;
 }
 
 async fn checkout_ref(rv: &Rc<RepoView>, full: &str) {
     let snap = rv.snapshot();
     if let Some(name) = full.strip_prefix("refs/heads/") {
-        rv.run_ops("Checkout", vec![s(&["checkout", name])], OpOptions::default()).await;
+        rv.run_ops(&gettext("Checkout"), vec![s(&["checkout", name])], OpOptions::default()).await;
         return;
     }
     let Some(remote_ref) = full.strip_prefix("refs/remotes/") else { return };
     let (_, branch) = remote_ref.split_once('/').unwrap_or(("", remote_ref));
     // A local branch already tracking it?
     if let Some(local) = snap.refs.locals().find(|l| l.upstream.as_deref() == Some(remote_ref)) {
-        let form = Form::new("Checkout", "Checkout");
-        form.description(&format!("Local branch “{}” already tracks {remote_ref}.", local.name));
-        let pull = form.switch("Pull after checkout (fast-forward only)", "", true);
+        let form = Form::new(&gettext("Checkout"), &gettext("Checkout"));
+        form.description(&gettext_f("Local branch “{branch}” already tracks {upstream}.", &[("branch", &local.name), ("upstream", remote_ref)]));
+        let pull = form.switch(&gettext("Pull after checkout (fast-forward only)"), "", true);
         form.focus_ok();
         if form.run(&rv.widget).await {
             let mut cmds = vec![s(&["checkout", &local.name])];
             if pull.is_active() {
                 cmds.push(s(&["merge", "--ff-only", remote_ref]));
             }
-            rv.run_ops("Checkout", cmds, OpOptions::default()).await;
+            rv.run_ops(&gettext("Checkout"), cmds, OpOptions::default()).await;
         }
         return;
     }
-    let form = Form::new("Checkout Remote Branch", "Checkout");
-    form.info("Checkout remote branch", remote_ref);
-    let name = form.entry("New local branch name", branch);
-    let track = form.switch("Local branch should track remote branch", "", true);
+    let form = Form::new(&gettext("Checkout Remote Branch"), &gettext("Checkout"));
+    form.info(&gettext("Checkout remote branch"), remote_ref);
+    let name = form.entry(&gettext("New local branch name"), branch);
+    let track = form.switch(&gettext("Local branch should track remote branch"), "", true);
     let git = rv.git.clone();
     let existing: Vec<String> = snap.refs.locals().map(|r| r.name.clone()).collect();
     let n2 = name.clone();
@@ -1059,7 +1076,7 @@ async fn checkout_ref(rv: &Rc<RepoView>, full: &str) {
     if form.run(&rv.widget).await {
         let n = name.text().trim().to_string();
         let c = s(&["checkout", "-b", &n, if track.is_active() { "--track" } else { "--no-track" }, remote_ref]);
-        rv.run_ops("Checkout", vec![c], OpOptions::default()).await;
+        rv.run_ops(&gettext("Checkout"), vec![c], OpOptions::default()).await;
     }
 }
 
@@ -1071,16 +1088,16 @@ async fn checkout_commit(rv: &Rc<RepoView>, oid: &str) {
         .filter(|r| r.oid == oid && !r.is_head)
         .map(|r| r.name.clone())
         .collect();
-    let form = Form::new("Checkout", "Checkout");
-    let mut options: Vec<String> = locals.iter().map(|l| format!("Branch {l}")).collect();
-    options.push(format!("Detached HEAD at {}", &oid[..oid.len().min(10)]));
-    let choice = form.combo("Checkout", &options, None);
-    form.description(if locals.is_empty() {
-        "You will be in “detached HEAD” state: commits made here won't belong to any branch unless you create one."
+    let form = Form::new(&gettext("Checkout"), &gettext("Checkout"));
+    let mut options: Vec<String> = locals.iter().map(|l| gettext_f("Branch {branch}", &[("branch", l)])).collect();
+    options.push(gettext_f("Detached HEAD at {commit}", &[("commit", &oid[..oid.len().min(10)])]));
+    let choice = form.combo(&gettext("Checkout"), &options, None);
+    form.description(&if locals.is_empty() {
+        gettext("You will be in “detached HEAD” state: commits made here won't belong to any branch unless you create one.")
     } else {
-        "Checking out a branch is recommended over a detached HEAD."
+        gettext("Checking out a branch is recommended over a detached HEAD.")
     });
-    let clean = form.switch("Discard local changes", "", false);
+    let clean = form.switch(&gettext("Discard local changes"), "", false);
     form.focus(&choice);
     if !form.run(&rv.widget).await {
         return;
@@ -1096,7 +1113,7 @@ async fn checkout_commit(rv: &Rc<RepoView>, oid: &str) {
         c.push("--detach".into());
         c.push(oid.to_string());
     }
-    rv.run_ops("Checkout", vec![c], OpOptions::default()).await;
+    rv.run_ops(&gettext("Checkout"), vec![c], OpOptions::default()).await;
 }
 
 async fn op_control(rv: &Rc<RepoView>, name: &str) {
@@ -1105,7 +1122,7 @@ async fn op_control(rv: &Rc<RepoView>, name: &str) {
     match name {
         "op-continue" => {
             if snap.status.has_conflicts() {
-                show_error(&rv.widget, "Unresolved conflicts", "Resolve the conflicted files and mark them resolved first.");
+                show_error(&rv.widget, &gettext("Unresolved conflicts"), &gettext("Resolve the conflicted files and mark them resolved first."));
                 return;
             }
             let c = match snap.op {
@@ -1113,31 +1130,35 @@ async fn op_control(rv: &Rc<RepoView>, name: &str) {
                 OpState::Bisect => return,
                 _ => s(&[cmd, "--continue"]),
             };
-            rv.run_ops("Continue", vec![c], OpOptions::default()).await;
+            rv.run_ops(&gettext("Continue"), vec![c], OpOptions::default()).await;
         }
         "op-skip" => {
-            rv.run_ops("Skip", vec![s(&[cmd, "--skip"])], OpOptions::default()).await;
+            rv.run_ops(&gettext("Skip"), vec![s(&[cmd, "--skip"])], OpOptions::default()).await;
         }
         _ => {
-            if !confirm(&rv.widget, "Abort?", &format!("Abort the {cmd} in progress and restore the previous state?"), "Abort", true).await {
+            if !confirm(&rv.widget, &gettext("Abort?"), &gettext_f(
+                // Translators: {operation} is a git command name such as "merge" or "rebase".
+                "Abort the {operation} in progress and restore the previous state?",
+                &[("operation", cmd)],
+            ), &gettext("Abort"), true).await {
                 return;
             }
             let c = match snap.op {
                 OpState::Bisect => s(&["bisect", "reset"]),
                 _ => s(&[cmd, "--abort"]),
             };
-            rv.run_ops("Abort", vec![c], OpOptions::default()).await;
+            rv.run_ops(&gettext("Abort"), vec![c], OpOptions::default()).await;
         }
     }
 }
 
 async fn subtree_dialog(rv: &Rc<RepoView>) {
-    let form = Form::new("Add / Link Subtree", "OK");
-    let url = form.entry("Source URL", "");
-    let branch = form.entry("Branch or commit", "main");
-    let prefix = form.entry("Local relative path", "");
-    let squash = form.switch("Squash commits", "", true);
-    let link_only = form.switch("Only link an existing subtree folder", "", false);
+    let form = Form::new(&gettext("Add / Link Subtree"), &gettext("OK"));
+    let url = form.entry(&gettext("Source URL"), "");
+    let branch = form.entry(&gettext("Branch or commit"), "main");
+    let prefix = form.entry(&gettext("Local relative path"), "");
+    let squash = form.switch(&gettext("Squash commits"), "", true);
+    let link_only = form.switch(&gettext("Only link an existing subtree folder"), "", false);
     let (u2, p2) = (url.clone(), prefix.clone());
     form.watch(&url);
     form.watch(&prefix);
@@ -1159,22 +1180,22 @@ async fn subtree_dialog(rv: &Rc<RepoView>) {
     }
     cmds.push(s(&["config", &format!("gitree.subtree.{p}.url"), &u]));
     cmds.push(s(&["config", &format!("gitree.subtree.{p}.branch"), &b]));
-    rv.run_ops("Subtree", cmds, net()).await;
+    rv.run_ops(&gettext("Subtree"), cmds, net()).await;
 }
 
 async fn apply_patch_dialog(rv: &Rc<RepoView>) {
-    let fd = gtk::FileDialog::builder().title("Choose a Patch File").build();
+    let fd = gtk::FileDialog::builder().title(gettext("Choose a Patch File")).build();
     let win = rv.widget.root().and_downcast::<gtk::Window>();
     let Ok(f) = fd.open_future(win.as_ref()).await else { return };
     let Some(p) = f.path() else { return };
-    let form = Form::new("Apply Patch", "Apply");
-    form.info("Patch", &p.to_string_lossy());
+    let form = Form::new(&gettext("Apply Patch"), &gettext("Apply"));
+    form.info(&gettext("Patch"), &p.to_string_lossy());
     let modes = vec![
-        "Modify working copy files".to_string(),
-        "Modify working copy and index (stage)".to_string(),
-        "Import as commits (git am)".to_string(),
+        gettext("Modify working copy files"),
+        gettext("Modify working copy and index (stage)"),
+        gettext("Import as commits (git am)"),
     ];
-    let mode = form.combo("Apply to", &modes, None);
+    let mode = form.combo(&gettext("Apply to"), &modes, None);
     form.focus(&mode);
     if !form.run(&rv.widget).await {
         return;
@@ -1185,7 +1206,7 @@ async fn apply_patch_dialog(rv: &Rc<RepoView>) {
         1 => s(&["apply", "--index", &ps]),
         _ => s(&["am", "--3way", &ps]),
     };
-    rv.run_ops("Apply Patch", vec![c], OpOptions::default()).await;
+    rv.run_ops(&gettext("Apply Patch"), vec![c], OpOptions::default()).await;
 }
 
 fn range_window(rv: &Rc<RepoView>, title: &str, from: git::log::Commit, to: git::log::Commit) {
@@ -1231,7 +1252,7 @@ pub fn external_diff(rv: &Rc<RepoView>, path: &str, staged: bool, range: Option<
     spawn(async move {
         let r = bg(move || git.run(&full)).await;
         if let Err(e) = r {
-            show_error(&widget, "External diff failed", &e.to_string());
+            show_error(&widget, &gettext("External diff failed"), &e.to_string());
         }
     });
 }
@@ -1312,7 +1333,7 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
         "file-unstage" => rv.file_status.unstage_paths(paths),
         "file-discard" => {
             let list = paths.join("\n");
-            if !confirm(&parent, "Discard Changes?", &format!("Discard all changes to:\n{list}\n\nThis cannot be undone."), "Discard", true).await {
+            if !confirm(&parent, &gettext("Discard Changes?"), &gettext_f("Discard all changes to:\n{files}\n\nThis cannot be undone.", &[("files", &list)]), &gettext("Discard"), true).await {
                 return;
             }
             let mut tracked = Vec::new();
@@ -1346,10 +1367,10 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
                 c.extend(untracked);
                 cmds.push(c);
             }
-            rv.run_ops("Discard", cmds, OpOptions::default()).await;
+            rv.run_ops(&gettext("Discard"), cmds, OpOptions::default()).await;
         }
         "file-remove" => {
-            if !confirm(&parent, "Remove Files?", &format!("Delete from disk and stage removal:\n{}", paths.join("\n")), "Remove", true).await {
+            if !confirm(&parent, &gettext("Remove Files?"), &gettext_f("Delete from disk and stage removal:\n{files}", &[("files", &paths.join("\n"))]), &gettext("Remove"), true).await {
                 return;
             }
             let (untracked, tracked): (Vec<String>, Vec<String>) =
@@ -1361,7 +1382,7 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
             if !tracked.is_empty() {
                 let mut c = s(&["rm", "-f", "-r", "--"]);
                 c.extend(tracked);
-                rv.run_ops("Remove", vec![c], OpOptions::default()).await;
+                rv.run_ops(&gettext("Remove"), vec![c], OpOptions::default()).await;
             } else {
                 rv.refresh();
             }
@@ -1369,7 +1390,7 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
         "file-stop-tracking" => {
             let mut c = s(&["rm", "--cached", "-r", "-q", "--"]);
             c.extend(paths);
-            rv.run_ops("Stop Tracking", vec![c], OpOptions::default()).await;
+            rv.run_ops(&gettext("Stop Tracking"), vec![c], OpOptions::default()).await;
         }
         "file-ignore" => ignore_dialog(rv, &paths).await,
         "file-open" => super::open_file(&rv.git.workdir.join(arg)),
@@ -1388,8 +1409,8 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
         }
         "file-checkout-at" => {
             if let Some((rev, p)) = arg.split_once('|')
-                && confirm(&parent, "Reset File?", &format!("Replace “{p}” with its version at {}? Local changes to it are lost.", &rev[..rev.len().min(11)]), "Reset", true).await {
-                    rv.run_ops("Reset File", vec![s(&["checkout", rev, "--", p])], OpOptions::default()).await;
+                && confirm(&parent, &gettext("Reset File?"), &gettext_f("Replace “{file}” with its version at {commit}? Local changes to it are lost.", &[("file", p), ("commit", &rev[..rev.len().min(11)])]), &gettext("Reset"), true).await {
+                    rv.run_ops(&gettext("Reset File"), vec![s(&["checkout", rev, "--", p])], OpOptions::default()).await;
                 }
         }
         "file-resolve-mine" | "file-resolve-theirs" => {
@@ -1401,17 +1422,17 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
             c1.extend(paths.iter().cloned());
             let mut c2 = s(&["add", "--"]);
             c2.extend(paths);
-            rv.run_ops("Resolve", vec![c1, c2], OpOptions::default()).await;
+            rv.run_ops(&gettext("Resolve"), vec![c1, c2], OpOptions::default()).await;
         }
         "file-mark-resolved" => {
             let mut c = s(&["add", "--"]);
             c.extend(paths);
-            rv.run_ops("Mark Resolved", vec![c], OpOptions::default()).await;
+            rv.run_ops(&gettext("Mark Resolved"), vec![c], OpOptions::default()).await;
         }
         "file-mark-unresolved" => {
             let mut c = s(&["checkout", "-m", "--"]);
             c.extend(paths);
-            rv.run_ops("Mark Unresolved", vec![c], OpOptions::default()).await;
+            rv.run_ops(&gettext("Mark Unresolved"), vec![c], OpOptions::default()).await;
         }
         "file-mergetool" => {
             let tool = config::with(|s| s.merge_tool.clone());
@@ -1420,7 +1441,7 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
             rest.extend(paths);
             let mut c = s(&["-c", "mergetool.keepBackup=false"]);
             c.extend(tool_invocation("mergetool", &tool, rest));
-            rv.run_ops("External Merge Tool", vec![c], OpOptions::default()).await;
+            rv.run_ops(&gettext("External Merge Tool"), vec![c], OpOptions::default()).await;
         }
         _ => {}
     }
@@ -1428,17 +1449,17 @@ async fn file_action(rv: &Rc<RepoView>, name: &str, arg: &str) {
 
 async fn ignore_dialog(rv: &Rc<RepoView>, paths: &[String]) {
     let Some(first) = paths.first() else { return };
-    let form = Form::new("Ignore", "OK");
+    let form = Form::new(&gettext("Ignore"), &gettext("OK"));
     let mut options = vec![if paths.len() == 1 {
-        format!("Ignore exact filename: {first}")
+        gettext_f("Ignore exact filename: {file}", &[("file", first)])
     } else {
-        format!("Ignore {} exact filenames", paths.len())
+        ngettext_f("Ignore {n} exact filename", "Ignore {n} exact filenames", paths.len() as u32, &[])
     }];
     let ext = std::path::Path::new(first)
         .extension()
         .map(|e| e.to_string_lossy().to_string());
     if let Some(e) = &ext {
-        options.push(format!("Ignore all files with this extension: *.{e}"));
+        options.push(gettext_f("Ignore all files with this extension: {pattern}", &[("pattern", &format!("*.{e}"))]));
     }
     let mut dirs: Vec<String> = Vec::new();
     let mut acc = String::new();
@@ -1450,14 +1471,14 @@ async fn ignore_dialog(rv: &Rc<RepoView>, paths: &[String]) {
         dirs.push(acc.clone());
     }
     for d in &dirs {
-        options.push(format!("Ignore everything beneath: {d}/"));
+        options.push(gettext_f("Ignore everything beneath: {dir}", &[("dir", &format!("{d}/"))]));
     }
-    let what = form.combo("Ignore", &options, None);
+    let what = form.combo(&gettext("Ignore"), &options, None);
     let files = vec![
-        ".gitignore (shared with the repository)".to_string(),
-        ".git/info/exclude (this copy only)".to_string(),
+        gettext(".gitignore (shared with the repository)"),
+        gettext(".git/info/exclude (this copy only)"),
     ];
-    let into = form.combo("Add this ignore entry to", &files, None);
+    let into = form.combo(&gettext("Add this ignore entry to"), &files, None);
     form.focus(&what);
     if !form.run(&rv.widget).await {
         return;
@@ -1488,7 +1509,7 @@ async fn ignore_dialog(rv: &Rc<RepoView>, paths: &[String]) {
         let _ = std::fs::create_dir_all(d);
     }
     if let Err(e) = std::fs::write(&file, content) {
-        show_error(&rv.widget, "Could not update ignore file", &e.to_string());
+        show_error(&rv.widget, &gettext("Could not update ignore file"), &e.to_string());
     }
     rv.refresh();
 }

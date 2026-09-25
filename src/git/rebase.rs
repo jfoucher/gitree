@@ -1,5 +1,6 @@
 //! Interactive rebase todo generation.
 
+use crate::i18n::N_;
 use std::path::Path;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,12 +25,12 @@ impl RebaseAction {
 
     pub fn label(self) -> &'static str {
         match self {
-            RebaseAction::Pick => "Pick",
-            RebaseAction::Reword => "Reword",
-            RebaseAction::Edit => "Edit",
-            RebaseAction::Squash => "Squash",
-            RebaseAction::Fixup => "Fixup",
-            RebaseAction::Drop => "Drop",
+            RebaseAction::Pick => N_("Pick"),
+            RebaseAction::Reword => N_("Reword"),
+            RebaseAction::Edit => N_("Edit"),
+            RebaseAction::Squash => N_("Squash"),
+            RebaseAction::Fixup => N_("Fixup"),
+            RebaseAction::Drop => N_("Drop"),
         }
     }
 

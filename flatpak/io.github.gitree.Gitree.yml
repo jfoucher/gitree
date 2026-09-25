@@ -28,8 +28,8 @@ modules:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
       - cargo --offline build --release --verbose
       - install -Dm755 target/release/gitree /app/bin/gitree
-      - install -Dm644 data/io.github.gitree.Gitree.desktop /app/share/applications/io.github.gitree.Gitree.desktop
-      - install -Dm644 data/io.github.gitree.Gitree.metainfo.xml /app/share/metainfo/io.github.gitree.Gitree.metainfo.xml
+      # Message catalogs, desktop entry and metainfo (with translations merged in).
+      - scripts/i18n.sh build /app
       - install -Dm644 data/icons/scalable/apps/io.github.gitree.Gitree.svg /app/share/icons/hicolor/scalable/apps/io.github.gitree.Gitree.svg
     sources:
       - type: dir

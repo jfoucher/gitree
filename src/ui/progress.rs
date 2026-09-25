@@ -3,6 +3,7 @@
 //! sheet open with the full output.
 
 use crate::git::{describe, Git, GitError, Prompt};
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use gtk::glib;
 use std::cell::Cell;
@@ -67,7 +68,7 @@ fn build_sheet(parent: &gtk::Widget, title: &str) -> Sheet {
     let spinner = adw::Spinner::new();
     spinner.set_size_request(20, 20);
     let status = gtk::Label::builder()
-        .label("Starting…")
+        .label(gettext("Starting…"))
         .xalign(0.0)
         .ellipsize(gtk::pango::EllipsizeMode::Middle)
         .hexpand(true)
@@ -122,16 +123,16 @@ fn build_sheet(parent: &gtk::Widget, title: &str) -> Sheet {
     actions.set_margin_bottom(12);
     actions.set_margin_start(12);
     actions.set_margin_end(12);
-    let copy = gtk::Button::with_label("Copy Output");
+    let copy = gtk::Button::with_label(&gettext("Copy Output"));
     copy.set_visible(false);
     let b2 = buffer.clone();
     copy.connect_clicked(move |b| {
         super::copy_to_clipboard(&b2.text(&b2.start_iter(), &b2.end_iter(), false));
-        b.set_label("Copied");
+        b.set_label(&gettext("Copied"));
     });
     let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     spacer.set_hexpand(true);
-    let button = gtk::Button::with_label("Cancel");
+    let button = gtk::Button::with_label(&gettext("Cancel"));
     button.add_css_class("pill");
     actions.append(&copy);
     actions.append(&spacer);
@@ -229,8 +230,8 @@ fn error_summary(e: &GitError) -> String {
         .collect();
     if summary.is_empty() {
         match e.code {
-            Some(c) => format!("{} failed (exit code {c}).", e.command),
-            None => format!("{} was interrupted.", e.command),
+            Some(c) => gettext_f("{command} failed (exit code {code}).", &[("command", &e.command), ("code", &c.to_string())]),
+            None => gettext_f("{command} was interrupted.", &[("command", &e.command)]),
         }
     } else {
         summary.join("\n")
@@ -287,7 +288,7 @@ pub async fn run(
                 Err(_) => {
                     return Err(GitError {
                         command: title.into(),
-                        stderr: "Worker ended unexpectedly".into(),
+                        stderr: gettext("Worker ended unexpectedly"),
                         stdout: String::new(),
                         code: None,
                     })
@@ -370,7 +371,7 @@ pub async fn run(
             Err(_) => {
                 break Err(GitError {
                     command: title.into(),
-                    stderr: "Worker ended unexpectedly".into(),
+                    stderr: gettext("Worker ended unexpectedly"),
                     stdout: String::new(),
                     code: None,
                 })
@@ -391,10 +392,10 @@ pub async fn run(
         Err(e) => {
             sheet.spinner.set_visible(false);
             let was_cancelled = cancelled.load(Ordering::SeqCst);
-            sheet.status.set_text(if was_cancelled {
-                "Cancelled"
+            sheet.status.set_text(&if was_cancelled {
+                gettext("Cancelled")
             } else {
-                "Completed with errors, see below."
+                gettext("Completed with errors, see below.")
             });
             if !was_cancelled {
                 let msg = error_summary(e);
@@ -408,7 +409,7 @@ pub async fn run(
                     buffer.delete_mark(&mark);
                 });
             }
-            sheet.button.set_label("Close");
+            sheet.button.set_label(&gettext("Close"));
             sheet.button.set_sensitive(true);
             sheet.window.set_deletable(true);
             let (ctx, crx) = async_channel::bounded::<()>(1);

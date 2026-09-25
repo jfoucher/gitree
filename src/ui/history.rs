@@ -13,6 +13,7 @@ use crate::git::graph::{GraphBuilder, GraphRow};
 use crate::git::log::{Commit, LogOrder, LogQuery, LogReader, LogScope};
 use crate::git::refs::{RefInfo, RefKind};
 use crate::git::Git;
+use crate::i18n::{gettext, gettext_f, ngettext, ngettext_f, pgettext};
 use adw::prelude::*;
 use gtk::{gio, glib};
 use std::cell::{Cell, RefCell};
@@ -135,16 +136,16 @@ impl CommitDetails {
             let p = &files[0].path;
             let menu = gio::Menu::new();
             let s1 = gio::Menu::new();
-            menu_item_target(&s1, "Open Current Version", "repo.file-open", p);
-            menu_item_target(&s1, "Show in Files", "repo.file-show", p);
-            menu_item_target(&s1, "Copy Path", "repo.copy-text", p);
+            menu_item_target(&s1, &gettext("Open Current Version"), "repo.file-open", p);
+            menu_item_target(&s1, &gettext("Show in Files"), "repo.file-show", p);
+            menu_item_target(&s1, &gettext("Copy Path"), "repo.copy-text", p);
             menu.append_section(None, &s1);
             let s2 = gio::Menu::new();
-            menu_item_target(&s2, "Log Selected…", "repo.file-log", p);
-            menu_item_target(&s2, "Blame Selected…", "repo.file-blame", p);
-            menu_item_target(&s2, "Blame at This Commit…", "repo.file-blame-at", &format!("{to}|{p}"));
-            menu_item_target(&s2, "Reset File to This Commit…", "repo.file-checkout-at", &format!("{to}|{p}"));
-            menu_item_target(&s2, "Reset File to Parent Commit…", "repo.file-checkout-at", &format!("{to}^|{p}"));
+            menu_item_target(&s2, &gettext("Log Selected…"), "repo.file-log", p);
+            menu_item_target(&s2, &gettext("Blame Selected…"), "repo.file-blame", p);
+            menu_item_target(&s2, &gettext("Blame at This Commit…"), "repo.file-blame-at", &format!("{to}|{p}"));
+            menu_item_target(&s2, &gettext("Reset File to This Commit…"), "repo.file-checkout-at", &format!("{to}|{p}"));
+            menu_item_target(&s2, &gettext("Reset File to Parent Commit…"), "repo.file-checkout-at", &format!("{to}^|{p}"));
             menu.append_section(None, &s2);
             popup_menu(widget, x, y, &menu);
         }));
@@ -158,7 +159,7 @@ impl CommitDetails {
             self.info.remove(&c);
         }
         self.files.set_files(Vec::new());
-        self.diff.show_message("No commit selected");
+        self.diff.show_message(&gettext("No commit selected"));
         *self.target.borrow_mut() = None;
     }
 
@@ -196,7 +197,7 @@ impl CommitDetails {
         }
         let sha = Self::value_label(&c.oid);
         sha.add_css_class("mono");
-        self.info_row("Commit:", sha.upcast_ref());
+        self.info_row(&gettext("Commit:"), sha.upcast_ref());
 
         let parents = gtk::Box::new(gtk::Orientation::Horizontal, 4);
         for p in &c.parents {
@@ -213,22 +214,22 @@ impl CommitDetails {
             parents.append(&b);
         }
         if !c.parents.is_empty() {
-            self.info_row(if c.parents.len() > 1 { "Parents:" } else { "Parent:" }, parents.upcast_ref());
+            self.info_row(&ngettext("Parent:", "Parents:", c.parents.len() as u32), parents.upcast_ref());
         }
         self.info_row(
-            "Author:",
+            &gettext("Author:"),
             Self::value_label(&format!("{} <{}>", c.author_name, c.author_email)).upcast_ref(),
         );
-        self.info_row("Date:", Self::value_label(&format_time_full(c.author_time)).upcast_ref());
+        self.info_row(&gettext("Date:"), Self::value_label(&format_time_full(c.author_time)).upcast_ref());
         if c.committer_email != c.author_email || c.committer_name != c.author_name {
             self.info_row(
-                "Committer:",
+                &gettext("Committer:"),
                 Self::value_label(&format!("{} <{}>", c.committer_name, c.committer_email)).upcast_ref(),
             );
         }
         if !refs.is_empty() {
             let names: Vec<String> = refs.iter().map(|r| r.name.clone()).collect();
-            self.info_row("Labels:", Self::value_label(&names.join(", ")).upcast_ref());
+            self.info_row(&gettext("Labels:"), Self::value_label(&names.join(", ")).upcast_ref());
         }
         let msg = Self::value_label(&c.subject);
         msg.set_margin_top(8);
@@ -261,10 +262,9 @@ impl CommitDetails {
         while let Some(ch) = self.info.first_child() {
             self.info.remove(&ch);
         }
-        let l = Self::value_label(&format!(
-            "Showing changes from {} to {}",
-            from.short(),
-            to.short()
+        let l = Self::value_label(&gettext_f(
+            "Showing changes from {from} to {to}",
+            &[("from", from.short()), ("to", to.short())],
         ));
         l.add_css_class("heading");
         self.info.append(&l);
@@ -351,7 +351,7 @@ impl CommitDetails {
                     if n > 0 {
                         this.files.select_first();
                     } else {
-                        this.diff.show_message("No file changes");
+                        this.diff.show_message(&gettext("No file changes"));
                     }
                 }
                 Err(e) => this.diff.show_message(&e.to_string()),
@@ -362,7 +362,7 @@ impl CommitDetails {
     fn load_diff(self: &Rc<Self>, files: Vec<FileItem>) {
         let Some((from, to)) = self.target.borrow().clone() else { return };
         if files.is_empty() {
-            self.diff.show_message("No file selected");
+            self.diff.show_message(&gettext("No file selected"));
             return;
         }
         let generation = self.generation.get() + 1;
@@ -453,9 +453,9 @@ impl HistoryView {
         // Toolbar
         let bar = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         bar.add_css_class("pane-header");
-        let scope = gtk::DropDown::from_strings(&["All Branches", "Local Branches", "Current Branch"]);
-        let order = gtk::DropDown::from_strings(&["Date Order", "Ancestor Order"]);
-        let search_kind = gtk::DropDown::from_strings(&["Commit Messages", "File Changes", "Authors", "Commit SHA"]);
+        let scope = gtk::DropDown::from_strings(&[&gettext("All Branches"), &gettext("Local Branches"), &gettext("Current Branch")]);
+        let order = gtk::DropDown::from_strings(&[&gettext("Date Order"), &gettext("Ancestor Order")]);
+        let search_kind = gtk::DropDown::from_strings(&[&gettext("Commit Messages"), &gettext("File Changes"), &gettext("Authors"), &gettext("Commit SHA")]);
         let search_entry = gtk::SearchEntry::builder().hexpand(true).build();
         let status_label = gtk::Label::new(None);
         status_label.add_css_class("dim-label");
@@ -468,20 +468,20 @@ impl HistoryView {
                 spacer.set_hexpand(true);
                 bar.append(&spacer);
                 bar.append(&status_label);
-                search_entry.set_placeholder_text(Some("Jump to commit or ref"));
+                search_entry.set_placeholder_text(Some(&gettext("Jump to commit or ref")));
                 search_entry.set_hexpand(false);
                 search_entry.set_width_chars(22);
                 bar.append(&search_entry);
             }
             HistoryMode::Search => {
-                search_entry.set_placeholder_text(Some("Search"));
+                search_entry.set_placeholder_text(Some(&gettext("Search")));
                 bar.append(&search_kind);
                 bar.append(&search_entry);
                 bar.append(&status_label);
             }
             HistoryMode::FileLog(p) => {
                 let l = gtk::Label::builder()
-                    .label(format!("History of {p}"))
+                    .label(gettext_f("History of {file}", &[("file", p)]))
                     .xalign(0.0)
                     .hexpand(true)
                     .build();
@@ -520,7 +520,7 @@ impl HistoryView {
         widget.append(&paned);
 
         let graph_col = gtk::ColumnViewColumn::builder()
-            .title("Graph")
+            .title(gettext("Graph"))
             .resizable(true)
             .fixed_width(60)
             .build();
@@ -683,7 +683,7 @@ impl HistoryView {
             cell.label.set_tooltip_text(Some(&r.commit.subject));
         });
         let desc = gtk::ColumnViewColumn::builder()
-            .title("Description")
+            .title(gettext("Description"))
             .factory(&f)
             .expand(true)
             .resizable(true)
@@ -722,9 +722,9 @@ impl HistoryView {
                 .fixed_width(width)
                 .build()
         };
-        self.column_view.append_column(&text_col("Date", 170, |r| format_time(r.commit.author_time), false));
-        self.column_view.append_column(&text_col("Author", 150, |r| r.commit.author_name.clone(), false));
-        self.column_view.append_column(&text_col("Commit", 80, |r| r.commit.short().to_string(), true));
+        self.column_view.append_column(&text_col(&gettext("Date"), 170, |r| format_time(r.commit.author_time), false));
+        self.column_view.append_column(&text_col(&gettext("Author"), 150, |r| r.commit.author_name.clone(), false));
+        self.column_view.append_column(&text_col(&pgettext("noun", "Commit"), 80, |r| r.commit.short().to_string(), true));
     }
 
     /// Scrolls the graph sideways by `dx`. Returns false when it all fits.
@@ -791,7 +791,7 @@ impl HistoryView {
                     let Some(rv) = t.rv.upgrade() else { return };
                     match rv.git.run(&["rev-parse", "--verify", "-q", &format!("{q}^{{commit}}")]) {
                         Ok(oid) => t.select_commit(oid.trim()),
-                        Err(_) => rv.toast(&format!("No commit or ref named “{q}”")),
+                        Err(_) => rv.toast(&gettext_f("No commit or ref named “{query}”", &[("query", &q)])),
                     }
                 }
                 _ => t.reload(),
@@ -949,7 +949,7 @@ impl HistoryView {
                         commit: Commit {
                             oid: UNCOMMITTED.into(),
                             parents: vec![h],
-                            subject: "Uncommitted changes".into(),
+                            subject: gettext("Uncommitted changes"),
                             ..Default::default()
                         },
                         graph: g,
@@ -1008,7 +1008,7 @@ impl HistoryView {
         self.graph_offset.set(0.0);
         let _ = req_tx.send(page);
         *self.req_tx.borrow_mut() = Some(req_tx);
-        self.status_label.set_text("Loading…");
+        self.status_label.set_text(&gettext("Loading…"));
 
         let this = self.clone();
         spawn(async move {
@@ -1040,11 +1040,12 @@ impl HistoryView {
                     this.done.set(true);
                 }
                 let n = this.store.n_items();
-                this.status_label.set_text(&format!(
-                    "{}{} commits",
-                    n,
-                    if this.done.get() { "" } else { "+" }
-                ));
+                this.status_label.set_text(&if this.done.get() {
+                    ngettext_f("{n} commit", "{n} commits", n, &[])
+                } else {
+                    // Translators: more commits exist beyond the {n} loaded so far.
+                    ngettext_f("{n}+ commit", "{n}+ commits", n, &[])
+                });
                 if first {
                     first = false;
                     // Restore previous selection / scroll position.
@@ -1073,7 +1074,7 @@ impl HistoryView {
                     } else if this.done.get() {
                         *this.pending_select.borrow_mut() = None;
                         if let Some(rv) = this.rv.upgrade() {
-                            rv.toast("That commit is not shown with the current branch filter");
+                            rv.toast(&gettext("That commit is not shown with the current branch filter"));
                         }
                     } else {
                         this.load_more(5000);
@@ -1130,7 +1131,7 @@ impl HistoryView {
             // Not loaded and nothing more to load: maybe the filter hides it.
             *self.pending_select.borrow_mut() = None;
             if let Some(rv) = self.rv.upgrade() {
-                rv.toast("That commit is not shown with the current branch filter");
+                rv.toast(&gettext("That commit is not shown with the current branch filter"));
             }
         } else {
             self.load_more(5000);
@@ -1149,25 +1150,25 @@ impl HistoryView {
             let c = &rows[0].commit;
             let oid = c.oid.as_str();
             let s1 = gio::Menu::new();
-            menu_item_target(&s1, "Checkout…", "repo.checkout-commit", oid);
-            menu_item_target(&s1, &format!("Merge into {current}…"), "repo.merge-commit", oid);
-            menu_item_target(&s1, &format!("Rebase {current} onto this…"), "repo.rebase-onto", oid);
+            menu_item_target(&s1, &gettext("Checkout…"), "repo.checkout-commit", oid);
+            menu_item_target(&s1, &gettext_f("Merge into {branch}…", &[("branch", &current)]), "repo.merge-commit", oid);
+            menu_item_target(&s1, &gettext_f("Rebase {branch} onto this…", &[("branch", &current)]), "repo.rebase-onto", oid);
             menu.append_section(None, &s1);
             let s2 = gio::Menu::new();
-            menu_item_target(&s2, "Tag…", "repo.tag", oid);
-            menu_item_target(&s2, "Branch…", "repo.branch", oid);
-            menu_item_target(&s2, "Archive…", "repo.archive", oid);
-            menu_item_target(&s2, "Create Patch…", "repo.patch", oid);
+            menu_item_target(&s2, &gettext("Tag…"), "repo.tag", oid);
+            menu_item_target(&s2, &gettext("Branch…"), "repo.branch", oid);
+            menu_item_target(&s2, &gettext("Archive…"), "repo.archive", oid);
+            menu_item_target(&s2, &gettext("Create Patch…"), "repo.patch", oid);
             menu.append_section(None, &s2);
             let s3 = gio::Menu::new();
-            menu_item_target(&s3, &format!("Reset {current} to this commit…"), "repo.reset-to", oid);
-            menu_item_target(&s3, "Reverse Commit…", "repo.revert", oid);
-            menu_item_target(&s3, "Cherry Pick", "repo.cherry-pick", oid);
-            menu_item_target(&s3, &format!("Rebase children of {} interactively…", c.short()), "repo.rebase-interactive", oid);
+            menu_item_target(&s3, &gettext_f("Reset {branch} to this commit…", &[("branch", &current)]), "repo.reset-to", oid);
+            menu_item_target(&s3, &gettext("Reverse Commit…"), "repo.revert", oid);
+            menu_item_target(&s3, &gettext("Cherry Pick"), "repo.cherry-pick", oid);
+            menu_item_target(&s3, &gettext_f("Rebase children of {commit} interactively…", &[("commit", c.short())]), "repo.rebase-interactive", oid);
             menu.append_section(None, &s3);
             let s4 = gio::Menu::new();
-            menu_item_target(&s4, "Copy SHA to Clipboard", "repo.copy-text", oid);
-            menu_item_target(&s4, "Copy Commit Message", "repo.copy-message", oid);
+            menu_item_target(&s4, &gettext("Copy SHA to Clipboard"), "repo.copy-text", oid);
+            menu_item_target(&s4, &gettext("Copy Commit Message"), "repo.copy-message", oid);
             menu.append_section(None, &s4);
             let actions = config::with(|s| s.custom_actions.clone());
             if !actions.is_empty() {
@@ -1175,14 +1176,14 @@ impl HistoryView {
                 for (i, a) in actions.iter().enumerate() {
                     menu_item_target(&s5, &a.name, "repo.custom-action", &format!("{i}|{oid}|"));
                 }
-                menu.append_submenu(Some("Custom Actions"), &s5);
+                menu.append_submenu(Some(&gettext("Custom Actions")), &s5);
             }
         } else {
             // Oldest first for cherry-picking.
             let oids: Vec<String> = rows.iter().rev().map(|r| r.commit.oid.clone()).collect();
             let s1 = gio::Menu::new();
-            menu_item_target(&s1, &format!("Cherry Pick {} Commits", oids.len()), "repo.cherry-pick", &oids.join(" "));
-            menu_item_target(&s1, "Copy SHAs to Clipboard", "repo.copy-text", &oids.join("\n"));
+            menu_item_target(&s1, &ngettext_f("Cherry Pick {n} Commit", "Cherry Pick {n} Commits", oids.len() as u32, &[]), "repo.cherry-pick", &oids.join(" "));
+            menu_item_target(&s1, &gettext("Copy SHAs to Clipboard"), "repo.copy-text", &oids.join("\n"));
             menu.append_section(None, &s1);
         }
         popup_menu(widget, x, y, &menu);
@@ -1192,7 +1193,7 @@ impl HistoryView {
 /// Stand-alone window showing the log of a single file.
 pub fn file_log_window(rv: &Rc<RepoView>, path: &str) {
     let win = adw::Window::builder()
-        .title(format!("Log — {path}"))
+        .title(gettext_f("Log — {file}", &[("file", path)]))
         .default_width(1100)
         .default_height(760)
         .build();

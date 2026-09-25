@@ -13,6 +13,7 @@ use crate::git::state::OpState;
 use crate::git::status::Status;
 use crate::git::{self, Git, GitError};
 use crate::watch;
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use gtk::{gio, glib};
 use std::cell::{Cell, RefCell};
@@ -141,14 +142,14 @@ impl RepoView {
             let banner_box = gtk::Box::new(gtk::Orientation::Horizontal, 8);
             banner_box.add_css_class("op-banner");
             let banner_label = gtk::Label::builder().xalign(0.0).hexpand(true).wrap(true).build();
-            let banner_continue = gtk::Button::with_label("Continue");
+            let banner_continue = gtk::Button::with_label(&gettext("Continue"));
             banner_continue.add_css_class("suggested-action");
             banner_continue.set_action_name(Some("repo.op-continue"));
             banner_continue.set_action_target_value(Some(&"".to_variant()));
-            let banner_skip = gtk::Button::with_label("Skip");
+            let banner_skip = gtk::Button::with_label(&gettext("Skip"));
             banner_skip.set_action_name(Some("repo.op-skip"));
             banner_skip.set_action_target_value(Some(&"".to_variant()));
-            let banner_abort = gtk::Button::with_label("Abort");
+            let banner_abort = gtk::Button::with_label(&gettext("Abort"));
             banner_abort.add_css_class("destructive-action");
             banner_abort.set_action_name(Some("repo.op-abort"));
             banner_abort.set_action_target_value(Some(&"".to_variant()));
@@ -286,7 +287,7 @@ impl RepoView {
                     let _ = progress::run(
                         &rv2.widget.clone().upcast(),
                         &rv2.git,
-                        "Background fetch",
+                        &gettext("Background fetch"),
                         vec![vec!["fetch".into(), "--all".into(), "--quiet".into()]],
                         OpOptions {
                             quiet: true,
@@ -323,9 +324,9 @@ impl RepoView {
                     this.apply_snapshot(s);
                 }
                 Err(e) => {
-                    this.error_banner.set_title(&format!(
-                        "Could not read repository: {}",
-                        e.stderr.lines().next().unwrap_or("")
+                    this.error_banner.set_title(&gettext_f(
+                        "Could not read repository: {error}",
+                        &[("error", e.stderr.lines().next().unwrap_or(""))],
                     ));
                     this.error_banner.set_revealed(true);
                 }
@@ -353,7 +354,8 @@ impl RepoView {
         } else {
             let mut text = s.op.label();
             if s.status.has_conflicts() {
-                text.push_str(" Resolve the conflicted files, then continue.");
+                text.push(' ');
+                text.push_str(&gettext("Resolve the conflicted files, then continue."));
             }
             self.banner_label.set_text(&text);
             self.banner_skip.set_visible(matches!(
@@ -462,69 +464,69 @@ fn build_toolbar() -> (gtk::Box, gtk::Label, gtk::Label) {
     bar.add_css_class("repo-toolbar");
     let sep = || gtk::Separator::new(gtk::Orientation::Vertical);
 
-    let (commit, _) = tool_button("gitree-commit-symbolic", "Commit", "repo.commit", "Commit (Ctrl+Shift+C)");
+    let (commit, _) = tool_button("gitree-commit-symbolic", &gettext("Commit"), "repo.commit", &gettext("Commit (Ctrl+Shift+C)"));
     bar.append(&commit);
     bar.append(&sep());
-    let (pull, pull_badge) = tool_button("gitree-pull-symbolic", "Pull", "repo.pull", "Pull (Ctrl+Shift+L)");
-    let (push, push_badge) = tool_button("gitree-push-symbolic", "Push", "repo.push", "Push (Ctrl+Shift+P)");
-    let (fetch, _) = tool_button("gitree-fetch-symbolic", "Fetch", "repo.fetch", "Fetch (Ctrl+Shift+F)");
+    let (pull, pull_badge) = tool_button("gitree-pull-symbolic", &gettext("Pull"), "repo.pull", &gettext("Pull (Ctrl+Shift+L)"));
+    let (push, push_badge) = tool_button("gitree-push-symbolic", &gettext("Push"), "repo.push", &gettext("Push (Ctrl+Shift+P)"));
+    let (fetch, _) = tool_button("gitree-fetch-symbolic", &gettext("Fetch"), "repo.fetch", &gettext("Fetch (Ctrl+Shift+F)"));
     bar.append(&pull);
     bar.append(&push);
     bar.append(&fetch);
     bar.append(&sep());
-    let (branch, _) = tool_button("gitree-branch-symbolic", "Branch", "repo.branch", "Branch (Ctrl+Shift+B)");
-    let (merge, _) = tool_button("gitree-merge-symbolic", "Merge", "repo.merge", "Merge (Ctrl+Shift+M)");
+    let (branch, _) = tool_button("gitree-branch-symbolic", &gettext("Branch"), "repo.branch", &gettext("Branch (Ctrl+Shift+B)"));
+    let (merge, _) = tool_button("gitree-merge-symbolic", &gettext("Merge"), "repo.merge", &gettext("Merge (Ctrl+Shift+M)"));
     bar.append(&branch);
     bar.append(&merge);
     bar.append(&sep());
-    let (stash, _) = tool_button("gitree-stash-symbolic", "Stash", "repo.stash", "Stash (Ctrl+Shift+S)");
-    let (discard, _) = tool_button("gitree-discard-symbolic", "Discard", "repo.discard", "Discard (Ctrl+Shift+R)");
-    let (tag, _) = tool_button("gitree-tag-symbolic", "Tag", "repo.tag", "Tag (Ctrl+Shift+T)");
+    let (stash, _) = tool_button("gitree-stash-symbolic", &gettext("Stash"), "repo.stash", &gettext("Stash (Ctrl+Shift+S)"));
+    let (discard, _) = tool_button("gitree-discard-symbolic", &gettext("Discard"), "repo.discard", &gettext("Discard (Ctrl+Shift+R)"));
+    let (tag, _) = tool_button("gitree-tag-symbolic", &gettext("Tag"), "repo.tag", &gettext("Tag (Ctrl+Shift+T)"));
     bar.append(&stash);
     bar.append(&discard);
     bar.append(&tag);
     bar.append(&sep());
-    let (flow, _) = tool_button("gitree-flow-symbolic", "Git-flow", "repo.flow", "Git-flow");
+    let (flow, _) = tool_button("gitree-flow-symbolic", &gettext("Git-flow"), "repo.flow", &gettext("Git-flow"));
     bar.append(&flow);
 
     let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     spacer.set_hexpand(true);
     bar.append(&spacer);
 
-    let (remote, _) = tool_button("gitree-remote-symbolic", "Remote", "repo.open-remote", "Open remote in web browser");
-    let (term, _) = tool_button("gitree-terminal-symbolic", "Terminal", "repo.terminal", "Open in Terminal (Ctrl+Alt+T)");
-    let (files, _) = tool_button("folder-open-symbolic", "Files", "repo.files", "Show in Files (Ctrl+Alt+O)");
+    let (remote, _) = tool_button("gitree-remote-symbolic", &gettext("Remote"), "repo.open-remote", &gettext("Open remote in web browser"));
+    let (term, _) = tool_button("gitree-terminal-symbolic", &gettext("Terminal"), "repo.terminal", &gettext("Open in Terminal (Ctrl+Alt+T)"));
+    let (files, _) = tool_button("folder-open-symbolic", &gettext("Files"), "repo.files", &gettext("Show in Files (Ctrl+Alt+O)"));
     bar.append(&remote);
     bar.append(&term);
     bar.append(&files);
 
     let menu = gio::Menu::new();
     let s1 = gio::Menu::new();
-    super::menu_item_target(&s1, "Repository Settings…", "repo.settings", "");
-    super::menu_item_target(&s1, "Refresh", "repo.refresh", "");
+    super::menu_item_target(&s1, &gettext("Repository Settings…"), "repo.settings", "");
+    super::menu_item_target(&s1, &gettext("Refresh"), "repo.refresh", "");
     menu.append_section(None, &s1);
     let s2 = gio::Menu::new();
-    super::menu_item_target(&s2, "Git LFS…", "repo.lfs", "");
-    super::menu_item_target(&s2, "Add Submodule…", "repo.add-submodule", "");
-    super::menu_item_target(&s2, "Add / Link Subtree…", "repo.add-subtree", "");
+    super::menu_item_target(&s2, &gettext("Git LFS…"), "repo.lfs", "");
+    super::menu_item_target(&s2, &gettext("Add Submodule…"), "repo.add-submodule", "");
+    super::menu_item_target(&s2, &gettext("Add / Link Subtree…"), "repo.add-subtree", "");
     menu.append_section(None, &s2);
     let s3 = gio::Menu::new();
-    super::menu_item_target(&s3, "Apply Patch…", "repo.apply-patch", "");
-    super::menu_item_target(&s3, "Interactive Rebase…", "repo.rebase-interactive-pick", "");
-    super::menu_item_target(&s3, "Cleanup Untracked Files…", "repo.clean", "");
-    super::menu_item_target(&s3, "Garbage Collect", "repo.gc", "");
+    super::menu_item_target(&s3, &gettext("Apply Patch…"), "repo.apply-patch", "");
+    super::menu_item_target(&s3, &gettext("Interactive Rebase…"), "repo.rebase-interactive-pick", "");
+    super::menu_item_target(&s3, &gettext("Cleanup Untracked Files…"), "repo.clean", "");
+    super::menu_item_target(&s3, &gettext("Garbage Collect"), "repo.gc", "");
     menu.append_section(None, &s3);
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 2);
     let img = gtk::Image::from_icon_name("preferences-system-symbolic");
     img.set_pixel_size(20);
     vbox.append(&img);
-    let l = gtk::Label::new(Some("Settings"));
+    let l = gtk::Label::new(Some(&gettext("Settings")));
     l.add_css_class("caption");
     vbox.append(&l);
     let more = gtk::MenuButton::builder()
         .child(&vbox)
         .menu_model(&menu)
-        .tooltip_text("Repository settings and more actions")
+        .tooltip_text(gettext("Repository settings and more actions"))
         .always_show_arrow(false)
         .build();
     more.add_css_class("flat");

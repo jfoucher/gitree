@@ -6,6 +6,7 @@ use super::progress::{self, OpOptions};
 use super::{ask_text, bg, confirm, spawn};
 use crate::config::{self, Bookmark};
 use crate::git::{self, Git};
+use crate::i18n::{gettext, gettext_f, ngettext_f};
 use adw::prelude::*;
 use gtk::{gio, glib};
 use std::cell::RefCell;
@@ -30,18 +31,18 @@ impl Browser {
         let bar = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         bar.add_css_class("repo-toolbar");
         let search = gtk::SearchEntry::builder()
-            .placeholder_text("Search repositories")
+            .placeholder_text(gettext("Search repositories"))
             .hexpand(true)
             .build();
         bar.append(&search);
 
         let new_menu = gio::Menu::new();
-        new_menu.append(Some("Clone from URL…"), Some("browser.clone"));
-        new_menu.append(Some("Add Existing Local Repository…"), Some("browser.add"));
-        new_menu.append(Some("Create Local Repository…"), Some("browser.create"));
-        new_menu.append(Some("Scan a Folder for Repositories…"), Some("browser.scan"));
+        new_menu.append(Some(&gettext("Clone from URL…")), Some("browser.clone"));
+        new_menu.append(Some(&gettext("Add Existing Local Repository…")), Some("browser.add"));
+        new_menu.append(Some(&gettext("Create Local Repository…")), Some("browser.create"));
+        new_menu.append(Some(&gettext("Scan a Folder for Repositories…")), Some("browser.scan"));
         let new_btn = gtk::MenuButton::builder()
-            .label("New…")
+            .label(gettext("New…"))
             .menu_model(&new_menu)
             .build();
         new_btn.add_css_class("suggested-action");
@@ -62,8 +63,8 @@ impl Browser {
         clamp.set_vexpand(true);
         let status_page = adw::StatusPage::builder()
             .icon_name("gitree-repo-symbolic")
-            .title("No Repositories")
-            .description("Clone a remote repository, add an existing local one, or create a new one using the “New…” menu.")
+            .title(gettext("No Repositories"))
+            .description(gettext("Clone a remote repository, add an existing local one, or create a new one using the “New…” menu."))
             .vexpand(true)
             .build();
         let stack = gtk::Stack::new();
@@ -94,7 +95,7 @@ impl Browser {
                     if p.exists() {
                         (t.on_open)(p);
                     } else {
-                        super::show_error(&t.widget, "Repository not found", &p.to_string_lossy());
+                        super::show_error(&t.widget, &gettext("Repository not found"), &p.to_string_lossy());
                     }
                 }
             }
@@ -140,7 +141,7 @@ impl Browser {
                 l.add_css_class("group-header");
                 row.set_header(Some(&l));
             } else if g.is_empty() && prev.as_ref().is_some_and(|p| !p.is_empty()) {
-                let l = gtk::Label::builder().label("Ungrouped").xalign(0.0).build();
+                let l = gtk::Label::builder().label(gettext("Ungrouped")).xalign(0.0).build();
                 l.add_css_class("group-header");
                 row.set_header(Some(&l));
             } else {
@@ -218,7 +219,7 @@ impl Browser {
             true,
             Box::new(|t, p| {
                 if let Err(e) = super::open_terminal(Path::new(&p)) {
-                    super::show_error(&t.widget, "Could not open terminal", &e);
+                    super::show_error(&t.widget, &gettext("Could not open terminal"), &e);
                 }
             }),
         );
@@ -235,7 +236,7 @@ impl Browser {
                             .map(|b| b.name.clone())
                     })
                     .unwrap_or_default();
-                    if let Some(name) = ask_text(&t.widget, "Rename Bookmark", "", &cur, "Rename").await {
+                    if let Some(name) = ask_text(&t.widget, &gettext("Rename Bookmark"), "", &cur, &gettext("Rename")).await {
                         config::update(|s| {
                             if let Some(b) = s.bookmarks.iter_mut().find(|b| b.path == Path::new(&p)) {
                                 b.name = name;
@@ -260,12 +261,12 @@ impl Browser {
                     })
                     .unwrap_or_default();
                     let d = adw::AlertDialog::new(
-                        Some("Move to Group"),
-                        Some("Enter a group (folder) name, or leave empty to ungroup."),
+                        Some(&gettext("Move to Group")),
+                        Some(&gettext("Enter a group (folder) name, or leave empty to ungroup.")),
                     );
                     let e = gtk::Entry::builder().text(&cur).activates_default(true).build();
                     d.set_extra_child(Some(&e));
-                    d.add_responses(&[("cancel", "Cancel"), ("ok", "Move")]);
+                    d.add_responses(&[("cancel", &gettext("Cancel")), ("ok", &gettext("Move"))]);
                     d.set_default_response(Some("ok"));
                     d.set_response_appearance("ok", adw::ResponseAppearance::Suggested);
                     if d.choose_future(Some(&t.widget)).await == "ok" {
@@ -288,9 +289,9 @@ impl Browser {
                 spawn(async move {
                     if confirm(
                         &t.widget,
-                        "Remove Bookmark?",
-                        "The repository stays on disk; only the bookmark is removed.",
-                        "Remove",
+                        &gettext("Remove Bookmark?"),
+                        &gettext("The repository stays on disk; only the bookmark is removed."),
+                        &gettext("Remove"),
                         true,
                     )
                     .await
@@ -340,11 +341,11 @@ impl Browser {
                     .into_iter()
                     .map(|(i, p)| {
                         if !p.exists() {
-                            return (i, "Missing".to_string());
+                            return (i, gettext("Missing"));
                         }
                         match git::status::status(&Git::new(&p), false) {
                             Ok(st) => {
-                                let branch = st.branch.clone().unwrap_or_else(|| "detached HEAD".into());
+                                let branch = st.branch.clone().unwrap_or_else(|| gettext("detached HEAD"));
                                 let n = st.change_count();
                                 let mut s = branch;
                                 if st.ahead > 0 {
@@ -354,11 +355,12 @@ impl Browser {
                                     s.push_str(&format!("  ↓{}", st.behind));
                                 }
                                 if n > 0 {
-                                    s.push_str(&format!("  •  {n} changed"));
+                                    s.push_str("  •  ");
+                                    s.push_str(&ngettext_f("{n} changed", "{n} changed", n as u32, &[]));
                                 }
                                 (i, s)
                             }
-                            Err(_) => (i, "Not a repository".into()),
+                            Err(_) => (i, gettext("Not a repository")),
                         }
                     })
                     .collect::<Vec<_>>()
@@ -404,14 +406,14 @@ impl Browser {
             g.set_state(gtk::EventSequenceState::Claimed);
             let menu = gio::Menu::new();
             let s1 = gio::Menu::new();
-            super::menu_item_target(&s1, "Open", "browser.open", &p);
-            super::menu_item_target(&s1, "Show in Files", "browser.show", &p);
-            super::menu_item_target(&s1, "Open in Terminal", "browser.terminal", &p);
+            super::menu_item_target(&s1, &gettext("Open"), "browser.open", &p);
+            super::menu_item_target(&s1, &gettext("Show in Files"), "browser.show", &p);
+            super::menu_item_target(&s1, &gettext("Open in Terminal"), "browser.terminal", &p);
             menu.append_section(None, &s1);
             let s2 = gio::Menu::new();
-            super::menu_item_target(&s2, "Rename…", "browser.rename", &p);
-            super::menu_item_target(&s2, "Move to Group…", "browser.group", &p);
-            super::menu_item_target(&s2, "Remove Bookmark", "browser.remove", &p);
+            super::menu_item_target(&s2, &gettext("Rename…"), "browser.rename", &p);
+            super::menu_item_target(&s2, &gettext("Move to Group…"), "browser.group", &p);
+            super::menu_item_target(&s2, &gettext("Remove Bookmark"), "browser.remove", &p);
             menu.append_section(None, &s2);
             super::popup_menu(&r, x, y, &menu);
         });
@@ -420,14 +422,14 @@ impl Browser {
     }
 
     async fn create_repo(self: &Rc<Self>) {
-        let form = Form::new("Create a Repository", "Create");
+        let form = Form::new(&gettext("Create a Repository"), &gettext("Create"));
         let default = config::with(|s| s.default_clone_dir.clone())
             .unwrap_or_default()
             .join("new-repo");
-        let path = form.entry("Destination path", &default.to_string_lossy());
+        let path = form.entry(&gettext("Destination path"), &default.to_string_lossy());
         add_browse_button(&form, &path);
-        let branch = form.entry("Initial branch", "main");
-        let bare = form.switch("Bare repository", "No working copy (for use as a remote)", false);
+        let branch = form.entry(&gettext("Initial branch"), "main");
+        let bare = form.switch(&gettext("Bare repository"), &gettext("No working copy (for use as a remote)"), false);
         form.watch(&path);
         let p2 = path.clone();
         form.validate(move || !p2.text().trim().is_empty());
@@ -437,7 +439,7 @@ impl Browser {
         }
         let dest = PathBuf::from(expand_tilde(path.text().trim()));
         if let Err(e) = std::fs::create_dir_all(&dest) {
-            super::show_error(&self.widget, "Could not create folder", &e.to_string());
+            super::show_error(&self.widget, &gettext("Could not create folder"), &e.to_string());
             return;
         }
         let mut args = vec!["init".to_string()];
@@ -450,7 +452,7 @@ impl Browser {
         let ok = progress::run(
             &self.widget.clone().upcast(),
             &Git::new(&dest),
-            "Create Repository",
+            &gettext("Create Repository"),
             vec![args],
             OpOptions::default(),
         )
@@ -465,7 +467,7 @@ impl Browser {
 
     async fn scan(self: &Rc<Self>) {
         let dialog = gtk::FileDialog::builder()
-            .title("Choose a folder to scan for repositories")
+            .title(gettext("Choose a folder to scan for repositories"))
             .build();
         let win = self.widget.root().and_downcast::<gtk::Window>();
         let Ok(folder) = dialog.select_folder_future(win.as_ref()).await else {
@@ -494,7 +496,7 @@ impl Browser {
             }
         });
         self.reload();
-        super::toast(&self.widget, &format!("Found {n} repositories"));
+        super::toast(&self.widget, &ngettext_f("Found {n} repository", "Found {n} repositories", n as u32, &[]));
     }
 }
 
@@ -531,7 +533,7 @@ pub fn add_browse_button(form: &Rc<Form>, entry: &adw::EntryRow) {
     let btn = gtk::Button::from_icon_name("folder-open-symbolic");
     btn.set_valign(gtk::Align::Center);
     btn.add_css_class("flat");
-    btn.set_tooltip_text(Some("Browse…"));
+    btn.set_tooltip_text(Some(&gettext("Browse…")));
     entry.add_suffix(&btn);
     let e = entry.clone();
     let d = form.dialog.clone();
@@ -539,7 +541,7 @@ pub fn add_browse_button(form: &Rc<Form>, entry: &adw::EntryRow) {
         let e = e.clone();
         let win = d.root().and_downcast::<gtk::Window>();
         spawn(async move {
-            let fd = gtk::FileDialog::builder().title("Choose Folder").build();
+            let fd = gtk::FileDialog::builder().title(gettext("Choose Folder")).build();
             let cur = PathBuf::from(expand_tilde(e.text().trim()));
             let start = if cur.is_dir() {
                 Some(cur)
@@ -567,7 +569,7 @@ pub fn repo_name_from_url(url: &str) -> String {
 /// "Add existing local repository" flow.
 pub async fn add_existing(parent: &gtk::Widget, on_open: impl Fn(PathBuf) + 'static) {
     let dialog = gtk::FileDialog::builder()
-        .title("Choose a Local Repository")
+        .title(gettext("Choose a Local Repository"))
         .build();
     let win = parent.root().and_downcast::<gtk::Window>();
     let Ok(folder) = dialog.select_folder_future(win.as_ref()).await else {
@@ -584,9 +586,9 @@ pub async fn add_existing(parent: &gtk::Widget, on_open: impl Fn(PathBuf) + 'sta
             let p3 = path.clone();
             if confirm(
                 parent,
-                "Not a Git Repository",
-                &format!("{}\n\nDo you want to initialise a new repository here?", path.display()),
-                "Create Repository",
+                &gettext("Not a Git Repository"),
+                &gettext_f("{path}\n\nDo you want to initialise a new repository here?", &[("path", &path.display().to_string())]),
+                &gettext("Create Repository"),
                 false,
             )
             .await
@@ -604,17 +606,17 @@ pub fn clone_dialog(parent: &gtk::Widget, url: &str, on_open: impl Fn(PathBuf) +
     let parent = parent.clone();
     let url = url.to_string();
     spawn(async move {
-        let form = Form::new("Clone a Repository", "Clone");
-        let src = form.entry("Source URL", &url);
+        let form = Form::new(&gettext("Clone a Repository"), &gettext("Clone"));
+        let src = form.entry(&gettext("Source URL"), &url);
         let base = config::with(|s| s.default_clone_dir.clone()).unwrap_or_default();
-        let dest = form.entry("Destination path", &base.to_string_lossy());
+        let dest = form.entry(&gettext("Destination path"), &base.to_string_lossy());
         add_browse_button(&form, &dest);
-        let name = form.entry("Bookmark name", "");
-        form.group("Advanced Options");
-        let branch = form.entry("Checkout branch (optional)", "");
-        let depth = form.spin("Clone depth (0 = full history)", 0.0, 100000.0, 0.0);
-        let recurse = form.switch("Recurse submodules", "", true);
-        let lfs = form.switch("Skip LFS files during clone", "Use `git lfs pull` later", false);
+        let name = form.entry(&gettext("Bookmark name"), "");
+        form.group(&gettext("Advanced Options"));
+        let branch = form.entry(&gettext("Checkout branch (optional)"), "");
+        let depth = form.spin(&gettext("Clone depth (0 = full history)"), 0.0, 100000.0, 0.0);
+        let recurse = form.switch(&gettext("Recurse submodules"), "", true);
+        let lfs = form.switch(&gettext("Skip LFS files during clone"), &gettext("Use `git lfs pull` later"), false);
 
         // Auto-fill destination and name from the URL.
         let (d2, n2) = (dest.clone(), name.clone());
@@ -677,7 +679,7 @@ pub fn clone_dialog(parent: &gtk::Widget, url: &str, on_open: impl Fn(PathBuf) +
         if lfs.is_active() {
             opts.env.push(("GIT_LFS_SKIP_SMUDGE".into(), "1".into()));
         }
-        let ok = progress::run(&parent, &Git::new(&dest_parent), "Clone", vec![args], opts)
+        let ok = progress::run(&parent, &Git::new(&dest_parent), &gettext("Clone"), vec![args], opts)
             .await
             .is_ok();
         if ok {

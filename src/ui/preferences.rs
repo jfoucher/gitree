@@ -2,24 +2,25 @@
 
 use crate::config::{self, CustomAction};
 use crate::git;
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use std::path::PathBuf;
 
 pub fn show(parent: &impl IsA<gtk::Widget>) {
     let dialog = adw::PreferencesDialog::new();
-    dialog.set_title("Preferences");
+    dialog.set_title(&gettext("Preferences"));
 
     // General
     let general = adw::PreferencesPage::builder()
-        .title("General")
+        .title(gettext("General"))
         .icon_name("preferences-system-symbolic")
         .build();
     let ident = adw::PreferencesGroup::builder()
-        .title("Default user information")
-        .description("Global git identity used for commits (git config --global)")
+        .title(gettext("Default user information"))
+        .description(gettext("Global git identity used for commits (git config --global)"))
         .build();
     let get = |k: &str| git::config_get(None, k).unwrap_or_default();
-    for (title, key) in [("Full name", "user.name"), ("Email address", "user.email")] {
+    for (title, key) in [(gettext("Full name"), "user.name"), (gettext("Email address"), "user.email")] {
         let row = adw::EntryRow::builder()
             .title(title)
             .text(get(key))
@@ -33,9 +34,9 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     }
     general.add(&ident);
 
-    let repos = adw::PreferencesGroup::builder().title("Repositories").build();
+    let repos = adw::PreferencesGroup::builder().title(gettext("Repositories")).build();
     let clone_dir = adw::EntryRow::builder()
-        .title("Default clone folder")
+        .title(gettext("Default clone folder"))
         .text(
             config::with(|s| s.default_clone_dir.clone())
                 .map(|p| p.to_string_lossy().to_string())
@@ -49,8 +50,8 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     });
     repos.add(&clone_dir);
     let fetch = adw::SpinRow::with_range(0.0, 240.0, 1.0);
-    fetch.set_title("Check remotes every (minutes)");
-    fetch.set_subtitle("Background fetch; 0 disables it");
+    fetch.set_title(&gettext("Check remotes every (minutes)"));
+    fetch.set_subtitle(&gettext("Background fetch; 0 disables it"));
     fetch.set_value(config::with(|s| s.fetch_interval_min) as f64);
     fetch.connect_value_notify(|r| {
         let v = r.value() as u32;
@@ -58,7 +59,7 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     });
     repos.add(&fetch);
     let page_size = adw::SpinRow::with_range(200.0, 100000.0, 100.0);
-    page_size.set_title("Commits loaded at a time");
+    page_size.set_title(&gettext("Commits loaded at a time"));
     page_size.set_value(config::with(|s| s.log_page_size) as f64);
     page_size.connect_value_notify(|r| {
         let v = r.value() as u32;
@@ -66,8 +67,8 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     });
     repos.add(&page_size);
     let confirm = adw::SwitchRow::builder()
-        .title("Confirm dangerous operations")
-        .subtitle("Hard reset and similar")
+        .title(gettext("Confirm dangerous operations"))
+        .subtitle(gettext("Hard reset and similar"))
         .active(config::with(|s| s.confirm_dangerous))
         .build();
     confirm.connect_active_notify(|r| {
@@ -76,7 +77,7 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     });
     repos.add(&confirm);
     let term = adw::EntryRow::builder()
-        .title("Terminal command (empty = auto-detect)")
+        .title(gettext("Terminal command (empty = auto-detect)"))
         .text(config::with(|s| s.terminal.clone()))
         .show_apply_button(true)
         .build();
@@ -88,18 +89,19 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     general.add(&repos);
 
     let creds = adw::PreferencesGroup::builder()
-        .title("Credentials")
-        .description("How git remembers HTTPS passwords (git config --global credential.helper)")
+        .title(gettext("Credentials"))
+        .description(gettext("How git remembers HTTPS passwords (git config --global credential.helper)"))
         .build();
     let helpers = ["(none)", "cache --timeout=3600", "store", "libsecret", "manager"];
     let current = git::config_get(None, "credential.helper").unwrap_or_default();
-    let model = gtk::StringList::new(&helpers);
-    let combo = adw::ComboRow::builder().title("Credential helper").model(&model).build();
+    let none_label = gettext("(none)");
+    let model = gtk::StringList::new(&[&none_label, helpers[1], helpers[2], helpers[3], helpers[4]]);
+    let combo = adw::ComboRow::builder().title(gettext("Credential helper")).model(&model).build();
     let idx = helpers.iter().position(|h| *h == current || (current.is_empty() && *h == "(none)"));
     if let Some(i) = idx {
         combo.set_selected(i as u32);
     } else {
-        combo.set_subtitle(&format!("Currently: {current}"));
+        combo.set_subtitle(&gettext_f("Currently: {helper}", &[("helper", &current)]));
         combo.set_selected(gtk::INVALID_LIST_POSITION);
     }
     combo.connect_selected_notify(move |c| {
@@ -114,8 +116,8 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     });
     creds.add(&combo);
     let ssh = adw::ActionRow::builder()
-        .title("SSH keys")
-        .subtitle("SSH authentication uses your ~/.ssh keys and ssh-agent. Passphrases are asked with a dialog.")
+        .title(gettext("SSH keys"))
+        .subtitle(gettext("SSH authentication uses your ~/.ssh keys and ssh-agent. Passphrases are asked with a dialog."))
         .build();
     creds.add(&ssh);
     general.add(&creds);
@@ -123,12 +125,12 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
 
     // Diff & tools
     let diff = adw::PreferencesPage::builder()
-        .title("Diff")
+        .title(gettext("Diff"))
         .icon_name("gitree-filestatus-symbolic")
         .build();
-    let dg = adw::PreferencesGroup::builder().title("Diff view").build();
+    let dg = adw::PreferencesGroup::builder().title(gettext("Diff view")).build();
     let ctx = adw::SpinRow::with_range(0.0, 100.0, 1.0);
-    ctx.set_title("Lines of context");
+    ctx.set_title(&gettext("Lines of context"));
     ctx.set_value(config::with(|s| s.diff_context) as f64);
     ctx.connect_value_notify(|r| {
         let v = r.value() as u32;
@@ -136,7 +138,7 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     });
     dg.add(&ctx);
     let ws = adw::SwitchRow::builder()
-        .title("Ignore whitespace by default")
+        .title(gettext("Ignore whitespace by default"))
         .active(config::with(|s| s.diff_ignore_whitespace))
         .build();
     ws.connect_active_notify(|r| {
@@ -146,11 +148,11 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     dg.add(&ws);
     diff.add(&dg);
     let tools = adw::PreferencesGroup::builder()
-        .title("External tools")
-        .description("A git tool name (meld, kdiff3, vimdiff, bc, …) or a command using $LOCAL $REMOTE ($BASE $MERGED for merges)")
+        .title(gettext("External tools"))
+        .description(gettext("A git tool name (meld, kdiff3, vimdiff, bc, …) or a command using $LOCAL $REMOTE ($BASE $MERGED for merges)"))
         .build();
     let dt = adw::EntryRow::builder()
-        .title("Diff tool")
+        .title(gettext("Diff tool"))
         .text(config::with(|s| s.diff_tool.clone()))
         .show_apply_button(true)
         .build();
@@ -160,7 +162,7 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
     });
     tools.add(&dt);
     let mt = adw::EntryRow::builder()
-        .title("Merge tool")
+        .title(gettext("Merge tool"))
         .text(config::with(|s| s.merge_tool.clone()))
         .show_apply_button(true)
         .build();
@@ -174,12 +176,12 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
 
     // Custom actions
     let custom = adw::PreferencesPage::builder()
-        .title("Custom Actions")
+        .title(gettext("Custom Actions"))
         .icon_name("system-run-symbolic")
         .build();
     let cg = adw::PreferencesGroup::builder()
-        .title("Custom actions")
-        .description("Shown in the commit and file context menus. Arguments may use $REPO, $SHA and $FILE.")
+        .title(gettext("Custom actions"))
+        .description(gettext("Shown in the commit and file context menus. Arguments may use $REPO, $SHA and $FILE."))
         .build();
     let add = gtk::Button::from_icon_name("list-add-symbolic");
     add.add_css_class("flat");
@@ -191,11 +193,11 @@ pub fn show(parent: &impl IsA<gtk::Widget>) {
         let cg3 = cg2.clone();
         let d3 = d2.clone();
         glib_spawn(async move {
-            let form = super::form::Form::new("New Custom Action", "Add");
-            let name = form.entry("Menu caption", "");
-            let cmd = form.entry("Script to run", "");
-            let args = form.entry("Parameters", "$SHA");
-            let show = form.switch("Show full output", "", false);
+            let form = super::form::Form::new(&gettext("New Custom Action"), &gettext("Add"));
+            let name = form.entry(&gettext("Menu caption"), "");
+            let cmd = form.entry(&gettext("Script to run"), "");
+            let args = form.entry(&gettext("Parameters"), "$SHA");
+            let show = form.switch(&gettext("Show full output"), "", false);
             let (n2, c2) = (name.clone(), cmd.clone());
             form.watch(&name);
             form.watch(&cmd);

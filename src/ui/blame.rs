@@ -3,6 +3,7 @@
 use super::repo_view::RepoView;
 use super::{bg, spawn};
 use crate::git::blame;
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use gtk::gdk;
 use sourceview5::prelude::*;
@@ -10,8 +11,8 @@ use std::rc::Rc;
 
 pub fn show(rv: &Rc<RepoView>, path: &str, rev: Option<String>) {
     let title = match &rev {
-        Some(r) => format!("Blame — {path} @ {}", &r[..r.len().min(10)]),
-        None => format!("Blame — {path}"),
+        Some(r) => gettext_f("Blame — {file} @ {commit}", &[("file", path), ("commit", &r[..r.len().min(10)])]),
+        None => gettext_f("Blame — {file}", &[("file", path)]),
     };
     let win = adw::Window::builder()
         .title(&title)
@@ -24,7 +25,7 @@ pub fn show(rv: &Rc<RepoView>, path: &str, rev: Option<String>) {
     let header = adw::HeaderBar::new();
     let spinner = adw::Spinner::new();
     header.pack_start(&spinner);
-    let info = gtk::Label::new(Some("Click a line's annotation to show the commit in History"));
+    let info = gtk::Label::new(Some(&gettext("Click a line's annotation to show the commit in History")));
     info.add_css_class("dim-label");
     info.add_css_class("caption");
     header.pack_end(&info);
@@ -80,7 +81,7 @@ pub fn show(rv: &Rc<RepoView>, path: &str, rev: Option<String>) {
         let b = match r {
             Ok(b) => b,
             Err(e) => {
-                super::show_error(&win2, "Blame failed", &e.to_string());
+                super::show_error(&win2, &gettext("Blame failed"), &e.to_string());
                 return;
             }
         };
@@ -109,7 +110,8 @@ pub fn show(rv: &Rc<RepoView>, path: &str, rev: Option<String>) {
                     .unwrap_or_default();
                 let author: String = c.map(|c| c.author.chars().take(16).collect()).unwrap_or_default();
                 if l.oid.starts_with("0000000") {
-                    gtext.push_str(&format!("{:<8} {:<16} {:<10}", "-------", "Not committed", ""));
+                    let not_committed: String = gettext("Not committed").chars().take(16).collect();
+                    gtext.push_str(&format!("{:<8} {:<16} {:<10}", "-------", not_committed, ""));
                 } else {
                     gtext.push_str(&format!("{:<8} {:<16} {:<10}", &l.oid[..7], author, date));
                 }

@@ -2,13 +2,14 @@
 //! passphrase. Git runs our own executable as GIT_ASKPASS/SSH_ASKPASS with
 //! the prompt as the first argument and reads the answer from stdout.
 
+use crate::i18n::gettext;
 use adw::prelude::*;
 use gtk::{gio, glib};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 pub fn run() -> glib::ExitCode {
-    let prompt = std::env::args().nth(1).unwrap_or_else(|| "Password:".into());
+    let prompt = std::env::args().nth(1).unwrap_or_else(|| gettext("Password:"));
     let lower = prompt.to_lowercase();
     // ssh host key confirmation prompts expect "yes"/"no".
     let is_confirm = lower.contains("(yes/no");
@@ -24,7 +25,7 @@ pub fn run() -> glib::ExitCode {
     app.connect_activate(move |app| {
         let win = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Authentication Required")
+            .title(gettext("Authentication Required"))
             .default_width(460)
             .resizable(false)
             .build();
@@ -36,7 +37,7 @@ pub fn run() -> glib::ExitCode {
         body.set_margin_end(18);
 
         let title = gtk::Label::builder()
-            .label("Git needs your credentials")
+            .label(gettext("Git needs your credentials"))
             .xalign(0.0)
             .build();
         title.add_css_class("title-3");
@@ -51,19 +52,19 @@ pub fn run() -> glib::ExitCode {
 
         let group = adw::PreferencesGroup::new();
         let entry: gtk::Widget = if is_confirm {
-            adw::EntryRow::builder().title("Type yes or no").text("yes").build().upcast()
+            adw::EntryRow::builder().title(gettext("Type yes or no")).text("yes").build().upcast()
         } else if is_secret {
-            adw::PasswordEntryRow::builder().title("Password").build().upcast()
+            adw::PasswordEntryRow::builder().title(gettext("Password")).build().upcast()
         } else {
-            adw::EntryRow::builder().title("Username").build().upcast()
+            adw::EntryRow::builder().title(gettext("Username")).build().upcast()
         };
         group.add(&entry);
         body.append(&group);
 
         let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         buttons.set_halign(gtk::Align::End);
-        let cancel = gtk::Button::with_label("Cancel");
-        let ok = gtk::Button::with_label("OK");
+        let cancel = gtk::Button::with_label(&gettext("Cancel"));
+        let ok = gtk::Button::with_label(&gettext("OK"));
         ok.add_css_class("suggested-action");
         buttons.append(&cancel);
         buttons.append(&ok);

@@ -4,9 +4,46 @@ use super::form::{combo_value, text_of, Form};
 use super::progress::OpOptions;
 use super::repo_view::RepoView;
 use crate::git::flow::{FinishOptions, FlowConfig, FlowKind};
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use std::cell::Cell;
 use std::rc::Rc;
+
+/// Translated labels for a branch kind, as whole phrases so they can be
+/// inflected per language.
+struct KindText {
+    name: String,
+    new: String,
+    start: String,
+    finish: String,
+    name_label: String,
+}
+
+fn kind_text(kind: FlowKind) -> KindText {
+    match kind {
+        FlowKind::Feature => KindText {
+            name: gettext("Feature"),
+            new: gettext("New Feature"),
+            start: gettext("Start Feature"),
+            finish: gettext("Finish Feature"),
+            name_label: gettext("Feature name"),
+        },
+        FlowKind::Release => KindText {
+            name: gettext("Release"),
+            new: gettext("New Release"),
+            start: gettext("Start Release"),
+            finish: gettext("Finish Release"),
+            name_label: gettext("Release name"),
+        },
+        FlowKind::Hotfix => KindText {
+            name: gettext("Hotfix"),
+            new: gettext("New Hotfix"),
+            start: gettext("Start Hotfix"),
+            finish: gettext("Finish Hotfix"),
+            name_label: gettext("Hotfix name"),
+        },
+    }
+}
 
 pub async fn show(rv: &Rc<RepoView>) {
     let snap = rv.snapshot();
@@ -15,8 +52,8 @@ pub async fn show(rv: &Rc<RepoView>) {
         return;
     };
     let current = snap.current_branch().unwrap_or("").to_string();
-    let form = Form::new("Git-flow", "Close");
-    form.description("What would you like to do?");
+    let form = Form::new(&gettext("Git-flow"), &gettext("Close"));
+    form.description(&gettext("What would you like to do?"));
     let choice = Rc::new(Cell::new(None::<u8>));
     let add = |label: &str, sub: &str, id: u8| {
         let row = adw::ButtonRow::builder().title(label).build();
@@ -32,11 +69,16 @@ pub async fn show(rv: &Rc<RepoView>) {
         form.add(&row);
     };
     if let Some((kind, name)) = cfg.classify(&current) {
-        add(&format!("Finish {} “{name}”", kind.label()), "", 0);
+        let label = match kind {
+            FlowKind::Feature => gettext_f("Finish Feature “{name}”", &[("name", &name)]),
+            FlowKind::Release => gettext_f("Finish Release “{name}”", &[("name", &name)]),
+            FlowKind::Hotfix => gettext_f("Finish Hotfix “{name}”", &[("name", &name)]),
+        };
+        add(&label, "", 0);
     }
-    add("Start New Feature", "Branch off develop", 1);
-    add("Start New Release", "Branch off develop", 2);
-    add("Start New Hotfix", "Branch off the production branch", 3);
+    add(&gettext("Start New Feature"), &gettext("Branch off develop"), 1);
+    add(&gettext("Start New Release"), &gettext("Branch off develop"), 2);
+    add(&gettext("Start New Hotfix"), &gettext("Branch off the production branch"), 3);
     form.ok.set_visible(false);
     form.run(&rv.widget).await;
     match choice.get() {
@@ -59,16 +101,16 @@ async fn init(rv: &Rc<RepoView>) {
     } else {
         "main"
     };
-    let form = Form::new("Initialise Git-flow", "OK");
-    form.description("Git-flow is not set up in this repository yet. Choose the branch names and prefixes to use.");
-    form.group("Branches");
-    let master = form.entry("Production branch", master_default);
-    let develop = form.entry("Development branch", &d.develop);
-    form.group("Prefixes");
-    let feature = form.entry("Feature", &d.feature);
-    let release = form.entry("Release", &d.release);
-    let hotfix = form.entry("Hotfix", &d.hotfix);
-    let versiontag = form.entry("Version tag prefix", "");
+    let form = Form::new(&gettext("Initialise Git-flow"), &gettext("OK"));
+    form.description(&gettext("Git-flow is not set up in this repository yet. Choose the branch names and prefixes to use."));
+    form.group(&gettext("Branches"));
+    let master = form.entry(&gettext("Production branch"), master_default);
+    let develop = form.entry(&gettext("Development branch"), &d.develop);
+    form.group(&gettext("Prefixes"));
+    let feature = form.entry(&gettext("Feature"), &d.feature);
+    let release = form.entry(&gettext("Release"), &d.release);
+    let hotfix = form.entry(&gettext("Hotfix"), &d.hotfix);
+    let versiontag = form.entry(&gettext("Version tag prefix"), "");
     form.focus(&master);
     if !form.run(&rv.widget).await {
         return;
@@ -87,12 +129,13 @@ async fn init(rv: &Rc<RepoView>) {
         locals.contains(&cfg.develop),
         snap.refs.head_oid.is_some(),
     );
-    rv.run_ops("Initialise Git-flow", cmds, OpOptions::default()).await;
+    rv.run_ops(&gettext("Initialise Git-flow"), cmds, OpOptions::default()).await;
 }
 
 async fn start(rv: &Rc<RepoView>, cfg: &FlowConfig, kind: FlowKind) {
-    let form = Form::new(&format!("New {}", kind.label()), &format!("Start {}", kind.label()));
-    let name = form.entry(&format!("{} name", kind.label()), "");
+    let t = kind_text(kind);
+    let form = Form::new(&t.new, &t.start);
+    let name = form.entry(&t.name_label, "");
     let default_base = match kind {
         FlowKind::Hotfix => cfg.master.clone(),
         _ => cfg.develop.clone(),
@@ -105,8 +148,8 @@ async fn start(rv: &Rc<RepoView>, cfg: &FlowConfig, kind: FlowKind) {
             .map(|r| r.name.clone())
             .filter(|n| *n != default_base),
     );
-    let base = form.combo("Start at", &bases, Some(&default_base));
-    form.info("Branch prefix", cfg.prefix(kind));
+    let base = form.combo(&gettext("Start at"), &bases, Some(&default_base));
+    form.info(&gettext("Branch prefix"), cfg.prefix(kind));
     let n2 = name.clone();
     form.watch(&name);
     let git = rv.git.clone();
@@ -120,25 +163,26 @@ async fn start(rv: &Rc<RepoView>, cfg: &FlowConfig, kind: FlowKind) {
         return;
     }
     let cmds = cfg.start_commands(kind, name.text().trim(), Some(&combo_value(&base)));
-    rv.run_ops(&format!("Start {}", kind.label()), cmds, OpOptions::default()).await;
+    rv.run_ops(&t.start, cmds, OpOptions::default()).await;
 }
 
 pub async fn finish(rv: &Rc<RepoView>, branch: &str) {
     let Some(cfg) = rv.snapshot().flow.clone() else { return };
     let Some((kind, name)) = cfg.classify(branch) else {
-        rv.toast("This is not a git-flow feature, release or hotfix branch");
+        rv.toast(&gettext("This is not a git-flow feature, release or hotfix branch"));
         return;
     };
-    let form = Form::new(&format!("Finish {}", kind.label()), &format!("Finish {}", kind.label()));
-    form.info(kind.label(), &name);
-    let delete = form.switch("Delete branch", "", true);
-    let rebase = form.switch("Rebase on development branch", "", false);
+    let t = kind_text(kind);
+    let form = Form::new(&t.finish, &t.finish);
+    form.info(&t.name, &name);
+    let delete = form.switch(&gettext("Delete branch"), "", true);
+    let rebase = form.switch(&gettext("Rebase on development branch"), "", false);
     rebase.set_visible(kind == FlowKind::Feature);
-    let push = form.switch("Push changes to origin", "", false);
+    let push = form.switch(&gettext("Push changes to origin"), "", false);
     push.set_visible(!rv.snapshot().remotes.is_empty());
-    let no_tag = form.switch("Don't create a tag", "", false);
+    let no_tag = form.switch(&gettext("Don't create a tag"), "", false);
     no_tag.set_visible(kind != FlowKind::Feature);
-    let msg = form.text("Tag message", &format!("{} {name}", kind.label()), 50);
+    let msg = form.text(&gettext("Tag message"), &format!("{} {name}", kind.label()), 50);
     if let Some(g) = msg.parent().and_then(|p| p.parent()) { g.set_visible(kind != FlowKind::Feature) }
     form.focus_ok();
     if !form.run(&rv.widget).await {
@@ -156,7 +200,7 @@ pub async fn finish(rv: &Rc<RepoView>, branch: &str) {
         },
     );
     rv.run_ops(
-        &format!("Finish {}", kind.label()),
+        &t.finish,
         cmds,
         OpOptions {
             network: push.is_active(),

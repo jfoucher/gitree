@@ -1,0 +1,25 @@
+# Source files containing translatable strings (see scripts/i18n.sh).
+data/io.github.gitree.Gitree.desktop
+data/io.github.gitree.Gitree.metainfo.xml
+src/askpass.rs
+src/git/log.rs
+src/git/rebase.rs
+src/git/runner.rs
+src/git/state.rs
+src/ui/blame.rs
+src/ui/browser.rs
+src/ui/dialogs.rs
+src/ui/diff_view.rs
+src/ui/file_status.rs
+src/ui/flow.rs
+src/ui/form.rs
+src/ui/history.rs
+src/ui/mod.rs
+src/ui/preferences.rs
+src/ui/progress.rs
+src/ui/rebase.rs
+src/ui/repo_settings.rs
+src/ui/repo_view.rs
+src/ui/sidebar.rs
+src/ui/staging.rs
+src/ui/window.rs

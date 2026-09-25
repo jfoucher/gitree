@@ -2,6 +2,7 @@ mod askpass;
 mod config;
 mod git;
 mod host;
+mod i18n;
 mod ui;
 mod watch;
 
@@ -14,6 +15,7 @@ pub const ASKPASS_ENV: &str = "GITREE_ASKPASS";
 pub const APP_ID: &str = "io.github.gitree.Gitree";
 
 fn main() -> glib::ExitCode {
+    i18n::init();
     if std::env::var_os(ASKPASS_ENV).is_some() {
         return askpass::run();
     }

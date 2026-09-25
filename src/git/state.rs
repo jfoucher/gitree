@@ -1,5 +1,6 @@
 //! Detection of in-progress operations (merge, rebase, cherry-pick, ...).
 
+use crate::i18n::{gettext, gettext_f};
 use std::path::Path;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -27,17 +28,18 @@ impl OpState {
     pub fn label(&self) -> String {
         match self {
             OpState::None => String::new(),
-            OpState::Merge => "A merge is in progress.".into(),
+            OpState::Merge => gettext("A merge is in progress."),
             OpState::Rebase { step, total, editing, .. } => {
+                let args = [("step", &*step.to_string()), ("total", &*total.to_string())];
                 if *editing {
-                    format!("Rebase stopped for editing (step {step} of {total}). Amend the commit, then continue.")
+                    gettext_f("Rebase stopped for editing (step {step} of {total}). Amend the commit, then continue.", &args)
                 } else {
-                    format!("A rebase is in progress (step {step} of {total}).")
+                    gettext_f("A rebase is in progress (step {step} of {total}).", &args)
                 }
             }
-            OpState::CherryPick => "A cherry-pick is in progress.".into(),
-            OpState::Revert => "A revert is in progress.".into(),
-            OpState::Bisect => "A bisect is in progress.".into(),
+            OpState::CherryPick => gettext("A cherry-pick is in progress."),
+            OpState::Revert => gettext("A revert is in progress."),
+            OpState::Bisect => gettext("A bisect is in progress."),
         }
     }
 

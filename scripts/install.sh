@@ -16,7 +16,7 @@ files=(
 )
 
 if [[ "${1:-}" == "--uninstall" ]]; then
-  rm -f "${files[@]}"
+  rm -f "${files[@]}" "$PREFIX"/share/locale/*/LC_MESSAGES/gitree.mo
   echo "Removed Gitree from $PREFIX"
   exit 0
 fi
@@ -27,6 +27,7 @@ check_build_deps() {
   local missing=()
   command -v pkg-config >/dev/null || missing+=(pkg-config)
   command -v cc >/dev/null || missing+=(cc)
+  command -v msgfmt >/dev/null || missing+=(msgfmt)
   if command -v pkg-config >/dev/null; then
     local mod
     for mod in 'gtk4 >= 4.18' 'libadwaita-1 >= 1.7' 'gtksourceview-5'; do
@@ -39,15 +40,15 @@ check_build_deps() {
   [[ -r /etc/os-release ]] && ids=$(. /etc/os-release; echo "${ID:-} ${ID_LIKE:-}")
   case " $ids " in
     *" fedora "*|*" rhel "*)
-      cmd="sudo dnf install gcc pkgconf-pkg-config gtk4-devel libadwaita-devel gtksourceview5-devel" ;;
+      cmd="sudo dnf install gcc pkgconf-pkg-config gettext gtk4-devel libadwaita-devel gtksourceview5-devel" ;;
     *" debian "*|*" ubuntu "*)
-      cmd="sudo apt install build-essential pkg-config libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev" ;;
+      cmd="sudo apt install build-essential pkg-config gettext libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev" ;;
     *" arch "*)
-      cmd="sudo pacman -S --needed base-devel gtk4 libadwaita gtksourceview5" ;;
+      cmd="sudo pacman -S --needed base-devel gettext gtk4 libadwaita gtksourceview5" ;;
     *" suse "*|*" opensuse "*)
-      cmd="sudo zypper install gcc pkgconf gtk4-devel libadwaita-devel gtksourceview5-devel" ;;
+      cmd="sudo zypper install gcc pkgconf gettext-tools gtk4-devel libadwaita-devel gtksourceview5-devel" ;;
     *)
-      cmd="install the development packages for GTK 4 (>= 4.18), libadwaita (>= 1.7) and GtkSourceView 5" ;;
+      cmd="install gettext and the development packages for GTK 4 (>= 4.18), libadwaita (>= 1.7) and GtkSourceView 5" ;;
   esac
   echo "Missing build dependencies: ${missing[*]}" >&2
   echo "Install them with:" >&2
@@ -65,12 +66,12 @@ elif [[ ! -x "$ROOT/target/release/gitree" ]]; then
 fi
 
 install -Dm755 "$ROOT/target/release/gitree" "${files[0]}"
+# Message catalogs, plus the desktop entry and metainfo with translations merged in.
+"$ROOT/scripts/i18n.sh" build "$PREFIX"
 # Absolute Exec path: GLib hides desktop entries whose binary isn't on the
 # session PATH, and ~/.local/bin is often only added by the shell profile.
-install -dm755 "$(dirname "${files[1]}")"
-sed "s|^Exec=gitree|Exec=${files[0]}|" "$ROOT/data/$APP.desktop" > "${files[1]}"
-chmod 644 "${files[1]}"
-install -Dm644 "$ROOT/data/$APP.metainfo.xml" "${files[2]}"
+sed -i "s|^Exec=gitree|Exec=${files[0]}|" "${files[1]}"
+chmod 644 "${files[1]}" "${files[2]}"
 install -Dm644 "$ROOT/data/icons/scalable/apps/$APP.svg" "${files[3]}"
 command -v update-desktop-database >/dev/null && update-desktop-database -q "$PREFIX/share/applications" || true
 # Only refresh an existing theme cache; without one, lookups scan the directory.

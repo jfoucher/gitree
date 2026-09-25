@@ -5,6 +5,7 @@ use super::progress::OpOptions;
 use super::repo_view::RepoView;
 use super::{bg, show_error, spawn};
 use crate::git;
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use std::rc::Rc;
 
@@ -15,20 +16,20 @@ fn s(v: &[&str]) -> Vec<String> {
 /// Shows the repository settings dialog (`page`: 0 remotes, 1 advanced).
 pub fn show(rv: &Rc<RepoView>, _page: u32) {
     let dialog = adw::PreferencesDialog::new();
-    dialog.set_title("Repository Settings");
+    dialog.set_title(&gettext("Repository Settings"));
     dialog.set_search_enabled(false);
 
     // Remotes page
     let remotes_page = adw::PreferencesPage::builder()
-        .title("Remotes")
+        .title(gettext("Remotes"))
         .icon_name("gitree-remote-symbolic")
         .build();
     let group = adw::PreferencesGroup::builder()
-        .title("Remote repositories")
+        .title(gettext("Remote repositories"))
         .build();
     let add = gtk::Button::from_icon_name("list-add-symbolic");
     add.add_css_class("flat");
-    add.set_tooltip_text(Some("Add remote"));
+    add.set_tooltip_text(Some(&gettext("Add remote")));
     group.set_header_suffix(Some(&add));
     for r in &rv.snapshot().remotes {
         let row = adw::ActionRow::builder()
@@ -57,7 +58,7 @@ pub fn show(rv: &Rc<RepoView>, _page: u32) {
         group.add(&row);
     }
     if rv.snapshot().remotes.is_empty() {
-        let row = adw::ActionRow::builder().title("No remotes").build();
+        let row = adw::ActionRow::builder().title(gettext("No remotes")).build();
         row.add_css_class("dim-label");
         group.add(&row);
     }
@@ -71,12 +72,12 @@ pub fn show(rv: &Rc<RepoView>, _page: u32) {
 
     // Advanced page: identity + files
     let adv = adw::PreferencesPage::builder()
-        .title("Advanced")
+        .title(gettext("Advanced"))
         .icon_name("preferences-system-symbolic")
         .build();
     let ident = adw::PreferencesGroup::builder()
-        .title("User information")
-        .description("Leave empty to use the global identity")
+        .title(gettext("User information"))
+        .description(gettext("Leave empty to use the global identity"))
         .build();
     let local = |k: &str| {
         rv.git
@@ -84,8 +85,8 @@ pub fn show(rv: &Rc<RepoView>, _page: u32) {
             .map(|s| s.trim().to_string())
             .unwrap_or_default()
     };
-    let name = adw::EntryRow::builder().title("Full name").text(local("user.name")).build();
-    let email = adw::EntryRow::builder().title("Email address").text(local("user.email")).build();
+    let name = adw::EntryRow::builder().title(gettext("Full name")).text(local("user.name")).build();
+    let email = adw::EntryRow::builder().title(gettext("Email address")).text(local("user.email")).build();
     name.set_show_apply_button(true);
     email.set_show_apply_button(true);
     for (row, key) in [(&name, "user.name"), (&email, "user.email")] {
@@ -103,7 +104,7 @@ pub fn show(rv: &Rc<RepoView>, _page: u32) {
     }
     adv.add(&ident);
 
-    let files = adw::PreferencesGroup::builder().title("Files").build();
+    let files = adw::PreferencesGroup::builder().title(gettext("Files")).build();
     let edit_row = |title: &str, sub: &str, path: std::path::PathBuf| {
         let row = adw::ActionRow::builder()
             .title(title)
@@ -118,10 +119,10 @@ pub fn show(rv: &Rc<RepoView>, _page: u32) {
         });
         row
     };
-    files.add(&edit_row("Edit .gitignore", "Ignore patterns shared with the repository", rv.git.workdir.join(".gitignore")));
-    files.add(&edit_row("Edit local excludes", ".git/info/exclude — not shared", rv.git_dir.join("info").join("exclude")));
-    files.add(&edit_row("Edit config file", ".git/config", rv.git_dir.join("config")));
-    files.add(&edit_row("Edit .gitattributes", "Line endings, LFS tracking, diff drivers", rv.git.workdir.join(".gitattributes")));
+    files.add(&edit_row(&gettext("Edit .gitignore"), &gettext("Ignore patterns shared with the repository"), rv.git.workdir.join(".gitignore")));
+    files.add(&edit_row(&gettext("Edit local excludes"), &gettext(".git/info/exclude — not shared"), rv.git_dir.join("info").join("exclude")));
+    files.add(&edit_row(&gettext("Edit config file"), ".git/config", rv.git_dir.join("config")));
+    files.add(&edit_row(&gettext("Edit .gitattributes"), &gettext("Line endings, LFS tracking, diff drivers"), rv.git.workdir.join(".gitattributes")));
     adv.add(&files);
     dialog.add(&adv);
 
@@ -142,7 +143,7 @@ fn edit_file_page(dialog: &adw::PreferencesDialog, title: &str, path: std::path:
         .build();
     tv.buffer().set_text(&content);
     let sw = gtk::ScrolledWindow::builder().child(&tv).vexpand(true).build();
-    let save = gtk::Button::with_label("Save");
+    let save = gtk::Button::with_label(&gettext("Save"));
     save.add_css_class("suggested-action");
     let header = adw::HeaderBar::new();
     header.pack_end(&save);
@@ -157,10 +158,10 @@ fn edit_file_page(dialog: &adw::PreferencesDialog, title: &str, path: std::path:
         }
         match std::fs::write(&path, text_of(&tv)) {
             Ok(()) => {
-                d.add_toast(adw::Toast::new("Saved"));
+                d.add_toast(adw::Toast::new(&gettext("Saved")));
                 d.pop_subpage();
             }
-            Err(e) => d.add_toast(adw::Toast::new(&format!("Could not save: {e}"))),
+            Err(e) => d.add_toast(adw::Toast::new(&gettext_f("Could not save: {error}", &[("error", &e.to_string())]))),
         }
     });
     dialog.push_subpage(&page);
@@ -171,18 +172,18 @@ pub async fn edit_remote(rv: &Rc<RepoView>, name: Option<String>) {
     let existing = name
         .as_ref()
         .and_then(|n| rv.snapshot().remotes.iter().find(|r| &r.name == n).cloned());
-    let form = Form::new(if existing.is_some() { "Edit Remote" } else { "Add Remote" }, "OK");
-    let n = form.entry("Remote name", existing.as_ref().map(|r| r.name.as_str()).unwrap_or(if rv.snapshot().remotes.is_empty() { "origin" } else { "" }));
-    let url = form.entry("URL / path", existing.as_ref().map(|r| r.fetch_url.as_str()).unwrap_or(""));
+    let form = Form::new(&if existing.is_some() { gettext("Edit Remote") } else { gettext("Add Remote") }, &gettext("OK"));
+    let n = form.entry(&gettext("Remote name"), existing.as_ref().map(|r| r.name.as_str()).unwrap_or(if rv.snapshot().remotes.is_empty() { "origin" } else { "" }));
+    let url = form.entry(&gettext("URL / path"), existing.as_ref().map(|r| r.fetch_url.as_str()).unwrap_or(""));
     let push_url = form.entry(
-        "Push URL (optional)",
+        &gettext("Push URL (optional)"),
         existing
             .as_ref()
             .filter(|r| r.push_url != r.fetch_url)
             .map(|r| r.push_url.as_str())
             .unwrap_or(""),
     );
-    let fetch_now = form.switch("Fetch after saving", "", existing.is_none());
+    let fetch_now = form.switch(&gettext("Fetch after saving"), "", existing.is_none());
     let (n2, u2) = (n.clone(), url.clone());
     form.watch(&n);
     form.watch(&url);
@@ -221,7 +222,7 @@ pub async fn edit_remote(rv: &Rc<RepoView>, name: Option<String>) {
         return;
     }
     rv.run_ops(
-        "Remote",
+        &gettext("Remote"),
         cmds,
         OpOptions {
             network: fetch_now.is_active(),
@@ -249,15 +250,15 @@ pub async fn lfs_dialog(rv: &Rc<RepoView>) {
     })
     .await;
     if !installed {
-        show_error(&rv.widget, "Git LFS is not installed", "Install the git-lfs package (e.g. `sudo apt install git-lfs`).");
+        show_error(&rv.widget, &gettext("Git LFS is not installed"), &gettext("Install the git-lfs package (e.g. `sudo apt install git-lfs`)."));
         return;
     }
     let dialog = adw::PreferencesDialog::new();
-    dialog.set_title("Git LFS");
+    dialog.set_title(&gettext("Git LFS"));
     dialog.set_search_enabled(false);
     let page = adw::PreferencesPage::new();
 
-    let actions = adw::PreferencesGroup::builder().title("Actions").build();
+    let actions = adw::PreferencesGroup::builder().title(gettext("Actions")).build();
     let action_row = |title: &str, sub: &str, cmd: Vec<String>, network: bool| {
         let row = adw::ActionRow::builder().title(title).subtitle(sub).activatable(true).build();
         row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
@@ -273,18 +274,18 @@ pub async fn lfs_dialog(rv: &Rc<RepoView>) {
         });
         row
     };
-    actions.add(&action_row("Initialise LFS in this repository", "git lfs install --local", s(&["lfs", "install", "--local"]), false));
-    actions.add(&action_row("Fetch", "Download LFS objects for the current branch", s(&["lfs", "fetch"]), true));
-    actions.add(&action_row("Pull", "Fetch and check out LFS files", s(&["lfs", "pull"]), true));
-    actions.add(&action_row("Push", "Upload LFS objects for all branches", s(&["lfs", "push", "--all", "origin"]), true));
-    actions.add(&action_row("Prune", "Delete old local LFS files", s(&["lfs", "prune"]), false));
+    actions.add(&action_row(&gettext("Initialise LFS in this repository"), "git lfs install --local", s(&["lfs", "install", "--local"]), false));
+    actions.add(&action_row(&gettext("Fetch"), &gettext("Download LFS objects for the current branch"), s(&["lfs", "fetch"]), true));
+    actions.add(&action_row(&gettext("Pull"), &gettext("Fetch and check out LFS files"), s(&["lfs", "pull"]), true));
+    actions.add(&action_row(&gettext("Push"), &gettext("Upload LFS objects for all branches"), s(&["lfs", "push", "--all", "origin"]), true));
+    actions.add(&action_row(&gettext("Prune"), &gettext("Delete old local LFS files"), s(&["lfs", "prune"]), false));
     page.add(&actions);
 
     let tracked = adw::PreferencesGroup::builder()
-        .title("Tracked patterns")
-        .description("Stored in .gitattributes")
+        .title(gettext("Tracked patterns"))
+        .description(gettext("Stored in .gitattributes"))
         .build();
-    let add_row = adw::EntryRow::builder().title("Add pattern (e.g. *.psd)").show_apply_button(true).build();
+    let add_row = adw::EntryRow::builder().title(gettext("Add pattern (e.g. *.psd)")).show_apply_button(true).build();
     let (rv2, d2) = (rv.clone(), dialog.clone());
     add_row.connect_apply(move |r| {
         let p = r.text().trim().to_string();
@@ -294,7 +295,7 @@ pub async fn lfs_dialog(rv: &Rc<RepoView>) {
         d2.close();
         let rv3 = rv2.clone();
         spawn(async move {
-            rv3.run_ops("LFS Track", vec![s(&["lfs", "track", &p]), s(&["add", ".gitattributes"])], OpOptions::default()).await;
+            rv3.run_ops(&gettext("LFS Track"), vec![s(&["lfs", "track", &p]), s(&["add", ".gitattributes"])], OpOptions::default()).await;
         });
     });
     tracked.add(&add_row);
@@ -303,7 +304,7 @@ pub async fn lfs_dialog(rv: &Rc<RepoView>) {
         let del = gtk::Button::from_icon_name("user-trash-symbolic");
         del.add_css_class("flat");
         del.set_valign(gtk::Align::Center);
-        del.set_tooltip_text(Some("Untrack"));
+        del.set_tooltip_text(Some(&gettext("Untrack")));
         row.add_suffix(&del);
         let (rv2, d2) = (rv.clone(), dialog.clone());
         del.connect_clicked(move |_| {
@@ -311,7 +312,7 @@ pub async fn lfs_dialog(rv: &Rc<RepoView>) {
             let rv3 = rv2.clone();
             let p = p.clone();
             spawn(async move {
-                rv3.run_ops("LFS Untrack", vec![s(&["lfs", "untrack", &p]), s(&["add", ".gitattributes"])], OpOptions::default()).await;
+                rv3.run_ops(&gettext("LFS Untrack"), vec![s(&["lfs", "untrack", &p]), s(&["add", ".gitattributes"])], OpOptions::default()).await;
             });
         });
         tracked.add(&row);

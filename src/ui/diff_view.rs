@@ -4,6 +4,7 @@ use super::{bg, spawn};
 use crate::config;
 use crate::git::diff::{FileDiff, LineKind, Selection};
 use crate::git::Git;
+use crate::i18n::{gettext, gettext_f, ngettext_f};
 use adw::prelude::*;
 use gtk::{gdk, glib};
 use sourceview5::prelude::*;
@@ -79,14 +80,14 @@ impl DiffView {
         bar.append(&title);
 
         let external_btn = gtk::Button::from_icon_name("document-open-symbolic");
-        external_btn.set_tooltip_text(Some("Open in external diff tool"));
+        external_btn.set_tooltip_text(Some(&gettext("Open in external diff tool")));
         external_btn.add_css_class("flat");
         external_btn.set_visible(false);
         bar.append(&external_btn);
 
         let ignore_ws = gtk::ToggleButton::builder()
             .icon_name("format-justify-fill-symbolic")
-            .tooltip_text("Ignore whitespace")
+            .tooltip_text(gettext("Ignore whitespace"))
             .active(config::with(|s| s.diff_ignore_whitespace))
             .build();
         ignore_ws.add_css_class("flat");
@@ -94,7 +95,7 @@ impl DiffView {
 
         let context_spin = gtk::SpinButton::with_range(0.0, 100.0, 1.0);
         context_spin.set_value(config::with(|s| s.diff_context) as f64);
-        context_spin.set_tooltip_text(Some("Lines of context"));
+        context_spin.set_tooltip_text(Some(&gettext("Lines of context")));
         context_spin.set_valign(gtk::Align::Center);
         bar.append(&context_spin);
         widget.append(&bar);
@@ -175,7 +176,7 @@ impl DiffView {
                     d.render();
                 }
         });
-        this.show_message("No file selected");
+        this.show_message(&gettext("No file selected"));
         this
     }
 
@@ -287,11 +288,11 @@ impl DiffView {
         self.clear();
         let files = self.files.borrow().clone();
         if files.is_empty() {
-            self.show_message("No changes");
+            self.show_message(&gettext("No changes"));
             return;
         }
         self.title.set_text(&if files.len() > 1 {
-            format!("{} files", files.len())
+            ngettext_f("{n} file", "{n} files", files.len() as u32, &[])
         } else if self.kind.get() == DiffKind::ReadOnly {
             files[0].path().to_string()
         } else {
@@ -304,9 +305,9 @@ impl DiffView {
             let b = gtk::Box::new(gtk::Orientation::Vertical, 12);
             b.set_valign(gtk::Align::Center);
             b.set_vexpand(true);
-            let l = gtk::Label::new(Some(&format!("This diff is large ({total} lines).")));
+            let l = gtk::Label::new(Some(&ngettext_f("This diff is large ({n} line).", "This diff is large ({n} lines).", total as u32, &[])));
             l.add_css_class("dim-label");
-            let btn = gtk::Button::with_label("Show Diff Anyway");
+            let btn = gtk::Button::with_label(&gettext("Show Diff Anyway"));
             btn.set_halign(gtk::Align::Center);
             btn.add_css_class("pill");
             let w = self.self_ref.borrow().clone();
@@ -335,16 +336,16 @@ impl DiffView {
         }
         let mut tags = Vec::new();
         if f.new_file {
-            tags.push("new file");
+            tags.push(gettext("new file"));
         }
         if f.deleted {
-            tags.push("deleted");
+            tags.push(gettext("deleted"));
         }
         if f.mode_change {
-            tags.push("mode changed");
+            tags.push(gettext("mode changed"));
         }
         if f.binary {
-            tags.push("binary");
+            tags.push(gettext("binary"));
         }
         if !tags.is_empty() {
             text.push_str(&format!("  ({})", tags.join(", ")));
@@ -376,18 +377,18 @@ impl DiffView {
         };
         match kind {
             DiffKind::Unstaged => {
-                add_btn("Discard File", PatchAction::Discard, true);
-                add_btn("Stage File", PatchAction::Stage, false);
+                add_btn(&gettext("Discard File"), PatchAction::Discard, true);
+                add_btn(&gettext("Stage File"), PatchAction::Stage, false);
             }
-            DiffKind::Staged => add_btn("Unstage File", PatchAction::Unstage, false),
+            DiffKind::Staged => add_btn(&gettext("Unstage File"), PatchAction::Unstage, false),
             DiffKind::ReadOnly => {}
             DiffKind::Conflict => {
                 let target = format!("U|{}", f.path());
                 for (label, action) in [
-                    ("Resolve Using Mine", "repo.file-resolve-mine"),
-                    ("Resolve Using Theirs", "repo.file-resolve-theirs"),
-                    ("Merge Tool", "repo.file-mergetool"),
-                    ("Mark Resolved", "repo.file-mark-resolved"),
+                    (gettext("Resolve Using Mine"), "repo.file-resolve-mine"),
+                    (gettext("Resolve Using Theirs"), "repo.file-resolve-theirs"),
+                    (gettext("Merge Tool"), "repo.file-mergetool"),
+                    (gettext("Mark Resolved"), "repo.file-mark-resolved"),
                 ] {
                     let b = gtk::Button::builder()
                         .label(label)
@@ -411,12 +412,12 @@ impl DiffView {
             return;
         }
         if f.hunks.is_empty() {
-            let l = gtk::Label::new(Some(if f.renamed {
-                "File renamed without changes"
+            let l = gtk::Label::new(Some(&if f.renamed {
+                gettext("File renamed without changes")
             } else if f.mode_change {
-                "File mode changed"
+                gettext("File mode changed")
             } else {
-                "No content changes"
+                gettext("No content changes")
             }));
             l.add_css_class("dim-label");
             l.set_margin_top(12);
@@ -439,7 +440,7 @@ impl DiffView {
             .any(|e| lower.ends_with(e));
         let ctx = self.ctx.borrow().clone();
         if !is_image || ctx.is_none() {
-            let l = gtk::Label::new(Some("Binary file — no text diff available"));
+            let l = gtk::Label::new(Some(&gettext("Binary file — no text diff available")));
             l.add_css_class("dim-label");
             l.set_margin_top(12);
             self.content.append(&l);
@@ -463,8 +464,8 @@ impl DiffView {
             row.append(&b);
             pic
         };
-        let old_pic = mk("Before");
-        let new_pic = mk("After");
+        let old_pic = mk(&gettext("Before"));
+        let new_pic = mk(&gettext("After"));
         self.content.append(&row);
         let old_path = f.old_path.clone().unwrap_or(path.clone());
         let deleted = f.deleted;
@@ -509,10 +510,15 @@ impl DiffView {
         let last_new = h.new_start + h.new_count.saturating_sub(1);
         let hl = gtk::Label::builder()
             .label(format!(
-                "Hunk {}: Lines {}-{}   {}",
-                hi + 1,
-                h.new_start,
-                last_new.max(h.new_start),
+                "{}   {}",
+                gettext_f(
+                    "Hunk {hunk}: Lines {first}-{last}",
+                    &[
+                        ("hunk", &(hi + 1).to_string()),
+                        ("first", &h.new_start.to_string()),
+                        ("last", &last_new.max(h.new_start).to_string()),
+                    ],
+                ),
                 h.header.find(" @@").map(|i| h.header[i + 3..].trim()).unwrap_or("")
             ))
             .xalign(0.0)
@@ -704,17 +710,17 @@ impl DiffView {
                 header.append(&b);
                 b
             };
-            let actions: Vec<(PatchAction, &str, &str, bool)> = match kind {
+            let actions: Vec<(PatchAction, String, String, bool)> = match kind {
                 DiffKind::Unstaged => vec![
-                    (PatchAction::Discard, "Discard Hunk", "Discard Lines", true),
-                    (PatchAction::Stage, "Stage Hunk", "Stage Lines", false),
+                    (PatchAction::Discard, gettext("Discard Hunk"), gettext("Discard Lines"), true),
+                    (PatchAction::Stage, gettext("Stage Hunk"), gettext("Stage Lines"), false),
                 ],
-                DiffKind::Staged => vec![(PatchAction::Unstage, "Unstage Hunk", "Unstage Lines", false)],
+                DiffKind::Staged => vec![(PatchAction::Unstage, gettext("Unstage Hunk"), gettext("Unstage Lines"), false)],
                 DiffKind::ReadOnly | DiffKind::Conflict => vec![],
             };
             let mut btns = Vec::new();
             for (action, hunk_label, lines_label, destructive) in actions {
-                let b = mk_btn(hunk_label, destructive);
+                let b = mk_btn(&hunk_label, destructive);
                 let w = self.self_ref.borrow().clone();
                 let file = f.clone();
                 let b2 = buf.clone();

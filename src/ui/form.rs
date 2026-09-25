@@ -1,6 +1,7 @@
 //! Small builder for option dialogs (Pull, Push, Branch, ...), mimicking
 //! macOS-style sheets with libadwaita preference rows.
 
+use crate::i18n::gettext;
 use adw::prelude::*;
 use gtk::glib;
 use std::cell::RefCell;
@@ -28,7 +29,7 @@ impl Form {
             .show_start_title_buttons(false)
             .show_end_title_buttons(false)
             .build();
-        let cancel = gtk::Button::with_label("Cancel");
+        let cancel = gtk::Button::with_label(&gettext("Cancel"));
         let ok = gtk::Button::with_label(ok_label);
         ok.add_css_class("suggested-action");
         header.pack_start(&cancel);

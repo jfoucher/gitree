@@ -1,0 +1,2943 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the Gitree package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Gitree 0.1.0\n"
+"Report-Msgid-Bugs-To: https://github.com/jfoucher/gitree/issues\n"
+"POT-Creation-Date: 2026-09-25 21:27+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: data/io.github.gitree.Gitree.desktop:3
+#: data/io.github.gitree.Gitree.metainfo.xml:6
+msgid "Gitree"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.desktop:4
+msgid "Git Client"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.desktop:5
+#: data/io.github.gitree.Gitree.metainfo.xml:7
+msgid "Visual Git client inspired by a source control tool on macOS"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.desktop:10
+msgid "git;version;control;commit;branch;merge;"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.desktop:16
+msgid "New Window"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.metainfo.xml:9
+msgid ""
+"Gitree is a native GNOME Git client inspired by a source control tool on "
+"macOS: a repository browser, a commit graph, hunk and line staging, and "
+"dialogs for every everyday Git operation."
+msgstr ""
+
+#: data/io.github.gitree.Gitree.metainfo.xml:13
+msgid "Commit history with branch graph, search and file log"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.metainfo.xml:14
+msgid "Stage, unstage and discard files, hunks or individual lines"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.metainfo.xml:15
+msgid "Pull, push, fetch, branch, merge, rebase, stash, tag and cherry-pick"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.metainfo.xml:16
+msgid "Interactive rebase, conflict resolution and blame"
+msgstr ""
+
+#: data/io.github.gitree.Gitree.metainfo.xml:17
+msgid "Git-flow, Git LFS, submodules and subtrees"
+msgstr ""
+
+#: src/askpass.rs:12
+msgid "Password:"
+msgstr ""
+
+#: src/askpass.rs:28
+msgid "Authentication Required"
+msgstr ""
+
+#: src/askpass.rs:40
+msgid "Git needs your credentials"
+msgstr ""
+
+#: src/askpass.rs:55
+msgid "Type yes or no"
+msgstr ""
+
+#: src/askpass.rs:57
+msgid "Password"
+msgstr ""
+
+#: src/askpass.rs:59
+msgid "Username"
+msgstr ""
+
+#: src/askpass.rs:66 src/ui/browser.rs:269 src/ui/form.rs:32 src/ui/mod.rs:82
+#: src/ui/mod.rs:114 src/ui/progress.rs:135 src/ui/rebase.rs:67
+#: src/ui/rebase.rs:209
+msgid "Cancel"
+msgstr ""
+
+#: src/askpass.rs:67 src/ui/dialogs.rs:353 src/ui/dialogs.rs:744
+#: src/ui/dialogs.rs:1156 src/ui/dialogs.rs:1452 src/ui/flow.rs:104
+#: src/ui/rebase.rs:209 src/ui/repo_settings.rs:175
+msgid "OK"
+msgstr ""
+
+#: src/git/log.rs:187
+msgid "Could not parse commit"
+msgstr ""
+
+#: src/git/rebase.rs:28
+msgid "Pick"
+msgstr ""
+
+#: src/git/rebase.rs:29
+msgid "Reword"
+msgstr ""
+
+#: src/git/rebase.rs:30
+msgid "Edit"
+msgstr ""
+
+#: src/git/rebase.rs:31
+msgid "Squash"
+msgstr ""
+
+#: src/git/rebase.rs:32
+msgid "Fixup"
+msgstr ""
+
+#: src/git/rebase.rs:33
+msgid "Drop"
+msgstr ""
+
+#: src/git/runner.rs:217
+msgid "Cancelled."
+msgstr ""
+
+#: src/git/runner.rs:256
+#, rust-format
+msgid "Failed to run git: {error}"
+msgstr ""
+
+#: src/git/state.rs:31
+msgid "A merge is in progress."
+msgstr ""
+
+#: src/git/state.rs:35
+#, rust-format
+msgid ""
+"Rebase stopped for editing (step {step} of {total}). Amend the commit, then "
+"continue."
+msgstr ""
+
+#: src/git/state.rs:37
+#, rust-format
+msgid "A rebase is in progress (step {step} of {total})."
+msgstr ""
+
+#: src/git/state.rs:40
+msgid "A cherry-pick is in progress."
+msgstr ""
+
+#: src/git/state.rs:41
+msgid "A revert is in progress."
+msgstr ""
+
+#: src/git/state.rs:42
+msgid "A bisect is in progress."
+msgstr ""
+
+#: src/ui/blame.rs:14
+#, rust-format
+msgid "Blame — {file} @ {commit}"
+msgstr ""
+
+#: src/ui/blame.rs:15
+#, rust-format
+msgid "Blame — {file}"
+msgstr ""
+
+#: src/ui/blame.rs:28
+msgid "Click a line's annotation to show the commit in History"
+msgstr ""
+
+#: src/ui/blame.rs:84
+msgid "Blame failed"
+msgstr ""
+
+#: src/ui/blame.rs:113
+msgid "Not committed"
+msgstr ""
+
+#: src/ui/browser.rs:34
+msgid "Search repositories"
+msgstr ""
+
+#: src/ui/browser.rs:40
+msgid "Clone from URL…"
+msgstr ""
+
+#: src/ui/browser.rs:41
+msgid "Add Existing Local Repository…"
+msgstr ""
+
+#: src/ui/browser.rs:42
+msgid "Create Local Repository…"
+msgstr ""
+
+#: src/ui/browser.rs:43
+msgid "Scan a Folder for Repositories…"
+msgstr ""
+
+#: src/ui/browser.rs:45
+msgid "New…"
+msgstr ""
+
+#: src/ui/browser.rs:66
+msgid "No Repositories"
+msgstr ""
+
+#: src/ui/browser.rs:67
+msgid ""
+"Clone a remote repository, add an existing local one, or create a new one "
+"using the “New…” menu."
+msgstr ""
+
+#: src/ui/browser.rs:98
+msgid "Repository not found"
+msgstr ""
+
+#: src/ui/browser.rs:144
+msgid "Ungrouped"
+msgstr ""
+
+#: src/ui/browser.rs:222 src/ui/dialogs.rs:164
+msgid "Could not open terminal"
+msgstr ""
+
+#: src/ui/browser.rs:239 src/ui/dialogs.rs:343
+msgid "Rename"
+msgstr ""
+
+#: src/ui/browser.rs:239
+msgid "Rename Bookmark"
+msgstr ""
+
+#: src/ui/browser.rs:264
+msgid "Move to Group"
+msgstr ""
+
+#: src/ui/browser.rs:265
+msgid "Enter a group (folder) name, or leave empty to ungroup."
+msgstr ""
+
+#: src/ui/browser.rs:269
+msgid "Move"
+msgstr ""
+
+#: src/ui/browser.rs:292
+msgid "Remove Bookmark?"
+msgstr ""
+
+#: src/ui/browser.rs:293
+msgid "The repository stays on disk; only the bookmark is removed."
+msgstr ""
+
+#: src/ui/browser.rs:294 src/ui/dialogs.rs:224 src/ui/dialogs.rs:294
+#: src/ui/dialogs.rs:489 src/ui/dialogs.rs:1373 src/ui/dialogs.rs:1385
+msgid "Remove"
+msgstr ""
+
+#: src/ui/browser.rs:344
+msgid "Missing"
+msgstr ""
+
+#: src/ui/browser.rs:348 src/ui/dialogs.rs:776
+msgid "detached HEAD"
+msgstr ""
+
+#: src/ui/browser.rs:359
+#, rust-format
+msgid "{n} changed"
+msgid_plural "{n} changed"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/browser.rs:363
+msgid "Not a repository"
+msgstr ""
+
+#: src/ui/browser.rs:409 src/ui/staging.rs:477
+msgid "Open"
+msgstr ""
+
+#: src/ui/browser.rs:410 src/ui/history.rs:140 src/ui/sidebar.rs:554
+#: src/ui/staging.rs:478 src/ui/window.rs:514
+msgid "Show in Files"
+msgstr ""
+
+#: src/ui/browser.rs:411
+msgid "Open in Terminal"
+msgstr ""
+
+#: src/ui/browser.rs:414 src/ui/sidebar.rs:488
+msgid "Rename…"
+msgstr ""
+
+#: src/ui/browser.rs:415
+msgid "Move to Group…"
+msgstr ""
+
+#: src/ui/browser.rs:416
+msgid "Remove Bookmark"
+msgstr ""
+
+#: src/ui/browser.rs:425 src/ui/dialogs.rs:117
+msgid "Create"
+msgstr ""
+
+#: src/ui/browser.rs:425
+msgid "Create a Repository"
+msgstr ""
+
+#: src/ui/browser.rs:429 src/ui/browser.rs:612
+msgid "Destination path"
+msgstr ""
+
+#: src/ui/browser.rs:431
+msgid "Initial branch"
+msgstr ""
+
+#: src/ui/browser.rs:432
+msgid "Bare repository"
+msgstr ""
+
+#: src/ui/browser.rs:432
+msgid "No working copy (for use as a remote)"
+msgstr ""
+
+#: src/ui/browser.rs:442
+msgid "Could not create folder"
+msgstr ""
+
+#: src/ui/browser.rs:455 src/ui/browser.rs:591
+msgid "Create Repository"
+msgstr ""
+
+#: src/ui/browser.rs:470
+msgid "Choose a folder to scan for repositories"
+msgstr ""
+
+#: src/ui/browser.rs:499
+#, rust-format
+msgid "Found {n} repository"
+msgid_plural "Found {n} repositories"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/browser.rs:536
+msgid "Browse…"
+msgstr ""
+
+#: src/ui/browser.rs:544
+msgid "Choose Folder"
+msgstr ""
+
+#: src/ui/browser.rs:572
+msgid "Choose a Local Repository"
+msgstr ""
+
+#: src/ui/browser.rs:589
+msgid "Not a Git Repository"
+msgstr ""
+
+#: src/ui/browser.rs:590
+#, rust-format
+msgid ""
+"{path}\n"
+"\n"
+"Do you want to initialise a new repository here?"
+msgstr ""
+
+#: src/ui/browser.rs:609 src/ui/browser.rs:682
+msgid "Clone"
+msgstr ""
+
+#: src/ui/browser.rs:609
+msgid "Clone a Repository"
+msgstr ""
+
+#: src/ui/browser.rs:610 src/ui/dialogs.rs:179 src/ui/dialogs.rs:1157
+msgid "Source URL"
+msgstr ""
+
+#: src/ui/browser.rs:614
+msgid "Bookmark name"
+msgstr ""
+
+#: src/ui/browser.rs:615
+msgid "Advanced Options"
+msgstr ""
+
+#: src/ui/browser.rs:616
+msgid "Checkout branch (optional)"
+msgstr ""
+
+#: src/ui/browser.rs:617
+msgid "Clone depth (0 = full history)"
+msgstr ""
+
+#: src/ui/browser.rs:618
+msgid "Recurse submodules"
+msgstr ""
+
+#: src/ui/browser.rs:619
+msgid "Skip LFS files during clone"
+msgstr ""
+
+#: src/ui/browser.rs:619
+msgid "Use `git lfs pull` later"
+msgstr ""
+
+#: src/ui/dialogs.rs:69 src/ui/dialogs.rs:744 src/ui/dialogs.rs:766
+#: src/ui/repo_settings.rs:278 src/ui/repo_view.rs:472 src/ui/window.rs:506
+msgid "Fetch"
+msgstr ""
+
+#: src/ui/dialogs.rs:73 src/ui/repo_settings.rs:281
+msgid "Prune"
+msgstr ""
+
+#: src/ui/dialogs.rs:80 src/ui/dialogs.rs:81 src/ui/dialogs.rs:825
+#: src/ui/dialogs.rs:852 src/ui/repo_view.rs:478 src/ui/window.rs:508
+msgid "Merge"
+msgstr ""
+
+#: src/ui/dialogs.rs:80
+msgid "Merge Commit"
+msgstr ""
+
+#: src/ui/dialogs.rs:80
+#, rust-format
+msgid "Merge commit {commit} into the current branch?"
+msgstr ""
+
+#: src/ui/dialogs.rs:86 src/ui/dialogs.rs:1191
+msgid "Apply"
+msgstr ""
+
+#: src/ui/dialogs.rs:86 src/ui/dialogs.rs:97
+msgid "Apply Stash"
+msgstr ""
+
+#: src/ui/dialogs.rs:87
+#, rust-format
+msgid "Apply {stash} to the working copy?"
+msgstr ""
+
+#: src/ui/dialogs.rs:88
+msgid "Delete after applying"
+msgstr ""
+
+#: src/ui/dialogs.rs:89
+msgid "Also restore the staged state (--index)"
+msgstr ""
+
+#: src/ui/dialogs.rs:101 src/ui/sidebar.rs:542
+msgid "Pop Stash"
+msgstr ""
+
+#: src/ui/dialogs.rs:104 src/ui/dialogs.rs:124 src/ui/dialogs.rs:338
+#: src/ui/dialogs.rs:1015 src/ui/rebase.rs:109
+msgid "Delete"
+msgstr ""
+
+#: src/ui/dialogs.rs:104
+msgid "Delete Stash?"
+msgstr ""
+
+#: src/ui/dialogs.rs:104
+#, rust-format
+msgid "{stash} will be permanently deleted."
+msgstr ""
+
+#: src/ui/dialogs.rs:105
+msgid "Delete Stash"
+msgstr ""
+
+#: src/ui/dialogs.rs:112
+#, rust-format
+msgid "Stash {stash}"
+msgstr ""
+
+#: src/ui/dialogs.rs:113
+msgid "Could not show stash"
+msgstr ""
+
+#: src/ui/dialogs.rs:117
+msgid "Create Branch from Stash"
+msgstr ""
+
+#: src/ui/dialogs.rs:117
+msgid ""
+"The stash is applied on a new branch created from the commit it was based on."
+msgstr ""
+
+#: src/ui/dialogs.rs:118
+msgid "Stash Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:124 src/ui/dialogs.rs:138
+msgid "Delete Tag"
+msgstr ""
+
+#: src/ui/dialogs.rs:125
+#, rust-format
+msgid "Delete tag “{tag}”?"
+msgstr ""
+
+#: src/ui/dialogs.rs:127
+msgid "Also remove the tag from the remote"
+msgstr ""
+
+#: src/ui/dialogs.rs:128 src/ui/dialogs.rs:935 src/ui/repo_settings.rs:225
+#: src/ui/repo_view.rs:496
+msgid "Remote"
+msgstr ""
+
+#: src/ui/dialogs.rs:144
+msgid "Add a remote in Repository Settings first."
+msgstr ""
+
+#: src/ui/dialogs.rs:144 src/ui/dialogs.rs:551 src/ui/dialogs.rs:631
+#: src/ui/dialogs.rs:741 src/ui/repo_settings.rs:61
+msgid "No remotes"
+msgstr ""
+
+#: src/ui/dialogs.rs:147 src/ui/dialogs.rs:635 src/ui/dialogs.rs:735
+#: src/ui/repo_settings.rs:280 src/ui/repo_view.rs:471 src/ui/window.rs:505
+msgid "Push"
+msgstr ""
+
+#: src/ui/dialogs.rs:147
+msgid "Push All Tags"
+msgstr ""
+
+#: src/ui/dialogs.rs:147 src/ui/dialogs.rs:157
+msgid "Push Tag"
+msgstr ""
+
+#: src/ui/dialogs.rs:148 src/ui/dialogs.rs:636
+msgid "Push to repository"
+msgstr ""
+
+#: src/ui/dialogs.rs:178 src/ui/dialogs.rs:924 src/ui/preferences.rs:196
+msgid "Add"
+msgstr ""
+
+#: src/ui/dialogs.rs:178 src/ui/dialogs.rs:201
+msgid "Add Submodule"
+msgstr ""
+
+#: src/ui/dialogs.rs:180 src/ui/dialogs.rs:1159
+msgid "Local relative path"
+msgstr ""
+
+#: src/ui/dialogs.rs:181
+msgid "Branch (optional)"
+msgstr ""
+
+#: src/ui/dialogs.rs:210
+msgid "Update Submodules"
+msgstr ""
+
+#: src/ui/dialogs.rs:213
+msgid "Sync Submodule"
+msgstr ""
+
+#: src/ui/dialogs.rs:220
+msgid "Submodule not initialised"
+msgstr ""
+
+#: src/ui/dialogs.rs:220
+msgid "Use “Update” to initialise the submodule first."
+msgstr ""
+
+#: src/ui/dialogs.rs:224
+msgid "Remove Submodule?"
+msgstr ""
+
+#: src/ui/dialogs.rs:224
+#, rust-format
+msgid "Remove submodule “{path}” from the repository?"
+msgstr ""
+
+#: src/ui/dialogs.rs:228
+msgid "Remove Submodule"
+msgstr ""
+
+#: src/ui/dialogs.rs:243
+msgid "Subtree Pull"
+msgstr ""
+
+#: src/ui/dialogs.rs:245
+msgid "Subtree Push"
+msgstr ""
+
+#: src/ui/dialogs.rs:257 src/ui/sidebar.rs:564
+msgid "Unlink Subtree"
+msgstr ""
+
+#: src/ui/dialogs.rs:294
+msgid "Remove Untracked Files"
+msgstr ""
+
+#: src/ui/dialogs.rs:295
+msgid "Permanently deletes files that are not tracked by Git."
+msgstr ""
+
+#: src/ui/dialogs.rs:296
+msgid "Include untracked directories"
+msgstr ""
+
+#: src/ui/dialogs.rs:297
+msgid "Also remove ignored files"
+msgstr ""
+
+#: src/ui/dialogs.rs:297
+msgid "e.g. build output"
+msgstr ""
+
+#: src/ui/dialogs.rs:308
+msgid "Clean"
+msgstr ""
+
+#: src/ui/dialogs.rs:312 src/ui/repo_view.rs:517
+msgid "Garbage Collect"
+msgstr ""
+
+#: src/ui/dialogs.rs:322 src/ui/dialogs.rs:327 src/ui/dialogs.rs:332
+msgid "Rebase"
+msgstr ""
+
+#: src/ui/dialogs.rs:324
+#, rust-format
+msgid ""
+"Rebase “{branch}” onto “{onto}”?\n"
+"\n"
+"This rewrites the commits of {branch}. Don't rebase commits that have "
+"already been pushed and shared."
+msgstr ""
+
+#: src/ui/dialogs.rs:338
+msgid "Delete Remote Branch?"
+msgstr ""
+
+#: src/ui/dialogs.rs:338
+#, rust-format
+msgid "Delete “{branch}” from {remote}?"
+msgstr ""
+
+#: src/ui/dialogs.rs:339
+msgid "Delete Remote Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:343
+#, rust-format
+msgid "New name for “{branch}”"
+msgstr ""
+
+#: src/ui/dialogs.rs:343 src/ui/dialogs.rs:345
+msgid "Rename Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:350 src/ui/preferences.rs:97
+msgid "(none)"
+msgstr ""
+
+#: src/ui/dialogs.rs:353
+msgid "Track Remote Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:354
+#, rust-format
+msgid "Choose the remote branch “{branch}” should track."
+msgstr ""
+
+#: src/ui/dialogs.rs:355
+msgid "Remote branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:364 src/ui/dialogs.rs:659
+msgid "Track"
+msgstr ""
+
+#: src/ui/dialogs.rs:373
+msgid "Could not compare"
+msgstr ""
+
+#: src/ui/dialogs.rs:378
+msgid "Copied to clipboard"
+msgstr ""
+
+#: src/ui/dialogs.rs:384
+msgid "Commit message copied"
+msgstr ""
+
+#: src/ui/dialogs.rs:390
+msgid "Reverse"
+msgstr ""
+
+#: src/ui/dialogs.rs:390 src/ui/dialogs.rs:407
+msgid "Reverse Commit"
+msgstr ""
+
+#: src/ui/dialogs.rs:391
+#, rust-format
+msgid "Create a new commit that undoes the changes of {commit}."
+msgstr ""
+
+#: src/ui/dialogs.rs:392 src/ui/dialogs.rs:423
+msgid "Commit immediately"
+msgstr ""
+
+#: src/ui/dialogs.rs:412 src/ui/dialogs.rs:435 src/ui/history.rs:1166
+msgid "Cherry Pick"
+msgstr ""
+
+#: src/ui/dialogs.rs:414
+#, rust-format
+msgid "Apply commit {commit} onto the current branch."
+msgstr ""
+
+#: src/ui/dialogs.rs:417
+#, rust-format
+msgid "Apply {n} commit onto the current branch."
+msgid_plural "Apply {n} commits onto the current branch."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/dialogs.rs:424
+msgid "Append “cherry picked from” line"
+msgstr ""
+
+#: src/ui/dialogs.rs:440 src/ui/dialogs.rs:454
+msgid "Archive"
+msgstr ""
+
+#: src/ui/dialogs.rs:455
+msgid "Archive created"
+msgstr ""
+
+#: src/ui/dialogs.rs:460
+msgid "Create Patch"
+msgstr ""
+
+#: src/ui/dialogs.rs:479
+msgid "Patch created"
+msgstr ""
+
+#: src/ui/dialogs.rs:480
+msgid "Could not create patch"
+msgstr ""
+
+#: src/ui/dialogs.rs:489
+msgid "Remove Remote?"
+msgstr ""
+
+#: src/ui/dialogs.rs:489
+#, rust-format
+msgid "Remove remote “{remote}” and its remote-tracking branches?"
+msgstr ""
+
+#: src/ui/dialogs.rs:490
+msgid "Remove Remote"
+msgstr ""
+
+#: src/ui/dialogs.rs:496
+msgid "URL copied"
+msgstr ""
+
+#: src/ui/dialogs.rs:507
+msgid "No web URL for this remote"
+msgstr ""
+
+#: src/ui/dialogs.rs:551 src/ui/dialogs.rs:631
+msgid "This repository has no remotes. Add one in Repository Settings."
+msgstr ""
+
+#: src/ui/dialogs.rs:555
+msgid "Check out a branch before pulling."
+msgstr ""
+
+#: src/ui/dialogs.rs:555
+msgid "Detached HEAD"
+msgstr ""
+
+#: src/ui/dialogs.rs:573 src/ui/dialogs.rs:625 src/ui/repo_settings.rs:279
+#: src/ui/repo_view.rs:470 src/ui/window.rs:504
+msgid "Pull"
+msgstr ""
+
+#: src/ui/dialogs.rs:575
+msgid "Pull from repository"
+msgstr ""
+
+#: src/ui/dialogs.rs:587
+msgid "Remote branch to pull"
+msgstr ""
+
+#: src/ui/dialogs.rs:588
+msgid "Pull into local branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:596 src/ui/dialogs.rs:671 src/ui/dialogs.rs:828
+msgid "Options"
+msgstr ""
+
+#: src/ui/dialogs.rs:597 src/ui/dialogs.rs:829
+msgid "Commit merged changes immediately"
+msgstr ""
+
+#: src/ui/dialogs.rs:598 src/ui/dialogs.rs:830
+msgid "Include messages from commits being merged in merge commit"
+msgstr ""
+
+#: src/ui/dialogs.rs:599
+msgid "Create new commit even if fast-forward merge"
+msgstr ""
+
+#: src/ui/dialogs.rs:600
+msgid "Rebase instead of merge"
+msgstr ""
+
+#: src/ui/dialogs.rs:600
+msgid "Warning: make sure you haven't pushed your changes"
+msgstr ""
+
+#: src/ui/dialogs.rs:637
+msgid "Branches to push"
+msgstr ""
+
+#: src/ui/dialogs.rs:656
+msgid "Remote branch name"
+msgstr ""
+
+#: src/ui/dialogs.rs:661
+msgid "Set as upstream (-u)"
+msgstr ""
+
+#: src/ui/dialogs.rs:664
+#, rust-format
+msgid "{n} commit ahead"
+msgid_plural "{n} commits ahead"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/dialogs.rs:666
+msgid "Not yet pushed"
+msgstr ""
+
+#: src/ui/dialogs.rs:672
+msgid "Push all tags"
+msgstr ""
+
+#: src/ui/dialogs.rs:673
+msgid "Force push (with lease)"
+msgstr ""
+
+#: src/ui/dialogs.rs:673
+msgid "Overwrites remote commits; use with care"
+msgstr ""
+
+#: src/ui/dialogs.rs:741
+msgid "This repository has no remotes."
+msgstr ""
+
+#: src/ui/dialogs.rs:745
+msgid "Fetch from all remotes"
+msgstr ""
+
+#: src/ui/dialogs.rs:746
+msgid "Prune tracking branches no longer present on remote(s)"
+msgstr ""
+
+#: src/ui/dialogs.rs:747
+msgid "Fetch and store all tags locally"
+msgstr ""
+
+#: src/ui/dialogs.rs:775
+msgid "Create Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:775 src/ui/dialogs.rs:808
+msgid "New Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:777
+msgid "Current branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:778
+msgid "New branch name"
+msgstr ""
+
+#: src/ui/dialogs.rs:780 src/ui/dialogs.rs:783 src/ui/dialogs.rs:927
+#: src/ui/dialogs.rs:930 src/ui/history.rs:727
+msgctxt "noun"
+msgid "Commit"
+msgstr ""
+
+#: src/ui/dialogs.rs:780 src/ui/dialogs.rs:927
+msgid "Working copy parent (HEAD)"
+msgstr ""
+
+#: src/ui/dialogs.rs:783 src/ui/dialogs.rs:930
+#, rust-format
+msgid "Specified commit: {commit}"
+msgstr ""
+
+#: src/ui/dialogs.rs:786
+msgid "Checkout new branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:822
+msgid "Nothing to merge"
+msgstr ""
+
+#: src/ui/dialogs.rs:822
+msgid "There are no other branches."
+msgstr ""
+
+#: src/ui/dialogs.rs:826
+msgid "Merge into"
+msgstr ""
+
+#: src/ui/dialogs.rs:827
+msgid "Branch to merge"
+msgstr ""
+
+#: src/ui/dialogs.rs:831
+msgid "Create a new commit even if fast-forward is possible"
+msgstr ""
+
+#: src/ui/dialogs.rs:832
+msgid "Squash (merge changes as a single commit)"
+msgstr ""
+
+#: src/ui/dialogs.rs:857
+msgid "There are no local changes to stash"
+msgstr ""
+
+#: src/ui/dialogs.rs:860 src/ui/dialogs.rs:880 src/ui/repo_view.rs:482
+#: src/ui/window.rs:509
+msgid "Stash"
+msgstr ""
+
+#: src/ui/dialogs.rs:861
+msgid "Stash all local changes so you can reapply them later."
+msgstr ""
+
+#: src/ui/dialogs.rs:862 src/ui/dialogs.rs:942
+msgid "Message"
+msgstr ""
+
+#: src/ui/dialogs.rs:863
+msgid "Keep staged changes"
+msgstr ""
+
+#: src/ui/dialogs.rs:864
+msgid "Include untracked files"
+msgstr ""
+
+#: src/ui/dialogs.rs:886
+msgid "There are no local changes to discard"
+msgstr ""
+
+#: src/ui/dialogs.rs:889 src/ui/dialogs.rs:919 src/ui/dialogs.rs:1336
+#: src/ui/dialogs.rs:1370 src/ui/repo_view.rs:483 src/ui/staging.rs:397
+#: src/ui/window.rs:511
+msgid "Discard"
+msgstr ""
+
+#: src/ui/dialogs.rs:889
+msgid "Discard Changes"
+msgstr ""
+
+#: src/ui/dialogs.rs:890
+msgid "Discard local changes. This cannot be undone."
+msgstr ""
+
+#: src/ui/dialogs.rs:891
+msgid "Reset all tracked files to HEAD"
+msgstr ""
+
+#: src/ui/dialogs.rs:891
+msgid "Staged and unstaged changes are lost"
+msgstr ""
+
+#: src/ui/dialogs.rs:892
+msgid "Remove untracked files"
+msgstr ""
+
+#: src/ui/dialogs.rs:924
+msgid "Add Tag"
+msgstr ""
+
+#: src/ui/dialogs.rs:925
+msgid "Tag name"
+msgstr ""
+
+#: src/ui/dialogs.rs:934
+msgid "Push tag"
+msgstr ""
+
+#: src/ui/dialogs.rs:938 src/ui/repo_settings.rs:75
+msgid "Advanced"
+msgstr ""
+
+#: src/ui/dialogs.rs:939
+msgid "Lightweight tag (no message)"
+msgstr ""
+
+#: src/ui/dialogs.rs:940
+msgid "Sign tag (GPG)"
+msgstr ""
+
+#: src/ui/dialogs.rs:941
+msgid "Move existing tag (force)"
+msgstr ""
+
+#: src/ui/dialogs.rs:981 src/ui/repo_view.rs:484 src/ui/window.rs:510
+msgid "Tag"
+msgstr ""
+
+#: src/ui/dialogs.rs:986 src/ui/dialogs.rs:1005 src/ui/dialogs.rs:1009
+#: src/ui/dialogs.rs:1412 src/ui/rebase.rs:111
+msgid "Reset"
+msgstr ""
+
+#: src/ui/dialogs.rs:986
+msgid "Reset to Commit"
+msgstr ""
+
+#: src/ui/dialogs.rs:987
+#, rust-format
+msgid "Reset “{branch}” to commit {commit}."
+msgstr ""
+
+#: src/ui/dialogs.rs:989
+msgid "Soft — keep all local changes (staged)"
+msgstr ""
+
+#: src/ui/dialogs.rs:990
+msgid "Mixed — keep working copy but reset index"
+msgstr ""
+
+#: src/ui/dialogs.rs:991
+msgid "Hard — discard all working copy changes"
+msgstr ""
+
+#: src/ui/dialogs.rs:993
+msgid "Using mode"
+msgstr ""
+
+#: src/ui/dialogs.rs:1005
+msgid "All uncommitted changes will be permanently lost."
+msgstr ""
+
+#: src/ui/dialogs.rs:1005
+msgid "Hard Reset?"
+msgstr ""
+
+#: src/ui/dialogs.rs:1015 src/ui/dialogs.rs:1037
+msgid "Delete Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:1016
+#, rust-format
+msgid "Delete local branch “{branch}”?"
+msgstr ""
+
+#: src/ui/dialogs.rs:1017
+msgid "Force delete regardless of merge status"
+msgstr ""
+
+#: src/ui/dialogs.rs:1020
+#, rust-format
+msgid "Also delete the remote branch ({branch})"
+msgstr ""
+
+#: src/ui/dialogs.rs:1021
+msgid "Also delete the remote branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:1043 src/ui/dialogs.rs:1050 src/ui/dialogs.rs:1059
+#: src/ui/dialogs.rs:1063 src/ui/dialogs.rs:1079 src/ui/dialogs.rs:1091
+#: src/ui/dialogs.rs:1094 src/ui/dialogs.rs:1116
+msgid "Checkout"
+msgstr ""
+
+#: src/ui/dialogs.rs:1051
+#, rust-format
+msgid "Local branch “{branch}” already tracks {upstream}."
+msgstr ""
+
+#: src/ui/dialogs.rs:1052
+msgid "Pull after checkout (fast-forward only)"
+msgstr ""
+
+#: src/ui/dialogs.rs:1063
+msgid "Checkout Remote Branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:1064
+msgid "Checkout remote branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:1065
+msgid "New local branch name"
+msgstr ""
+
+#: src/ui/dialogs.rs:1066
+msgid "Local branch should track remote branch"
+msgstr ""
+
+#: src/ui/dialogs.rs:1092
+#, rust-format
+msgid "Branch {branch}"
+msgstr ""
+
+#: src/ui/dialogs.rs:1093
+#, rust-format
+msgid "Detached HEAD at {commit}"
+msgstr ""
+
+#: src/ui/dialogs.rs:1096
+msgid ""
+"You will be in “detached HEAD” state: commits made here won't belong to any "
+"branch unless you create one."
+msgstr ""
+
+#: src/ui/dialogs.rs:1098
+msgid "Checking out a branch is recommended over a detached HEAD."
+msgstr ""
+
+#: src/ui/dialogs.rs:1100
+msgid "Discard local changes"
+msgstr ""
+
+#: src/ui/dialogs.rs:1125
+msgid "Resolve the conflicted files and mark them resolved first."
+msgstr ""
+
+#: src/ui/dialogs.rs:1125 src/ui/file_status.rs:417
+msgid "Unresolved conflicts"
+msgstr ""
+
+#: src/ui/dialogs.rs:1133 src/ui/rebase.rs:254 src/ui/repo_view.rs:145
+msgid "Continue"
+msgstr ""
+
+#: src/ui/dialogs.rs:1136 src/ui/repo_view.rs:149
+msgid "Skip"
+msgstr ""
+
+#: src/ui/dialogs.rs:1139
+msgid "Abort?"
+msgstr ""
+
+#. Translators: {operation} is a git command name such as "merge" or "rebase".
+#: src/ui/dialogs.rs:1141
+#, rust-format
+msgid "Abort the {operation} in progress and restore the previous state?"
+msgstr ""
+
+#: src/ui/dialogs.rs:1143 src/ui/dialogs.rs:1150 src/ui/repo_view.rs:152
+msgid "Abort"
+msgstr ""
+
+#: src/ui/dialogs.rs:1156
+msgid "Add / Link Subtree"
+msgstr ""
+
+#: src/ui/dialogs.rs:1158
+msgid "Branch or commit"
+msgstr ""
+
+#: src/ui/dialogs.rs:1160
+msgid "Squash commits"
+msgstr ""
+
+#: src/ui/dialogs.rs:1161
+msgid "Only link an existing subtree folder"
+msgstr ""
+
+#: src/ui/dialogs.rs:1183
+msgid "Subtree"
+msgstr ""
+
+#: src/ui/dialogs.rs:1187
+msgid "Choose a Patch File"
+msgstr ""
+
+#: src/ui/dialogs.rs:1191 src/ui/dialogs.rs:1209
+msgid "Apply Patch"
+msgstr ""
+
+#: src/ui/dialogs.rs:1192
+msgid "Patch"
+msgstr ""
+
+#: src/ui/dialogs.rs:1194
+msgid "Modify working copy files"
+msgstr ""
+
+#: src/ui/dialogs.rs:1195
+msgid "Modify working copy and index (stage)"
+msgstr ""
+
+#: src/ui/dialogs.rs:1196
+msgid "Import as commits (git am)"
+msgstr ""
+
+#: src/ui/dialogs.rs:1198
+msgid "Apply to"
+msgstr ""
+
+#: src/ui/dialogs.rs:1255
+msgid "External diff failed"
+msgstr ""
+
+#: src/ui/dialogs.rs:1336 src/ui/staging.rs:395
+msgid "Discard Changes?"
+msgstr ""
+
+#: src/ui/dialogs.rs:1336
+#, rust-format
+msgid ""
+"Discard all changes to:\n"
+"{files}\n"
+"\n"
+"This cannot be undone."
+msgstr ""
+
+#: src/ui/dialogs.rs:1373
+#, rust-format
+msgid ""
+"Delete from disk and stage removal:\n"
+"{files}"
+msgstr ""
+
+#: src/ui/dialogs.rs:1373
+msgid "Remove Files?"
+msgstr ""
+
+#: src/ui/dialogs.rs:1393 src/ui/staging.rs:458
+msgid "Stop Tracking"
+msgstr ""
+
+#: src/ui/dialogs.rs:1412
+#, rust-format
+msgid ""
+"Replace “{file}” with its version at {commit}? Local changes to it are lost."
+msgstr ""
+
+#: src/ui/dialogs.rs:1412
+msgid "Reset File?"
+msgstr ""
+
+#: src/ui/dialogs.rs:1413
+msgid "Reset File"
+msgstr ""
+
+#: src/ui/dialogs.rs:1425
+msgid "Resolve"
+msgstr ""
+
+#: src/ui/dialogs.rs:1430 src/ui/diff_view.rs:391 src/ui/staging.rs:470
+msgid "Mark Resolved"
+msgstr ""
+
+#: src/ui/dialogs.rs:1435
+msgid "Mark Unresolved"
+msgstr ""
+
+#: src/ui/dialogs.rs:1444
+msgid "External Merge Tool"
+msgstr ""
+
+#: src/ui/dialogs.rs:1452 src/ui/dialogs.rs:1476
+msgid "Ignore"
+msgstr ""
+
+#: src/ui/dialogs.rs:1454
+#, rust-format
+msgid "Ignore exact filename: {file}"
+msgstr ""
+
+#: src/ui/dialogs.rs:1456
+#, rust-format
+msgid "Ignore {n} exact filename"
+msgid_plural "Ignore {n} exact filenames"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/dialogs.rs:1462
+#, rust-format
+msgid "Ignore all files with this extension: {pattern}"
+msgstr ""
+
+#: src/ui/dialogs.rs:1474
+#, rust-format
+msgid "Ignore everything beneath: {dir}"
+msgstr ""
+
+#: src/ui/dialogs.rs:1478
+msgid ".gitignore (shared with the repository)"
+msgstr ""
+
+#: src/ui/dialogs.rs:1479
+msgid ".git/info/exclude (this copy only)"
+msgstr ""
+
+#: src/ui/dialogs.rs:1481
+msgid "Add this ignore entry to"
+msgstr ""
+
+#: src/ui/dialogs.rs:1512
+msgid "Could not update ignore file"
+msgstr ""
+
+#: src/ui/diff_view.rs:83
+msgid "Open in external diff tool"
+msgstr ""
+
+#: src/ui/diff_view.rs:90
+msgid "Ignore whitespace"
+msgstr ""
+
+#: src/ui/diff_view.rs:98 src/ui/preferences.rs:133
+msgid "Lines of context"
+msgstr ""
+
+#: src/ui/diff_view.rs:179 src/ui/history.rs:365 src/ui/staging.rs:185
+msgid "No file selected"
+msgstr ""
+
+#: src/ui/diff_view.rs:291
+msgid "No changes"
+msgstr ""
+
+#: src/ui/diff_view.rs:295
+#, rust-format
+msgid "{n} file"
+msgid_plural "{n} files"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/diff_view.rs:308
+#, rust-format
+msgid "This diff is large ({n} line)."
+msgid_plural "This diff is large ({n} lines)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/diff_view.rs:310
+msgid "Show Diff Anyway"
+msgstr ""
+
+#: src/ui/diff_view.rs:339
+msgid "new file"
+msgstr ""
+
+#: src/ui/diff_view.rs:342
+msgid "deleted"
+msgstr ""
+
+#: src/ui/diff_view.rs:345
+msgid "mode changed"
+msgstr ""
+
+#: src/ui/diff_view.rs:348
+msgid "binary"
+msgstr ""
+
+#: src/ui/diff_view.rs:380
+msgid "Discard File"
+msgstr ""
+
+#: src/ui/diff_view.rs:381
+msgid "Stage File"
+msgstr ""
+
+#: src/ui/diff_view.rs:383
+msgid "Unstage File"
+msgstr ""
+
+#: src/ui/diff_view.rs:388
+msgid "Resolve Using Mine"
+msgstr ""
+
+#: src/ui/diff_view.rs:389
+msgid "Resolve Using Theirs"
+msgstr ""
+
+#: src/ui/diff_view.rs:390
+msgid "Merge Tool"
+msgstr ""
+
+#: src/ui/diff_view.rs:416
+msgid "File renamed without changes"
+msgstr ""
+
+#: src/ui/diff_view.rs:418
+msgid "File mode changed"
+msgstr ""
+
+#: src/ui/diff_view.rs:420
+msgid "No content changes"
+msgstr ""
+
+#: src/ui/diff_view.rs:443
+msgid "Binary file — no text diff available"
+msgstr ""
+
+#: src/ui/diff_view.rs:467
+msgid "Before"
+msgstr ""
+
+#: src/ui/diff_view.rs:468
+msgid "After"
+msgstr ""
+
+#: src/ui/diff_view.rs:515
+#, rust-format
+msgid "Hunk {hunk}: Lines {first}-{last}"
+msgstr ""
+
+#: src/ui/diff_view.rs:715
+msgid "Discard Hunk"
+msgstr ""
+
+#: src/ui/diff_view.rs:715
+msgid "Discard Lines"
+msgstr ""
+
+#: src/ui/diff_view.rs:716
+msgid "Stage Hunk"
+msgstr ""
+
+#: src/ui/diff_view.rs:716
+msgid "Stage Lines"
+msgstr ""
+
+#: src/ui/diff_view.rs:718
+msgid "Unstage Hunk"
+msgstr ""
+
+#: src/ui/diff_view.rs:718
+msgid "Unstage Lines"
+msgstr ""
+
+#: src/ui/file_status.rs:27
+msgid "Pending files"
+msgstr ""
+
+#: src/ui/file_status.rs:28
+msgid "Conflicted files"
+msgstr ""
+
+#: src/ui/file_status.rs:29
+msgid "Untracked files"
+msgstr ""
+
+#: src/ui/file_status.rs:30
+msgid "Modified files"
+msgstr ""
+
+#: src/ui/file_status.rs:31
+msgid "Ignored files"
+msgstr ""
+
+#: src/ui/file_status.rs:64
+msgid "Show files"
+msgstr ""
+
+#: src/ui/file_status.rs:67
+msgid "Filter files"
+msgstr ""
+
+#: src/ui/file_status.rs:73
+msgid "Tree view"
+msgstr ""
+
+#: src/ui/file_status.rs:102
+msgid "Amend last commit"
+msgstr ""
+
+#: src/ui/file_status.rs:103
+msgid "Sign off"
+msgstr ""
+
+#: src/ui/file_status.rs:104
+msgid "Bypass commit hooks"
+msgstr ""
+
+#: src/ui/file_status.rs:105
+msgid "Sign commit (GPG)"
+msgstr ""
+
+#: src/ui/file_status.rs:117
+msgid "Commit Options"
+msgstr ""
+
+#: src/ui/file_status.rs:124
+msgid "Previous commit messages"
+msgstr ""
+
+#: src/ui/file_status.rs:148
+msgid "Push changes immediately"
+msgstr ""
+
+#: src/ui/file_status.rs:152
+msgid "Ctrl+Enter to commit"
+msgstr ""
+
+#: src/ui/file_status.rs:156 src/ui/file_status.rs:265
+#: src/ui/file_status.rs:466 src/ui/repo_view.rs:467 src/ui/window.rs:503
+msgid "Commit"
+msgstr ""
+
+#: src/ui/file_status.rs:263
+msgid "Amend Commit"
+msgstr ""
+
+#: src/ui/file_status.rs:286
+msgid "No previous messages"
+msgstr ""
+
+#: src/ui/file_status.rs:358
+msgid "Unknown user"
+msgstr ""
+
+#: src/ui/file_status.rs:376
+#, rust-format
+msgid "Push changes immediately to {upstream}"
+msgstr ""
+
+#: src/ui/file_status.rs:380
+msgid "Push changes immediately (no remote)"
+msgstr ""
+
+#: src/ui/file_status.rs:400
+msgid "Please enter a commit message"
+msgstr ""
+
+#: src/ui/file_status.rs:409
+msgid "Nothing to commit"
+msgstr ""
+
+#: src/ui/file_status.rs:410
+msgid ""
+"Stage the changes you want to commit first (tick them in the Unstaged files "
+"list)."
+msgstr ""
+
+#: src/ui/file_status.rs:418
+msgid "Resolve all conflicted files and mark them resolved before committing."
+msgstr ""
+
+#: src/ui/file_status.rs:424
+msgid "Could not write commit message"
+msgstr ""
+
+#: src/ui/file_status.rs:466
+msgid "Commit and Push"
+msgstr ""
+
+#: src/ui/file_status.rs:479
+msgid "Committed"
+msgstr ""
+
+#: src/ui/flow.rs:25 src/ui/flow.rs:110
+msgid "Feature"
+msgstr ""
+
+#: src/ui/flow.rs:26
+msgid "New Feature"
+msgstr ""
+
+#: src/ui/flow.rs:27
+msgid "Start Feature"
+msgstr ""
+
+#: src/ui/flow.rs:28
+msgid "Finish Feature"
+msgstr ""
+
+#: src/ui/flow.rs:29
+msgid "Feature name"
+msgstr ""
+
+#: src/ui/flow.rs:32 src/ui/flow.rs:111
+msgid "Release"
+msgstr ""
+
+#: src/ui/flow.rs:33
+msgid "New Release"
+msgstr ""
+
+#: src/ui/flow.rs:34
+msgid "Start Release"
+msgstr ""
+
+#: src/ui/flow.rs:35
+msgid "Finish Release"
+msgstr ""
+
+#: src/ui/flow.rs:36
+msgid "Release name"
+msgstr ""
+
+#: src/ui/flow.rs:39 src/ui/flow.rs:112
+msgid "Hotfix"
+msgstr ""
+
+#: src/ui/flow.rs:40
+msgid "New Hotfix"
+msgstr ""
+
+#: src/ui/flow.rs:41
+msgid "Start Hotfix"
+msgstr ""
+
+#: src/ui/flow.rs:42
+msgid "Finish Hotfix"
+msgstr ""
+
+#: src/ui/flow.rs:43
+msgid "Hotfix name"
+msgstr ""
+
+#: src/ui/flow.rs:55 src/ui/mod.rs:67 src/ui/progress.rs:412
+msgid "Close"
+msgstr ""
+
+#: src/ui/flow.rs:55 src/ui/repo_view.rs:489
+msgid "Git-flow"
+msgstr ""
+
+#: src/ui/flow.rs:56
+msgid "What would you like to do?"
+msgstr ""
+
+#: src/ui/flow.rs:73
+#, rust-format
+msgid "Finish Feature “{name}”"
+msgstr ""
+
+#: src/ui/flow.rs:74
+#, rust-format
+msgid "Finish Release “{name}”"
+msgstr ""
+
+#: src/ui/flow.rs:75
+#, rust-format
+msgid "Finish Hotfix “{name}”"
+msgstr ""
+
+#: src/ui/flow.rs:79 src/ui/flow.rs:80
+msgid "Branch off develop"
+msgstr ""
+
+#: src/ui/flow.rs:79
+msgid "Start New Feature"
+msgstr ""
+
+#: src/ui/flow.rs:80
+msgid "Start New Release"
+msgstr ""
+
+#: src/ui/flow.rs:81
+msgid "Branch off the production branch"
+msgstr ""
+
+#: src/ui/flow.rs:81
+msgid "Start New Hotfix"
+msgstr ""
+
+#: src/ui/flow.rs:104 src/ui/flow.rs:132
+msgid "Initialise Git-flow"
+msgstr ""
+
+#: src/ui/flow.rs:105
+msgid ""
+"Git-flow is not set up in this repository yet. Choose the branch names and "
+"prefixes to use."
+msgstr ""
+
+#: src/ui/flow.rs:106
+msgid "Branches"
+msgstr ""
+
+#: src/ui/flow.rs:107
+msgid "Production branch"
+msgstr ""
+
+#: src/ui/flow.rs:108
+msgid "Development branch"
+msgstr ""
+
+#: src/ui/flow.rs:109
+msgid "Prefixes"
+msgstr ""
+
+#: src/ui/flow.rs:113
+msgid "Version tag prefix"
+msgstr ""
+
+#: src/ui/flow.rs:151
+msgid "Start at"
+msgstr ""
+
+#: src/ui/flow.rs:152
+msgid "Branch prefix"
+msgstr ""
+
+#: src/ui/flow.rs:172
+msgid "This is not a git-flow feature, release or hotfix branch"
+msgstr ""
+
+#: src/ui/flow.rs:178
+msgid "Delete branch"
+msgstr ""
+
+#: src/ui/flow.rs:179
+msgid "Rebase on development branch"
+msgstr ""
+
+#: src/ui/flow.rs:181
+msgid "Push changes to origin"
+msgstr ""
+
+#: src/ui/flow.rs:183
+msgid "Don't create a tag"
+msgstr ""
+
+#: src/ui/flow.rs:185
+msgid "Tag message"
+msgstr ""
+
+#: src/ui/history.rs:139
+msgid "Open Current Version"
+msgstr ""
+
+#: src/ui/history.rs:141 src/ui/staging.rs:481
+msgid "Copy Path"
+msgstr ""
+
+#: src/ui/history.rs:144 src/ui/staging.rs:486
+msgid "Log Selected…"
+msgstr ""
+
+#: src/ui/history.rs:145 src/ui/staging.rs:487
+msgid "Blame Selected…"
+msgstr ""
+
+#: src/ui/history.rs:146
+msgid "Blame at This Commit…"
+msgstr ""
+
+#: src/ui/history.rs:147
+msgid "Reset File to This Commit…"
+msgstr ""
+
+#: src/ui/history.rs:148
+msgid "Reset File to Parent Commit…"
+msgstr ""
+
+#: src/ui/history.rs:162
+msgid "No commit selected"
+msgstr ""
+
+#: src/ui/history.rs:200
+msgid "Commit:"
+msgstr ""
+
+#: src/ui/history.rs:217
+msgid "Parent:"
+msgid_plural "Parents:"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/history.rs:220
+msgid "Author:"
+msgstr ""
+
+#: src/ui/history.rs:223
+msgid "Date:"
+msgstr ""
+
+#: src/ui/history.rs:226
+msgid "Committer:"
+msgstr ""
+
+#: src/ui/history.rs:232
+msgid "Labels:"
+msgstr ""
+
+#: src/ui/history.rs:266
+#, rust-format
+msgid "Showing changes from {from} to {to}"
+msgstr ""
+
+#: src/ui/history.rs:354 src/ui/staging.rs:168
+msgid "No file changes"
+msgstr ""
+
+#: src/ui/history.rs:456
+msgid "All Branches"
+msgstr ""
+
+#: src/ui/history.rs:456
+msgid "Current Branch"
+msgstr ""
+
+#: src/ui/history.rs:456
+msgid "Local Branches"
+msgstr ""
+
+#: src/ui/history.rs:457
+msgid "Ancestor Order"
+msgstr ""
+
+#: src/ui/history.rs:457
+msgid "Date Order"
+msgstr ""
+
+#: src/ui/history.rs:458
+msgid "Authors"
+msgstr ""
+
+#: src/ui/history.rs:458
+msgid "Commit Messages"
+msgstr ""
+
+#: src/ui/history.rs:458
+msgid "Commit SHA"
+msgstr ""
+
+#: src/ui/history.rs:458
+msgid "File Changes"
+msgstr ""
+
+#: src/ui/history.rs:471
+msgid "Jump to commit or ref"
+msgstr ""
+
+#: src/ui/history.rs:477 src/ui/sidebar.rs:89
+msgid "Search"
+msgstr ""
+
+#: src/ui/history.rs:484
+#, rust-format
+msgid "History of {file}"
+msgstr ""
+
+#: src/ui/history.rs:523
+msgid "Graph"
+msgstr ""
+
+#: src/ui/history.rs:686
+msgid "Description"
+msgstr ""
+
+#: src/ui/history.rs:725
+msgid "Date"
+msgstr ""
+
+#: src/ui/history.rs:726
+msgid "Author"
+msgstr ""
+
+#: src/ui/history.rs:794
+#, rust-format
+msgid "No commit or ref named “{query}”"
+msgstr ""
+
+#: src/ui/history.rs:952
+msgid "Uncommitted changes"
+msgstr ""
+
+#: src/ui/history.rs:1011
+msgid "Loading…"
+msgstr ""
+
+#: src/ui/history.rs:1044
+#, rust-format
+msgid "{n} commit"
+msgid_plural "{n} commits"
+msgstr[0] ""
+msgstr[1] ""
+
+#. Translators: more commits exist beyond the {n} loaded so far.
+#: src/ui/history.rs:1047
+#, rust-format
+msgid "{n}+ commit"
+msgid_plural "{n}+ commits"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/history.rs:1077 src/ui/history.rs:1134
+msgid "That commit is not shown with the current branch filter"
+msgstr ""
+
+#: src/ui/history.rs:1153
+msgid "Checkout…"
+msgstr ""
+
+#: src/ui/history.rs:1154
+#, rust-format
+msgid "Merge into {branch}…"
+msgstr ""
+
+#: src/ui/history.rs:1155
+#, rust-format
+msgid "Rebase {branch} onto this…"
+msgstr ""
+
+#: src/ui/history.rs:1158
+msgid "Tag…"
+msgstr ""
+
+#: src/ui/history.rs:1159
+msgid "Branch…"
+msgstr ""
+
+#: src/ui/history.rs:1160
+msgid "Archive…"
+msgstr ""
+
+#: src/ui/history.rs:1161
+msgid "Create Patch…"
+msgstr ""
+
+#: src/ui/history.rs:1164
+#, rust-format
+msgid "Reset {branch} to this commit…"
+msgstr ""
+
+#: src/ui/history.rs:1165
+msgid "Reverse Commit…"
+msgstr ""
+
+#: src/ui/history.rs:1167
+#, rust-format
+msgid "Rebase children of {commit} interactively…"
+msgstr ""
+
+#: src/ui/history.rs:1170
+msgid "Copy SHA to Clipboard"
+msgstr ""
+
+#: src/ui/history.rs:1171
+msgid "Copy Commit Message"
+msgstr ""
+
+#: src/ui/history.rs:1179 src/ui/preferences.rs:179 src/ui/staging.rs:496
+msgid "Custom Actions"
+msgstr ""
+
+#: src/ui/history.rs:1185
+#, rust-format
+msgid "Cherry Pick {n} Commit"
+msgid_plural "Cherry Pick {n} Commits"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/ui/history.rs:1186
+msgid "Copy SHAs to Clipboard"
+msgstr ""
+
+#: src/ui/history.rs:1196
+#, rust-format
+msgid "Log — {file}"
+msgstr ""
+
+#: src/ui/mod.rs:169
+#, rust-format
+msgid "Today at {time}"
+msgstr ""
+
+#. Translators: a chrono strftime format (%d day, %b month, %Y year, %H:%M time).
+#: src/ui/mod.rs:172
+msgid "%d %b %Y at %H:%M"
+msgstr ""
+
+#. Translators: a chrono strftime format; day and month names stay in English.
+#: src/ui/mod.rs:184
+msgid "%A %d %B %Y %H:%M:%S"
+msgstr ""
+
+#: src/ui/mod.rs:247
+msgid "No terminal emulator found. Set one in Preferences."
+msgstr ""
+
+#: src/ui/mod.rs:268
+msgid "Added"
+msgstr ""
+
+#: src/ui/mod.rs:269
+msgid "Modified"
+msgstr ""
+
+#: src/ui/mod.rs:270
+msgid "Deleted"
+msgstr ""
+
+#: src/ui/mod.rs:271
+msgid "Renamed"
+msgstr ""
+
+#: src/ui/mod.rs:272 src/ui/progress.rs:131
+msgid "Copied"
+msgstr ""
+
+#: src/ui/mod.rs:273
+msgid "Type changed"
+msgstr ""
+
+#: src/ui/mod.rs:274
+msgid "Conflicted"
+msgstr ""
+
+#: src/ui/mod.rs:275
+msgid "Untracked"
+msgstr ""
+
+#: src/ui/mod.rs:276
+msgid "Ignored"
+msgstr ""
+
+#: src/ui/preferences.rs:11 src/ui/window.rs:140 src/ui/window.rs:516
+msgid "Preferences"
+msgstr ""
+
+#: src/ui/preferences.rs:15
+msgid "General"
+msgstr ""
+
+#: src/ui/preferences.rs:19
+msgid "Default user information"
+msgstr ""
+
+#: src/ui/preferences.rs:20
+msgid "Global git identity used for commits (git config --global)"
+msgstr ""
+
+#: src/ui/preferences.rs:23 src/ui/repo_settings.rs:89
+msgid "Email address"
+msgstr ""
+
+#: src/ui/preferences.rs:23 src/ui/repo_settings.rs:88
+msgid "Full name"
+msgstr ""
+
+#: src/ui/preferences.rs:37 src/ui/window.rs:384 src/ui/window.rs:411
+msgid "Repositories"
+msgstr ""
+
+#: src/ui/preferences.rs:39
+msgid "Default clone folder"
+msgstr ""
+
+#: src/ui/preferences.rs:53
+msgid "Check remotes every (minutes)"
+msgstr ""
+
+#: src/ui/preferences.rs:54
+msgid "Background fetch; 0 disables it"
+msgstr ""
+
+#: src/ui/preferences.rs:62
+msgid "Commits loaded at a time"
+msgstr ""
+
+#: src/ui/preferences.rs:70
+msgid "Confirm dangerous operations"
+msgstr ""
+
+#: src/ui/preferences.rs:71
+msgid "Hard reset and similar"
+msgstr ""
+
+#: src/ui/preferences.rs:80
+msgid "Terminal command (empty = auto-detect)"
+msgstr ""
+
+#: src/ui/preferences.rs:92
+msgid "Credentials"
+msgstr ""
+
+#: src/ui/preferences.rs:93
+msgid ""
+"How git remembers HTTPS passwords (git config --global credential.helper)"
+msgstr ""
+
+#: src/ui/preferences.rs:99
+msgid "Credential helper"
+msgstr ""
+
+#: src/ui/preferences.rs:104
+#, rust-format
+msgid "Currently: {helper}"
+msgstr ""
+
+#: src/ui/preferences.rs:119
+msgid "SSH keys"
+msgstr ""
+
+#: src/ui/preferences.rs:120
+msgid ""
+"SSH authentication uses your ~/.ssh keys and ssh-agent. Passphrases are "
+"asked with a dialog."
+msgstr ""
+
+#: src/ui/preferences.rs:128
+msgid "Diff"
+msgstr ""
+
+#: src/ui/preferences.rs:131
+msgid "Diff view"
+msgstr ""
+
+#: src/ui/preferences.rs:141
+msgid "Ignore whitespace by default"
+msgstr ""
+
+#: src/ui/preferences.rs:151
+msgid "External tools"
+msgstr ""
+
+#: src/ui/preferences.rs:152
+msgid ""
+"A git tool name (meld, kdiff3, vimdiff, bc, …) or a command using $LOCAL "
+"$REMOTE ($BASE $MERGED for merges)"
+msgstr ""
+
+#: src/ui/preferences.rs:155
+msgid "Diff tool"
+msgstr ""
+
+#: src/ui/preferences.rs:165
+msgid "Merge tool"
+msgstr ""
+
+#: src/ui/preferences.rs:183
+msgid "Custom actions"
+msgstr ""
+
+#: src/ui/preferences.rs:184
+msgid ""
+"Shown in the commit and file context menus. Arguments may use $REPO, $SHA "
+"and $FILE."
+msgstr ""
+
+#: src/ui/preferences.rs:196
+msgid "New Custom Action"
+msgstr ""
+
+#: src/ui/preferences.rs:197
+msgid "Menu caption"
+msgstr ""
+
+#: src/ui/preferences.rs:198
+msgid "Script to run"
+msgstr ""
+
+#: src/ui/preferences.rs:199
+msgid "Parameters"
+msgstr ""
+
+#: src/ui/preferences.rs:200
+msgid "Show full output"
+msgstr ""
+
+#: src/ui/progress.rs:71
+msgid "Starting…"
+msgstr ""
+
+#: src/ui/progress.rs:126
+msgid "Copy Output"
+msgstr ""
+
+#: src/ui/progress.rs:233
+#, rust-format
+msgid "{command} failed (exit code {code})."
+msgstr ""
+
+#: src/ui/progress.rs:234
+#, rust-format
+msgid "{command} was interrupted."
+msgstr ""
+
+#: src/ui/progress.rs:291 src/ui/progress.rs:374
+msgid "Worker ended unexpectedly"
+msgstr ""
+
+#: src/ui/progress.rs:396
+msgid "Cancelled"
+msgstr ""
+
+#: src/ui/progress.rs:398
+msgid "Completed with errors, see below."
+msgstr ""
+
+#: src/ui/rebase.rs:24
+msgid "Finish or abort the current operation first."
+msgstr ""
+
+#: src/ui/rebase.rs:24
+msgid "Operation in progress"
+msgstr ""
+
+#: src/ui/rebase.rs:32
+msgid "Could not list commits"
+msgstr ""
+
+#: src/ui/rebase.rs:37
+msgid "There are no commits to rebase after that commit"
+msgstr ""
+
+#: src/ui/rebase.rs:43
+msgid "Merge commits in range"
+msgstr ""
+
+#: src/ui/rebase.rs:44
+msgid ""
+"The selected range contains merge commits, which interactive rebase would "
+"flatten. Pick a later base commit."
+msgstr ""
+
+#: src/ui/rebase.rs:59 src/ui/rebase.rs:273
+msgid "Interactive Rebase"
+msgstr ""
+
+#: src/ui/rebase.rs:68
+msgid "Start Rebase"
+msgstr ""
+
+#: src/ui/rebase.rs:81
+#, rust-format
+msgid ""
+"Commits are applied from top to bottom on top of {base}. Drag rows to "
+"reorder."
+msgstr ""
+
+#: src/ui/rebase.rs:84
+msgid ""
+"Commits are applied from top to bottom on top of the root. Drag rows to "
+"reorder."
+msgstr ""
+
+#: src/ui/rebase.rs:104
+msgid "Move up"
+msgstr ""
+
+#: src/ui/rebase.rs:106
+msgid "Move down"
+msgstr ""
+
+#: src/ui/rebase.rs:107
+msgid "Squash with Previous"
+msgstr ""
+
+#: src/ui/rebase.rs:108
+msgid "Edit Message…"
+msgstr ""
+
+#: src/ui/rebase.rs:192
+msgid "Edit Commit Message"
+msgstr ""
+
+#: src/ui/rebase.rs:250
+msgid "Invalid rebase"
+msgstr ""
+
+#: src/ui/rebase.rs:250
+msgid ""
+"The first commit can't be squashed: there is nothing before it to squash "
+"into."
+msgstr ""
+
+#: src/ui/rebase.rs:254
+msgid "Drop All Commits?"
+msgstr ""
+
+#: src/ui/rebase.rs:254
+msgid "Every commit in the range will be removed."
+msgstr ""
+
+#: src/ui/rebase.rs:263
+msgid "Could not prepare rebase"
+msgstr ""
+
+#: src/ui/repo_settings.rs:19
+msgid "Repository Settings"
+msgstr ""
+
+#: src/ui/repo_settings.rs:24
+msgid "Remotes"
+msgstr ""
+
+#: src/ui/repo_settings.rs:28
+msgid "Remote repositories"
+msgstr ""
+
+#: src/ui/repo_settings.rs:32
+msgid "Add remote"
+msgstr ""
+
+#: src/ui/repo_settings.rs:79
+msgid "User information"
+msgstr ""
+
+#: src/ui/repo_settings.rs:80
+msgid "Leave empty to use the global identity"
+msgstr ""
+
+#: src/ui/repo_settings.rs:107 src/ui/repo_view.rs:498
+msgid "Files"
+msgstr ""
+
+#: src/ui/repo_settings.rs:122
+msgid "Edit .gitignore"
+msgstr ""
+
+#: src/ui/repo_settings.rs:122
+msgid "Ignore patterns shared with the repository"
+msgstr ""
+
+#: src/ui/repo_settings.rs:123
+msgid ".git/info/exclude — not shared"
+msgstr ""
+
+#: src/ui/repo_settings.rs:123
+msgid "Edit local excludes"
+msgstr ""
+
+#: src/ui/repo_settings.rs:124
+msgid "Edit config file"
+msgstr ""
+
+#: src/ui/repo_settings.rs:125
+msgid "Edit .gitattributes"
+msgstr ""
+
+#: src/ui/repo_settings.rs:125
+msgid "Line endings, LFS tracking, diff drivers"
+msgstr ""
+
+#: src/ui/repo_settings.rs:146
+msgid "Save"
+msgstr ""
+
+#: src/ui/repo_settings.rs:161
+msgid "Saved"
+msgstr ""
+
+#: src/ui/repo_settings.rs:164
+#, rust-format
+msgid "Could not save: {error}"
+msgstr ""
+
+#: src/ui/repo_settings.rs:175
+msgid "Add Remote"
+msgstr ""
+
+#: src/ui/repo_settings.rs:175
+msgid "Edit Remote"
+msgstr ""
+
+#: src/ui/repo_settings.rs:176
+msgid "Remote name"
+msgstr ""
+
+#: src/ui/repo_settings.rs:177
+msgid "URL / path"
+msgstr ""
+
+#: src/ui/repo_settings.rs:179
+msgid "Push URL (optional)"
+msgstr ""
+
+#: src/ui/repo_settings.rs:186
+msgid "Fetch after saving"
+msgstr ""
+
+#: src/ui/repo_settings.rs:253
+msgid "Git LFS is not installed"
+msgstr ""
+
+#: src/ui/repo_settings.rs:253
+msgid "Install the git-lfs package (e.g. `sudo apt install git-lfs`)."
+msgstr ""
+
+#: src/ui/repo_settings.rs:257
+msgid "Git LFS"
+msgstr ""
+
+#: src/ui/repo_settings.rs:261
+msgid "Actions"
+msgstr ""
+
+#: src/ui/repo_settings.rs:277
+msgid "Initialise LFS in this repository"
+msgstr ""
+
+#: src/ui/repo_settings.rs:278
+msgid "Download LFS objects for the current branch"
+msgstr ""
+
+#: src/ui/repo_settings.rs:279
+msgid "Fetch and check out LFS files"
+msgstr ""
+
+#: src/ui/repo_settings.rs:280
+msgid "Upload LFS objects for all branches"
+msgstr ""
+
+#: src/ui/repo_settings.rs:281
+msgid "Delete old local LFS files"
+msgstr ""
+
+#: src/ui/repo_settings.rs:285
+msgid "Tracked patterns"
+msgstr ""
+
+#: src/ui/repo_settings.rs:286
+msgid "Stored in .gitattributes"
+msgstr ""
+
+#: src/ui/repo_settings.rs:288
+msgid "Add pattern (e.g. *.psd)"
+msgstr ""
+
+#: src/ui/repo_settings.rs:298
+msgid "LFS Track"
+msgstr ""
+
+#: src/ui/repo_settings.rs:307
+msgid "Untrack"
+msgstr ""
+
+#: src/ui/repo_settings.rs:315
+msgid "LFS Untrack"
+msgstr ""
+
+#: src/ui/repo_view.rs:290
+msgid "Background fetch"
+msgstr ""
+
+#: src/ui/repo_view.rs:328
+#, rust-format
+msgid "Could not read repository: {error}"
+msgstr ""
+
+#: src/ui/repo_view.rs:358
+msgid "Resolve the conflicted files, then continue."
+msgstr ""
+
+#: src/ui/repo_view.rs:467
+msgid "Commit (Ctrl+Shift+C)"
+msgstr ""
+
+#: src/ui/repo_view.rs:470
+msgid "Pull (Ctrl+Shift+L)"
+msgstr ""
+
+#: src/ui/repo_view.rs:471
+msgid "Push (Ctrl+Shift+P)"
+msgstr ""
+
+#: src/ui/repo_view.rs:472
+msgid "Fetch (Ctrl+Shift+F)"
+msgstr ""
+
+#: src/ui/repo_view.rs:477
+msgid "Branch"
+msgstr ""
+
+#: src/ui/repo_view.rs:477
+msgid "Branch (Ctrl+Shift+B)"
+msgstr ""
+
+#: src/ui/repo_view.rs:478
+msgid "Merge (Ctrl+Shift+M)"
+msgstr ""
+
+#: src/ui/repo_view.rs:482
+msgid "Stash (Ctrl+Shift+S)"
+msgstr ""
+
+#: src/ui/repo_view.rs:483
+msgid "Discard (Ctrl+Shift+R)"
+msgstr ""
+
+#: src/ui/repo_view.rs:484
+msgid "Tag (Ctrl+Shift+T)"
+msgstr ""
+
+#: src/ui/repo_view.rs:496
+msgid "Open remote in web browser"
+msgstr ""
+
+#: src/ui/repo_view.rs:497
+msgid "Open in Terminal (Ctrl+Alt+T)"
+msgstr ""
+
+#: src/ui/repo_view.rs:497
+msgid "Terminal"
+msgstr ""
+
+#: src/ui/repo_view.rs:498
+msgid "Show in Files (Ctrl+Alt+O)"
+msgstr ""
+
+#: src/ui/repo_view.rs:505
+msgid "Repository Settings…"
+msgstr ""
+
+#: src/ui/repo_view.rs:506 src/ui/window.rs:512
+msgid "Refresh"
+msgstr ""
+
+#: src/ui/repo_view.rs:509
+msgid "Git LFS…"
+msgstr ""
+
+#: src/ui/repo_view.rs:510 src/ui/sidebar.rs:592
+msgid "Add Submodule…"
+msgstr ""
+
+#: src/ui/repo_view.rs:511
+msgid "Add / Link Subtree…"
+msgstr ""
+
+#: src/ui/repo_view.rs:514
+msgid "Apply Patch…"
+msgstr ""
+
+#: src/ui/repo_view.rs:515
+msgid "Interactive Rebase…"
+msgstr ""
+
+#: src/ui/repo_view.rs:516
+msgid "Cleanup Untracked Files…"
+msgstr ""
+
+#: src/ui/repo_view.rs:523
+msgid "Settings"
+msgstr ""
+
+#: src/ui/repo_view.rs:529
+msgid "Repository settings and more actions"
+msgstr ""
+
+#: src/ui/sidebar.rs:81
+msgid "WORKSPACE"
+msgstr ""
+
+#: src/ui/sidebar.rs:82
+msgid "File Status"
+msgstr ""
+
+#: src/ui/sidebar.rs:88
+msgid "History"
+msgstr ""
+
+#: src/ui/sidebar.rs:92
+msgid "BRANCHES"
+msgstr ""
+
+#. Translators: shown next to a branch whose upstream was deleted.
+#: src/ui/sidebar.rs:108
+msgid "gone"
+msgstr ""
+
+#: src/ui/sidebar.rs:116
+msgid "TAGS"
+msgstr ""
+
+#: src/ui/sidebar.rs:124
+msgid "REMOTES"
+msgstr ""
+
+#: src/ui/sidebar.rs:138
+msgid "STASHES"
+msgstr ""
+
+#: src/ui/sidebar.rs:147
+msgid "SUBMODULES"
+msgstr ""
+
+#: src/ui/sidebar.rs:151
+msgid "not initialised"
+msgstr ""
+
+#: src/ui/sidebar.rs:152
+msgid "modified"
+msgstr ""
+
+#: src/ui/sidebar.rs:153
+msgid "conflict"
+msgstr ""
+
+#: src/ui/sidebar.rs:161
+msgid "SUBTREES"
+msgstr ""
+
+#: src/ui/sidebar.rs:468 src/ui/sidebar.rs:518
+#, rust-format
+msgid "Checkout {branch}"
+msgstr ""
+
+#: src/ui/sidebar.rs:471 src/ui/sidebar.rs:506
+#, rust-format
+msgid "Merge {branch} into {current}"
+msgstr ""
+
+#: src/ui/sidebar.rs:472 src/ui/sidebar.rs:507
+#, rust-format
+msgid "Rebase {current} onto {branch}"
+msgstr ""
+
+#: src/ui/sidebar.rs:476
+msgid "Fetch & Pull…"
+msgstr ""
+
+#: src/ui/sidebar.rs:477
+msgid "Push to…"
+msgstr ""
+
+#: src/ui/sidebar.rs:479
+msgid "Track Remote Branch…"
+msgstr ""
+
+#: src/ui/sidebar.rs:481
+msgid "Change Tracked Branch…"
+msgstr ""
+
+#: src/ui/sidebar.rs:486 src/ui/sidebar.rs:511
+msgid "Diff Against Current"
+msgstr ""
+
+#: src/ui/sidebar.rs:490 src/ui/sidebar.rs:513 src/ui/sidebar.rs:523
+#, rust-format
+msgid "Delete {name}…"
+msgstr ""
+
+#: src/ui/sidebar.rs:492 src/ui/sidebar.rs:512
+msgid "Copy Branch Name"
+msgstr ""
+
+#: src/ui/sidebar.rs:497
+msgid "Git-flow: Finish…"
+msgstr ""
+
+#: src/ui/sidebar.rs:503
+#, rust-format
+msgid "Checkout {branch}…"
+msgstr ""
+
+#: src/ui/sidebar.rs:505
+#, rust-format
+msgid "Pull {branch} into {current}"
+msgstr ""
+
+#: src/ui/sidebar.rs:519
+msgid "Push Tag to…"
+msgstr ""
+
+#: src/ui/sidebar.rs:520
+msgid "Copy Tag Name"
+msgstr ""
+
+#: src/ui/sidebar.rs:528
+#, rust-format
+msgid "Fetch from {remote}"
+msgstr ""
+
+#: src/ui/sidebar.rs:529
+#, rust-format
+msgid "Prune stale branches of {remote}"
+msgstr ""
+
+#: src/ui/sidebar.rs:530
+msgid "Open in Browser"
+msgstr ""
+
+#: src/ui/sidebar.rs:533
+msgid "Edit Remote…"
+msgstr ""
+
+#: src/ui/sidebar.rs:534
+msgid "Remove Remote…"
+msgstr ""
+
+#: src/ui/sidebar.rs:535
+msgid "Copy URL"
+msgstr ""
+
+#: src/ui/sidebar.rs:540
+msgid "Show Changes"
+msgstr ""
+
+#: src/ui/sidebar.rs:541
+msgid "Apply Stash…"
+msgstr ""
+
+#: src/ui/sidebar.rs:543
+msgid "Create Branch from Stash…"
+msgstr ""
+
+#: src/ui/sidebar.rs:546
+msgid "Delete Stash…"
+msgstr ""
+
+#: src/ui/sidebar.rs:551
+msgid "Open Submodule"
+msgstr ""
+
+#: src/ui/sidebar.rs:552
+msgid "Update (init, recursive)"
+msgstr ""
+
+#: src/ui/sidebar.rs:553
+msgid "Sync URL"
+msgstr ""
+
+#: src/ui/sidebar.rs:557
+msgid "Remove Submodule…"
+msgstr ""
+
+#: src/ui/sidebar.rs:562
+msgid "Pull Subtree"
+msgstr ""
+
+#: src/ui/sidebar.rs:563
+msgid "Push Subtree"
+msgstr ""
+
+#: src/ui/sidebar.rs:570
+msgid "New Branch…"
+msgstr ""
+
+#: src/ui/sidebar.rs:575
+msgid "New Tag…"
+msgstr ""
+
+#: src/ui/sidebar.rs:576
+msgid "Push All Tags…"
+msgstr ""
+
+#: src/ui/sidebar.rs:581
+msgid "New Remote…"
+msgstr ""
+
+#: src/ui/sidebar.rs:582
+msgid "Fetch All"
+msgstr ""
+
+#: src/ui/sidebar.rs:587
+msgid "Stash Changes…"
+msgstr ""
+
+#: src/ui/sidebar.rs:593
+msgid "Update All Submodules"
+msgstr ""
+
+#: src/ui/staging.rs:85
+msgid "Unstage All"
+msgstr ""
+
+#: src/ui/staging.rs:86
+msgid "Unstage Selected"
+msgstr ""
+
+#: src/ui/staging.rs:87
+msgid "Stage All"
+msgstr ""
+
+#: src/ui/staging.rs:88
+msgid "Stage Selected"
+msgstr ""
+
+#: src/ui/staging.rs:89
+msgid "Staged files"
+msgstr ""
+
+#: src/ui/staging.rs:90
+msgid "Unstaged files"
+msgstr ""
+
+#: src/ui/staging.rs:385
+msgid "Cannot stage partial changes"
+msgstr ""
+
+#: src/ui/staging.rs:386
+msgid ""
+"Turn off “Ignore whitespace” to stage, unstage or discard individual hunks "
+"or lines."
+msgstr ""
+
+#: src/ui/staging.rs:396
+msgid "The selected changes will be permanently lost."
+msgstr ""
+
+#: src/ui/staging.rs:416
+msgid "Could not apply the change"
+msgstr ""
+
+#: src/ui/staging.rs:452
+msgid "Stage"
+msgstr ""
+
+#: src/ui/staging.rs:453
+msgid "Unstage"
+msgstr ""
+
+#: src/ui/staging.rs:455
+msgid "Discard Changes…"
+msgstr ""
+
+#: src/ui/staging.rs:456
+msgid "Remove…"
+msgstr ""
+
+#: src/ui/staging.rs:461
+msgid "Ignore…"
+msgstr ""
+
+#: src/ui/staging.rs:467
+msgid "Resolve Using “Mine”"
+msgstr ""
+
+#: src/ui/staging.rs:468
+msgid "Resolve Using “Theirs”"
+msgstr ""
+
+#: src/ui/staging.rs:469
+msgid "Launch External Merge Tool"
+msgstr ""
+
+#: src/ui/staging.rs:471
+msgid "Restart Merge (Mark Unresolved)"
+msgstr ""
+
+#: src/ui/staging.rs:472
+msgid "Resolve Conflicts"
+msgstr ""
+
+#: src/ui/staging.rs:479
+msgid "External Diff"
+msgstr ""
+
+#: src/ui/staging.rs:541
+msgid "Resolve with the context menu or edit the file"
+msgstr ""
+
+#: src/ui/window.rs:59
+msgid "A Git client for GNOME inspired by a source control tool on macOS"
+msgstr ""
+
+#. Translators: replace with your name(s), one per line, e.g. "Jane Doe <jane@example.com>".
+#: src/ui/window.rs:61
+msgid "translator-credits"
+msgstr ""
+
+#: src/ui/window.rs:129
+msgid "New Tab (Ctrl+T)"
+msgstr ""
+
+#: src/ui/window.rs:135
+msgid "New Tab"
+msgstr ""
+
+#: src/ui/window.rs:136
+msgid "Open Repository…"
+msgstr ""
+
+#: src/ui/window.rs:137
+msgid "Clone Repository…"
+msgstr ""
+
+#: src/ui/window.rs:141 src/ui/window.rs:519
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+#: src/ui/window.rs:142
+msgid "About Gitree"
+msgstr ""
+
+#: src/ui/window.rs:148
+msgid "Main Menu"
+msgstr ""
+
+#: src/ui/window.rs:429
+msgid "Not a Git repository"
+msgstr ""
+
+#: src/ui/window.rs:498
+msgid "New tab"
+msgstr ""
+
+#: src/ui/window.rs:499
+msgid "Close tab"
+msgstr ""
+
+#: src/ui/window.rs:500
+msgid "Open repository"
+msgstr ""
+
+#: src/ui/window.rs:501
+msgid "Clone repository"
+msgstr ""
+
+#: src/ui/window.rs:502
+msgid "File status / History / Search"
+msgstr ""
+
+#: src/ui/window.rs:507
+msgid "New branch"
+msgstr ""
+
+#: src/ui/window.rs:513
+msgid "Open terminal"
+msgstr ""
+
+#: src/ui/window.rs:515
+msgid "Repository settings"
+msgstr ""

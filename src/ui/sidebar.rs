@@ -4,6 +4,7 @@
 use super::repo_view::{RepoView, Snapshot, View};
 use super::{menu_item_target, popup_menu};
 use crate::git::refs::RefInfo;
+use crate::i18n::{gettext, gettext_f};
 use adw::prelude::*;
 use gtk::{gio, glib};
 use std::cell::{Cell, RefCell};
@@ -77,18 +78,18 @@ fn insert_path(parent: &mut Node, key_prefix: &str, parts: &[&str], leaf: Node) 
 fn build_tree(s: &Snapshot) -> Vec<Rc<Node>> {
     let mut roots = Vec::new();
 
-    let mut ws = Node::new("ws", "WORKSPACE", "", Kind::Section);
-    let mut fs = Node::new("view-status", "File Status", "gitree-filestatus-symbolic", Kind::View(View::Status));
+    let mut ws = Node::new("ws", gettext("WORKSPACE"), "", Kind::Section);
+    let mut fs = Node::new("view-status", gettext("File Status"), "gitree-filestatus-symbolic", Kind::View(View::Status));
     let n = s.status.change_count();
     if n > 0 {
         fs.detail = n.to_string();
     }
     ws.children.push(Rc::new(fs));
-    ws.children.push(Rc::new(Node::new("view-history", "History", "gitree-history-symbolic", Kind::View(View::History))));
-    ws.children.push(Rc::new(Node::new("view-search", "Search", "system-search-symbolic", Kind::View(View::Search))));
+    ws.children.push(Rc::new(Node::new("view-history", gettext("History"), "gitree-history-symbolic", Kind::View(View::History))));
+    ws.children.push(Rc::new(Node::new("view-search", gettext("Search"), "system-search-symbolic", Kind::View(View::Search))));
     roots.push(Rc::new(ws));
 
-    let mut br = Node::new("branches", "BRANCHES", "", Kind::Section);
+    let mut br = Node::new("branches", gettext("BRANCHES"), "", Kind::Section);
     for r in s.refs.locals() {
         let mut leaf = Node::new(format!("b:{}", r.name), r.name.rsplit('/').next().unwrap_or(&r.name), "gitree-branch-symbolic", Kind::Branch(r.clone()));
         leaf.bold = r.is_head;
@@ -103,7 +104,8 @@ fn build_tree(s: &Snapshot) -> Vec<Rc<Node>> {
             d.push_str(&format!("{}↓", r.behind));
         }
         if r.upstream_gone {
-            d.push_str("gone");
+            // Translators: shown next to a branch whose upstream was deleted.
+            d.push_str(&gettext("gone"));
         }
         leaf.detail = d;
         let parts: Vec<&str> = r.name.split('/').collect();
@@ -111,7 +113,7 @@ fn build_tree(s: &Snapshot) -> Vec<Rc<Node>> {
     }
     roots.push(Rc::new(br));
 
-    let mut tags = Node::new("tags", "TAGS", "", Kind::Section);
+    let mut tags = Node::new("tags", gettext("TAGS"), "", Kind::Section);
     let mut tag_list: Vec<&RefInfo> = s.refs.tags().collect();
     tag_list.reverse();
     for t in tag_list {
@@ -119,7 +121,7 @@ fn build_tree(s: &Snapshot) -> Vec<Rc<Node>> {
     }
     roots.push(Rc::new(tags));
 
-    let mut remotes = Node::new("remotes", "REMOTES", "", Kind::Section);
+    let mut remotes = Node::new("remotes", gettext("REMOTES"), "", Kind::Section);
     for rem in &s.remotes {
         let mut rn = Node::new(format!("r:{}", rem.name), rem.name.clone(), "gitree-remote-symbolic", Kind::Remote(rem.name.clone()));
         for r in s.refs.remotes().filter(|r| r.remote() == Some(rem.name.as_str())) {
@@ -133,7 +135,7 @@ fn build_tree(s: &Snapshot) -> Vec<Rc<Node>> {
     }
     roots.push(Rc::new(remotes));
 
-    let mut stashes = Node::new("stashes", "STASHES", "", Kind::Section);
+    let mut stashes = Node::new("stashes", gettext("STASHES"), "", Kind::Section);
     for st in &s.stashes {
         let mut n = Node::new(format!("s:{}", st.oid), st.message.clone(), "gitree-stash-symbolic", Kind::Stash(st.name.clone()));
         n.detail = st.name.trim_start_matches("stash").to_string();
@@ -142,13 +144,13 @@ fn build_tree(s: &Snapshot) -> Vec<Rc<Node>> {
     roots.push(Rc::new(stashes));
 
     if !s.submodules.is_empty() {
-        let mut subs = Node::new("submodules", "SUBMODULES", "", Kind::Section);
+        let mut subs = Node::new("submodules", gettext("SUBMODULES"), "", Kind::Section);
         for sm in &s.submodules {
             let mut n = Node::new(format!("sm:{}", sm.path), sm.path.clone(), "gitree-submodule-symbolic", Kind::Submodule(sm.path.clone()));
             n.detail = match sm.state {
-                '-' => "not initialised".into(),
-                '+' => "modified".into(),
-                'U' => "conflict".into(),
+                '-' => gettext("not initialised"),
+                '+' => gettext("modified"),
+                'U' => gettext("conflict"),
                 _ => String::new(),
             };
             subs.children.push(Rc::new(n));
@@ -156,7 +158,7 @@ fn build_tree(s: &Snapshot) -> Vec<Rc<Node>> {
         roots.push(Rc::new(subs));
     }
     if !s.subtrees.is_empty() {
-        let mut subs = Node::new("subtrees", "SUBTREES", "", Kind::Section);
+        let mut subs = Node::new("subtrees", gettext("SUBTREES"), "", Kind::Section);
         for st in &s.subtrees {
             subs.children.push(Rc::new(Node::new(format!("st:{}", st.prefix), st.prefix.clone(), "folder-remote-symbolic", Kind::Subtree(st.prefix.clone()))));
         }
@@ -463,132 +465,132 @@ impl Sidebar {
             Kind::Branch(r) => {
                 let s1 = sec();
                 if !r.is_head {
-                    menu_item_target(&s1, &format!("Checkout {}", r.name), "repo.checkout-ref", &r.full);
+                    menu_item_target(&s1, &gettext_f("Checkout {branch}", &[("branch", &r.name)]), "repo.checkout-ref", &r.full);
                 }
                 if !r.is_head && !current.is_empty() {
-                    menu_item_target(&s1, &format!("Merge {} into {}", r.name, current), "repo.merge-ref", &r.name);
-                    menu_item_target(&s1, &format!("Rebase {} onto {}", current, r.name), "repo.rebase-onto", &r.name);
+                    menu_item_target(&s1, &gettext_f("Merge {branch} into {current}", &[("branch", &r.name), ("current", &current)]), "repo.merge-ref", &r.name);
+                    menu_item_target(&s1, &gettext_f("Rebase {current} onto {branch}", &[("current", &current), ("branch", &r.name)]), "repo.rebase-onto", &r.name);
                 }
                 menu.append_section(None, &s1);
                 let s2 = sec();
-                menu_item_target(&s2, "Fetch & Pull…", "repo.pull", "");
-                menu_item_target(&s2, "Push to…", "repo.push-branch", &r.name);
+                menu_item_target(&s2, &gettext("Fetch & Pull…"), "repo.pull", "");
+                menu_item_target(&s2, &gettext("Push to…"), "repo.push-branch", &r.name);
                 if r.upstream.is_none() {
-                    menu_item_target(&s2, "Track Remote Branch…", "repo.track", &r.name);
+                    menu_item_target(&s2, &gettext("Track Remote Branch…"), "repo.track", &r.name);
                 } else {
-                    menu_item_target(&s2, "Change Tracked Branch…", "repo.track", &r.name);
+                    menu_item_target(&s2, &gettext("Change Tracked Branch…"), "repo.track", &r.name);
                 }
                 menu.append_section(None, &s2);
                 let s3 = sec();
                 if !r.is_head {
-                    menu_item_target(&s3, "Diff Against Current", "repo.diff-ref", &r.name);
+                    menu_item_target(&s3, &gettext("Diff Against Current"), "repo.diff-ref", &r.name);
                 }
-                menu_item_target(&s3, "Rename…", "repo.rename-branch", &r.name);
+                menu_item_target(&s3, &gettext("Rename…"), "repo.rename-branch", &r.name);
                 if !r.is_head {
-                    menu_item_target(&s3, &format!("Delete {}…", r.name), "repo.delete-branch", &r.name);
+                    menu_item_target(&s3, &gettext_f("Delete {name}…", &[("name", &r.name)]), "repo.delete-branch", &r.name);
                 }
-                menu_item_target(&s3, "Copy Branch Name", "repo.copy-text", &r.name);
+                menu_item_target(&s3, &gettext("Copy Branch Name"), "repo.copy-text", &r.name);
                 menu.append_section(None, &s3);
                 if let Some(flow) = &snap.flow
                     && flow.classify(&r.name).is_some() {
                         let s4 = sec();
-                        menu_item_target(&s4, "Git-flow: Finish…", "repo.flow-finish", &r.name);
+                        menu_item_target(&s4, &gettext("Git-flow: Finish…"), "repo.flow-finish", &r.name);
                         menu.append_section(None, &s4);
                     }
             }
             Kind::RemoteBranch(r) => {
                 let s1 = sec();
-                menu_item_target(&s1, &format!("Checkout {}…", r.name), "repo.checkout-ref", &r.full);
+                menu_item_target(&s1, &gettext_f("Checkout {branch}…", &[("branch", &r.name)]), "repo.checkout-ref", &r.full);
                 if !current.is_empty() {
-                    menu_item_target(&s1, &format!("Pull {} into {}", r.name, current), "repo.pull-ref", &r.name);
-                    menu_item_target(&s1, &format!("Merge {} into {}", r.name, current), "repo.merge-ref", &r.name);
-                    menu_item_target(&s1, &format!("Rebase {} onto {}", current, r.name), "repo.rebase-onto", &r.name);
+                    menu_item_target(&s1, &gettext_f("Pull {branch} into {current}", &[("branch", &r.name), ("current", &current)]), "repo.pull-ref", &r.name);
+                    menu_item_target(&s1, &gettext_f("Merge {branch} into {current}", &[("branch", &r.name), ("current", &current)]), "repo.merge-ref", &r.name);
+                    menu_item_target(&s1, &gettext_f("Rebase {current} onto {branch}", &[("current", &current), ("branch", &r.name)]), "repo.rebase-onto", &r.name);
                 }
                 menu.append_section(None, &s1);
                 let s2 = sec();
-                menu_item_target(&s2, "Diff Against Current", "repo.diff-ref", &r.name);
-                menu_item_target(&s2, "Copy Branch Name", "repo.copy-text", &r.name);
-                menu_item_target(&s2, &format!("Delete {}…", r.name), "repo.delete-remote-branch", &r.name);
+                menu_item_target(&s2, &gettext("Diff Against Current"), "repo.diff-ref", &r.name);
+                menu_item_target(&s2, &gettext("Copy Branch Name"), "repo.copy-text", &r.name);
+                menu_item_target(&s2, &gettext_f("Delete {name}…", &[("name", &r.name)]), "repo.delete-remote-branch", &r.name);
                 menu.append_section(None, &s2);
             }
             Kind::Tag(r) => {
                 let s1 = sec();
-                menu_item_target(&s1, &format!("Checkout {}", r.name), "repo.checkout-commit", &r.oid);
-                menu_item_target(&s1, "Push Tag to…", "repo.push-tag", &r.name);
-                menu_item_target(&s1, "Copy Tag Name", "repo.copy-text", &r.name);
+                menu_item_target(&s1, &gettext_f("Checkout {branch}", &[("branch", &r.name)]), "repo.checkout-commit", &r.oid);
+                menu_item_target(&s1, &gettext("Push Tag to…"), "repo.push-tag", &r.name);
+                menu_item_target(&s1, &gettext("Copy Tag Name"), "repo.copy-text", &r.name);
                 menu.append_section(None, &s1);
                 let s2 = sec();
-                menu_item_target(&s2, &format!("Delete {}…", r.name), "repo.delete-tag", &r.name);
+                menu_item_target(&s2, &gettext_f("Delete {name}…", &[("name", &r.name)]), "repo.delete-tag", &r.name);
                 menu.append_section(None, &s2);
             }
             Kind::Remote(name) => {
                 let s1 = sec();
-                menu_item_target(&s1, &format!("Fetch from {name}"), "repo.remote-fetch", name);
-                menu_item_target(&s1, &format!("Prune stale branches of {name}"), "repo.remote-prune", name);
-                menu_item_target(&s1, "Open in Browser", "repo.open-remote", name);
+                menu_item_target(&s1, &gettext_f("Fetch from {remote}", &[("remote", name)]), "repo.remote-fetch", name);
+                menu_item_target(&s1, &gettext_f("Prune stale branches of {remote}", &[("remote", name)]), "repo.remote-prune", name);
+                menu_item_target(&s1, &gettext("Open in Browser"), "repo.open-remote", name);
                 menu.append_section(None, &s1);
                 let s2 = sec();
-                menu_item_target(&s2, "Edit Remote…", "repo.remote-edit", name);
-                menu_item_target(&s2, "Remove Remote…", "repo.remote-remove", name);
-                menu_item_target(&s2, "Copy URL", "repo.remote-copy-url", name);
+                menu_item_target(&s2, &gettext("Edit Remote…"), "repo.remote-edit", name);
+                menu_item_target(&s2, &gettext("Remove Remote…"), "repo.remote-remove", name);
+                menu_item_target(&s2, &gettext("Copy URL"), "repo.remote-copy-url", name);
                 menu.append_section(None, &s2);
             }
             Kind::Stash(name) => {
                 let s1 = sec();
-                menu_item_target(&s1, "Show Changes", "repo.stash-show", name);
-                menu_item_target(&s1, "Apply Stash…", "repo.stash-apply", name);
-                menu_item_target(&s1, "Pop Stash", "repo.stash-pop", name);
-                menu_item_target(&s1, "Create Branch from Stash…", "repo.stash-branch", name);
+                menu_item_target(&s1, &gettext("Show Changes"), "repo.stash-show", name);
+                menu_item_target(&s1, &gettext("Apply Stash…"), "repo.stash-apply", name);
+                menu_item_target(&s1, &gettext("Pop Stash"), "repo.stash-pop", name);
+                menu_item_target(&s1, &gettext("Create Branch from Stash…"), "repo.stash-branch", name);
                 menu.append_section(None, &s1);
                 let s2 = sec();
-                menu_item_target(&s2, "Delete Stash…", "repo.stash-drop", name);
+                menu_item_target(&s2, &gettext("Delete Stash…"), "repo.stash-drop", name);
                 menu.append_section(None, &s2);
             }
             Kind::Submodule(p) => {
                 let s1 = sec();
-                menu_item_target(&s1, "Open Submodule", "repo.open-submodule", p);
-                menu_item_target(&s1, "Update (init, recursive)", "repo.update-submodule", p);
-                menu_item_target(&s1, "Sync URL", "repo.sync-submodule", p);
-                menu_item_target(&s1, "Show in Files", "repo.file-show", p);
+                menu_item_target(&s1, &gettext("Open Submodule"), "repo.open-submodule", p);
+                menu_item_target(&s1, &gettext("Update (init, recursive)"), "repo.update-submodule", p);
+                menu_item_target(&s1, &gettext("Sync URL"), "repo.sync-submodule", p);
+                menu_item_target(&s1, &gettext("Show in Files"), "repo.file-show", p);
                 menu.append_section(None, &s1);
                 let s2 = sec();
-                menu_item_target(&s2, "Remove Submodule…", "repo.remove-submodule", p);
+                menu_item_target(&s2, &gettext("Remove Submodule…"), "repo.remove-submodule", p);
                 menu.append_section(None, &s2);
             }
             Kind::Subtree(p) => {
                 let s1 = sec();
-                menu_item_target(&s1, "Pull Subtree", "repo.subtree-pull", p);
-                menu_item_target(&s1, "Push Subtree", "repo.subtree-push", p);
-                menu_item_target(&s1, "Unlink Subtree", "repo.subtree-unlink", p);
+                menu_item_target(&s1, &gettext("Pull Subtree"), "repo.subtree-pull", p);
+                menu_item_target(&s1, &gettext("Push Subtree"), "repo.subtree-push", p);
+                menu_item_target(&s1, &gettext("Unlink Subtree"), "repo.subtree-unlink", p);
                 menu.append_section(None, &s1);
             }
             Kind::Section => match node.key.as_str() {
                 "branches" => {
                     let s1 = sec();
-                    menu_item_target(&s1, "New Branch…", "repo.branch", "");
+                    menu_item_target(&s1, &gettext("New Branch…"), "repo.branch", "");
                     menu.append_section(None, &s1);
                 }
                 "tags" => {
                     let s1 = sec();
-                    menu_item_target(&s1, "New Tag…", "repo.tag", "");
-                    menu_item_target(&s1, "Push All Tags…", "repo.push-tag", "");
+                    menu_item_target(&s1, &gettext("New Tag…"), "repo.tag", "");
+                    menu_item_target(&s1, &gettext("Push All Tags…"), "repo.push-tag", "");
                     menu.append_section(None, &s1);
                 }
                 "remotes" => {
                     let s1 = sec();
-                    menu_item_target(&s1, "New Remote…", "repo.remote-add", "");
-                    menu_item_target(&s1, "Fetch All", "repo.fetch", "");
+                    menu_item_target(&s1, &gettext("New Remote…"), "repo.remote-add", "");
+                    menu_item_target(&s1, &gettext("Fetch All"), "repo.fetch", "");
                     menu.append_section(None, &s1);
                 }
                 "stashes" => {
                     let s1 = sec();
-                    menu_item_target(&s1, "Stash Changes…", "repo.stash", "");
+                    menu_item_target(&s1, &gettext("Stash Changes…"), "repo.stash", "");
                     menu.append_section(None, &s1);
                 }
                 "submodules" => {
                     let s1 = sec();
-                    menu_item_target(&s1, "Add Submodule…", "repo.add-submodule", "");
-                    menu_item_target(&s1, "Update All Submodules", "repo.update-submodule", "");
+                    menu_item_target(&s1, &gettext("Add Submodule…"), "repo.add-submodule", "");
+                    menu_item_target(&s1, &gettext("Update All Submodules"), "repo.update-submodule", "");
                     menu.append_section(None, &s1);
                 }
                 _ => return,

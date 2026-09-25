@@ -65,10 +65,17 @@ elif [[ ! -x "$ROOT/target/release/gitree" ]]; then
 fi
 
 install -Dm755 "$ROOT/target/release/gitree" "${files[0]}"
-install -Dm644 "$ROOT/data/$APP.desktop" "${files[1]}"
+# Absolute Exec path: GLib hides desktop entries whose binary isn't on the
+# session PATH, and ~/.local/bin is often only added by the shell profile.
+install -dm755 "$(dirname "${files[1]}")"
+sed "s|^Exec=gitree|Exec=${files[0]}|" "$ROOT/data/$APP.desktop" > "${files[1]}"
+chmod 644 "${files[1]}"
 install -Dm644 "$ROOT/data/$APP.metainfo.xml" "${files[2]}"
 install -Dm644 "$ROOT/data/icons/scalable/apps/$APP.svg" "${files[3]}"
 command -v update-desktop-database >/dev/null && update-desktop-database -q "$PREFIX/share/applications" || true
-command -v gtk4-update-icon-cache >/dev/null && gtk4-update-icon-cache -q -t "$PREFIX/share/icons/hicolor" || true
+# Only refresh an existing theme cache; without one, lookups scan the directory.
+if [[ -f "$PREFIX/share/icons/hicolor/icon-theme.cache" ]] && command -v gtk4-update-icon-cache >/dev/null; then
+  gtk4-update-icon-cache -q -t "$PREFIX/share/icons/hicolor" 2>/dev/null || true
+fi
 echo "Installed Gitree to $PREFIX (binary: ${files[0]})"
 case ":$PATH:" in *":$PREFIX/bin:"*) ;; *) echo "Note: $PREFIX/bin is not on your PATH";; esac

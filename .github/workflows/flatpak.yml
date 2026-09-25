@@ -1,0 +1,36 @@
+# Builds the Flatpak bundle when a tag is pushed and attaches it to a GitHub release.
+# Manual runs (workflow_dispatch) build the bundle as a workflow artifact only.
+name: Flatpak
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    container:
+      # Ships flatpak-builder with the GNOME 50 SDK preinstalled (matches runtime-version in the manifest).
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build bundle
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: gitree.flatpak
+          manifest-path: flatpak/io.github.gitree.Gitree.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: gitree.flatpak
+          generate_release_notes: true

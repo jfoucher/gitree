@@ -14,7 +14,27 @@ fn s(v: &[&str]) -> Vec<String> {
 }
 
 /// Shows the repository settings dialog (`page`: 0 remotes, 1 advanced).
-pub fn show(rv: &Rc<RepoView>, _page: u32) {
+pub fn show(rv: &Rc<RepoView>, page: u32) {
+    show_with(rv, page, rv.snapshot().remotes.clone());
+}
+
+/// Runs a remote action (`remote-add`, `remote-edit`, `remote-remove`) with the settings
+/// dialog closed, then reopens it with the remotes reloaded, since the snapshot refresh
+/// triggered by the operation has not finished yet.
+fn run_remote_action(rv: &Rc<RepoView>, dialog: &adw::PreferencesDialog, action: &'static str, arg: String) {
+    dialog.close();
+    let rv = rv.clone();
+    spawn(async move {
+        super::dialogs::handle(&rv, action, arg).await;
+        let git = rv.git.clone();
+        let remotes = bg(move || git::refs::remotes(&git))
+            .await
+            .unwrap_or_else(|_| rv.snapshot().remotes.clone());
+        show_with(&rv, 0, remotes);
+    });
+}
+
+fn show_with(rv: &Rc<RepoView>, _page: u32, remotes: Vec<git::refs::Remote>) {
     let dialog = adw::PreferencesDialog::new();
     dialog.set_title(&gettext("Repository Settings"));
     dialog.set_search_enabled(false);
@@ -31,7 +51,7 @@ pub fn show(rv: &Rc<RepoView>, _page: u32) {
     add.add_css_class("flat");
     add.set_tooltip_text(Some(&gettext("Add remote")));
     group.set_header_suffix(Some(&add));
-    for r in &rv.snapshot().remotes {
+    for r in &remotes {
         let row = adw::ActionRow::builder()
             .title(&r.name)
             .subtitle(&r.fetch_url)
@@ -46,27 +66,18 @@ pub fn show(rv: &Rc<RepoView>, _page: u32) {
         row.add_suffix(&edit);
         row.add_suffix(&del);
         let (rv2, name, d2) = (rv.clone(), r.name.clone(), dialog.clone());
-        edit.connect_clicked(move |_| {
-            d2.close();
-            super::dialogs::dispatch(&rv2, "remote-edit", name.clone());
-        });
+        edit.connect_clicked(move |_| run_remote_action(&rv2, &d2, "remote-edit", name.clone()));
         let (rv2, name, d2) = (rv.clone(), r.name.clone(), dialog.clone());
-        del.connect_clicked(move |_| {
-            d2.close();
-            super::dialogs::dispatch(&rv2, "remote-remove", name.clone());
-        });
+        del.connect_clicked(move |_| run_remote_action(&rv2, &d2, "remote-remove", name.clone()));
         group.add(&row);
     }
-    if rv.snapshot().remotes.is_empty() {
+    if remotes.is_empty() {
         let row = adw::ActionRow::builder().title(gettext("No remotes")).build();
         row.add_css_class("dim-label");
         group.add(&row);
     }
     let (rv2, d2) = (rv.clone(), dialog.clone());
-    add.connect_clicked(move |_| {
-        d2.close();
-        super::dialogs::dispatch(&rv2, "remote-add", String::new());
-    });
+    add.connect_clicked(move |_| run_remote_action(&rv2, &d2, "remote-add", String::new()));
     remotes_page.add(&group);
     dialog.add(&remotes_page);
 

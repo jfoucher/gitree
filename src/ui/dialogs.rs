@@ -53,7 +53,7 @@ pub fn dispatch(rv: &Rc<RepoView>, name: &str, arg: String) {
     spawn(async move { handle(&rv, &name, arg).await });
 }
 
-async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
+pub(super) async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
     let parent = rv.widget.clone();
     match name {
         "commit" => {

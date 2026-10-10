@@ -258,6 +258,10 @@ impl FileStatusView {
         });
         let w = Rc::downgrade(self);
         self.push_after.connect_toggled(move |b| {
+            // Unchecked programmatically while there is no remote; keep the saved preference.
+            if !b.is_sensitive() {
+                return;
+            }
             config::update(|s| s.push_after_commit = b.is_active());
             let _ = w.upgrade();
         });
@@ -365,11 +369,15 @@ impl FileStatusView {
             match target {
                 Some(t) => {
                     self.push_after.set_label(Some(&gettext_f("Push changes immediately to {upstream}", &[("upstream", &t)])));
-                    self.push_after.set_sensitive(true);
+                    if !self.push_after.is_sensitive() {
+                        self.push_after.set_active(config::with(|s| s.push_after_commit));
+                        self.push_after.set_sensitive(true);
+                    }
                 }
                 None => {
                     self.push_after.set_label(Some(&gettext("Push changes immediately (no remote)")));
                     self.push_after.set_sensitive(false);
+                    self.push_after.set_active(false);
                 }
             }
             // Pre-fill the merge message when a merge starts.

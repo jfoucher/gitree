@@ -5,7 +5,7 @@
 use super::staging::{decode_target, Side};
 use super::form::{combo_value, text_of, Form};
 use super::progress::OpOptions;
-use super::repo_view::{RepoView, View};
+use super::repo_view::{RepoView, Snapshot, View};
 use super::{ask_text, bg, confirm, copy_to_clipboard, show_error, spawn};
 use crate::config;
 use crate::git::state::OpState;
@@ -25,7 +25,7 @@ pub const ACTIONS: &[&str] = &[
     "add-submodule", "update-submodule", "sync-submodule", "open-submodule", "remove-submodule",
     "add-subtree", "subtree-pull", "subtree-push", "subtree-unlink", "apply-patch",
     "rebase-interactive-pick", "rebase-interactive", "clean", "gc", "op-continue", "op-abort",
-    "op-skip", "checkout-ref", "checkout-commit", "rebase-onto", "delete-branch",
+    "op-skip", "checkout-ref", "checkout-remote", "checkout-commit", "rebase-onto", "delete-branch",
     "delete-remote-branch", "rename-branch", "track", "diff-ref", "copy-text", "copy-message",
     "reset-to", "revert", "cherry-pick", "archive", "patch", "custom-action", "file-stage",
     "file-unstage", "file-discard", "file-remove", "file-stop-tracking", "file-ignore", "file-open",
@@ -313,6 +313,7 @@ pub(super) async fn handle(rv: &Rc<RepoView>, name: &str, arg: String) {
         }
         "op-continue" | "op-abort" | "op-skip" => op_control(rv, name).await,
         "checkout-ref" => checkout_ref(rv, &arg).await,
+        "checkout-remote" => checkout_remote(rv, &arg, false).await,
         "checkout-commit" => checkout_commit(rv, &arg).await,
         "rebase-onto" => {
             let cur = rv.snapshot().current_branch().unwrap_or("HEAD").to_string();
@@ -1080,6 +1081,54 @@ async fn checkout_ref(rv: &Rc<RepoView>, full: &str) {
     }
 }
 
+/// Splits `origin/feature/x` into its remote and branch, matching configured remote names.
+fn split_remote_ref<'a>(snap: &Snapshot, remote_ref: &'a str) -> (&'a str, &'a str) {
+    snap.remotes
+        .iter()
+        .filter_map(|r| {
+            let branch = remote_ref.strip_prefix(r.name.as_str())?.strip_prefix('/')?;
+            Some((&remote_ref[..r.name.len()], branch))
+        })
+        .max_by_key(|(r, _)| r.len())
+        .or_else(|| remote_ref.split_once('/'))
+        .unwrap_or(("", remote_ref))
+}
+
+/// Commands that fetch a remote branch (`origin/x`) and check it out on a local branch tracking
+/// it, fast-forwarding that branch if it already exists. None when a local branch with the same
+/// name exists but doesn't track it.
+fn remote_checkout_cmds(snap: &Snapshot, remote_ref: &str, force: bool) -> Option<Vec<Vec<String>>> {
+    let (remote, branch) = split_remote_ref(snap, remote_ref);
+    let mut cmds = vec![s(&["fetch", "--progress", remote, branch])];
+    let mut c = s(&["checkout"]);
+    if force {
+        c.push("-f".into());
+    }
+    if let Some(local) = snap.refs.locals().find(|l| l.upstream.as_deref() == Some(remote_ref)) {
+        c.push(local.name.clone());
+        cmds.push(c);
+        cmds.push(s(&["merge", "--ff-only", remote_ref]));
+    } else if snap.refs.locals().any(|l| l.name == branch) {
+        return None;
+    } else {
+        c.extend(s(&["-b", branch, "--track", remote_ref]));
+        cmds.push(c);
+    }
+    Some(cmds)
+}
+
+/// Fetches and checks out the remote branch `full` (`refs/remotes/…`) without asking, unless its
+/// local name is taken.
+async fn checkout_remote(rv: &Rc<RepoView>, full: &str, force: bool) {
+    let Some(remote_ref) = full.strip_prefix("refs/remotes/") else { return };
+    match remote_checkout_cmds(&rv.snapshot(), remote_ref, force) {
+        Some(cmds) => {
+            rv.run_ops(&gettext("Checkout"), cmds, net()).await;
+        }
+        None => checkout_ref(rv, full).await,
+    }
+}
+
 async fn checkout_commit(rv: &Rc<RepoView>, oid: &str) {
     let snap = rv.snapshot();
     let locals: Vec<String> = snap
@@ -1088,14 +1137,19 @@ async fn checkout_commit(rv: &Rc<RepoView>, oid: &str) {
         .filter(|r| r.oid == oid && !r.is_head)
         .map(|r| r.name.clone())
         .collect();
+    let remotes: Vec<(String, String)> =
+        snap.refs.remotes().filter(|r| r.oid == oid).map(|r| (r.full.clone(), r.name.clone())).collect();
     let form = Form::new(&gettext("Checkout"), &gettext("Checkout"));
     let mut options: Vec<String> = locals.iter().map(|l| gettext_f("Branch {branch}", &[("branch", l)])).collect();
+    options.extend(remotes.iter().map(|(_, r)| gettext_f("Remote branch {branch} (pull and track)", &[("branch", r)])));
     options.push(gettext_f("Detached HEAD at {commit}", &[("commit", &oid[..oid.len().min(10)])]));
     let choice = form.combo(&gettext("Checkout"), &options, None);
-    form.description(&if locals.is_empty() {
-        gettext("You will be in “detached HEAD” state: commits made here won't belong to any branch unless you create one.")
-    } else {
+    form.description(&if !locals.is_empty() {
         gettext("Checking out a branch is recommended over a detached HEAD.")
+    } else if !remotes.is_empty() {
+        gettext("A remote branch is fetched, then checked out on a local branch that tracks it.")
+    } else {
+        gettext("You will be in “detached HEAD” state: commits made here won't belong to any branch unless you create one.")
     });
     let clean = form.switch(&gettext("Discard local changes"), "", false);
     form.focus(&choice);
@@ -1103,6 +1157,10 @@ async fn checkout_commit(rv: &Rc<RepoView>, oid: &str) {
         return;
     }
     let sel = choice.selected() as usize;
+    if let Some((full, _)) = sel.checked_sub(locals.len()).and_then(|i| remotes.get(i)) {
+        checkout_remote(rv, full, clean.is_active()).await;
+        return;
+    }
     let mut c = s(&["checkout"]);
     if clean.is_active() {
         c.push("-f".into());
@@ -1533,5 +1591,45 @@ mod tests {
         assert_eq!(v[0], "-c");
         assert!(v.contains(&"difftool".to_string()));
         assert_eq!(v.last().unwrap(), "--tool=gitree");
+    }
+
+    #[test]
+    fn remote_checkout() {
+        use crate::git::refs::{RefInfo, RefKind, Remote};
+        let local = |name: &str, upstream: Option<&str>| RefInfo {
+            full: format!("refs/heads/{name}"),
+            name: name.into(),
+            kind: RefKind::Local,
+            oid: "a".into(),
+            upstream: upstream.map(String::from),
+            ahead: 0,
+            behind: 0,
+            upstream_gone: false,
+            is_head: false,
+            subject: String::new(),
+        };
+        let mut snap = Snapshot {
+            remotes: ["origin", "my/fork"]
+                .iter()
+                .map(|n| Remote { name: n.to_string(), fetch_url: String::new(), push_url: String::new() })
+                .collect(),
+            ..Default::default()
+        };
+        snap.refs.refs = vec![local("main", Some("origin/main")), local("taken", None)];
+
+        assert_eq!(split_remote_ref(&snap, "my/fork/feat/x"), ("my/fork", "feat/x"));
+        assert_eq!(
+            remote_checkout_cmds(&snap, "origin/feat/x", false).unwrap(),
+            vec![s(&["fetch", "--progress", "origin", "feat/x"]), s(&["checkout", "-b", "feat/x", "--track", "origin/feat/x"])]
+        );
+        assert_eq!(
+            remote_checkout_cmds(&snap, "origin/main", true).unwrap(),
+            vec![
+                s(&["fetch", "--progress", "origin", "main"]),
+                s(&["checkout", "-f", "main"]),
+                s(&["merge", "--ff-only", "origin/main"]),
+            ]
+        );
+        assert!(remote_checkout_cmds(&snap, "origin/taken", false).is_none());
     }
 }

@@ -417,12 +417,14 @@ pub async fn run(
             sheet.button.set_label(&gettext("Close"));
             sheet.button.set_sensitive(true);
             sheet.window.set_deletable(true);
-            // Wait for the sheet to be dismissed. "hide" rather than
-            // "destroy": the window is only disposed once every reference
-            // is gone, and this future still holds one.
+            // Wait for the sheet to be dismissed (Close button, Escape or the
+            // title bar). Not "destroy": the window is only disposed once
+            // every reference is gone, and this future still holds one. Not
+            // "hide" either: closing destroys the window without hiding it.
             let (ctx, crx) = async_channel::bounded::<()>(1);
-            sheet.window.connect_hide(move |_| {
+            sheet.window.connect_close_request(move |_| {
                 let _ = ctx.try_send(());
+                glib::Propagation::Proceed
             });
             if was_cancelled {
                 if presented.get() {
@@ -434,6 +436,11 @@ pub async fn run(
             } else if !presented.get() {
                 presented.set(true);
                 sheet.window.present();
+            }
+            // Headless test runs: dismiss the error so the flow continues.
+            if std::env::var_os("GITREE_AUTO_ACCEPT").is_some() {
+                let w = sheet.window.clone();
+                glib::timeout_add_local_once(Duration::from_millis(1000), move || w.close());
             }
             let _ = crx.recv().await;
         }

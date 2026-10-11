@@ -118,18 +118,32 @@ impl Form {
     pub fn combo(&self, title: &str, items: &[String], selected: Option<&str>) -> adw::ComboRow {
         let model = gtk::StringList::new(&items.iter().map(|s| s.as_str()).collect::<Vec<_>>());
         let c = adw::ComboRow::builder().title(title).model(&model).build();
-        if items.len() > 12 {
-            c.set_enable_search(true);
+        let searchable = items.len() > 12;
+        let long = items.iter().any(|s| s.chars().count() > 24);
+        if searchable || long {
             c.set_expression(Some(gtk::PropertyExpression::new(
                 gtk::StringObject::static_type(),
                 None::<&gtk::Expression>,
                 "string",
             )));
         }
+        c.set_enable_search(searchable);
+        if long {
+            // Long values would be ellipsized beside the title (and the
+            // dialog can't be resized): show the selection as a wrapping
+            // subtitle, and wrap the entries of the popup too.
+            c.set_use_subtitle(true);
+            c.set_use_markup(false);
+            c.set_list_factory(Some(&wrapping_factory()));
+            c.connect_selected_notify(|c| c.set_subtitle(&combo_value(c)));
+        }
         if let Some(sel) = selected
             && let Some(i) = items.iter().position(|s| s == sel) {
                 c.set_selected(i as u32);
             }
+        if long {
+            c.set_subtitle(&combo_value(&c));
+        }
         self.add(&c);
         c
     }
@@ -253,6 +267,43 @@ impl Form {
         });
         self.rx.recv().await.unwrap_or(false)
     }
+}
+
+/// Popup entries for combo rows with long strings: wrapped instead of
+/// ellipsized, with the usual checkmark on the selected one.
+fn wrapping_factory() -> gtk::SignalListItemFactory {
+    let f = gtk::SignalListItemFactory::new();
+    f.connect_setup(|_, obj| {
+        let item = obj.downcast_ref::<gtk::ListItem>().unwrap();
+        let label = gtk::Label::builder()
+            .xalign(0.0)
+            .wrap(true)
+            .wrap_mode(gtk::pango::WrapMode::WordChar)
+            .max_width_chars(48)
+            .hexpand(true)
+            .build();
+        let check = gtk::Image::from_icon_name("object-select-symbolic");
+        item.bind_property("selected", &check, "opacity")
+            .transform_to(|_, selected: bool| Some(if selected { 1.0 } else { 0.0 }))
+            .sync_create()
+            .build();
+        let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        hbox.append(&label);
+        hbox.append(&check);
+        item.set_child(Some(&hbox));
+    });
+    f.connect_bind(|_, obj| {
+        let item = obj.downcast_ref::<gtk::ListItem>().unwrap();
+        let text = item
+            .item()
+            .and_downcast::<gtk::StringObject>()
+            .map(|s| s.string().to_string())
+            .unwrap_or_default();
+        if let Some(label) = item.child().and_then(|b| b.first_child()).and_downcast::<gtk::Label>() {
+            label.set_label(&text);
+        }
+    });
+    f
 }
 
 /// Selected string of a combo row built with [`Form::combo`].

@@ -775,6 +775,14 @@ impl HistoryView {
                 rv.show_view(View::Status);
             } else if t.mode != HistoryMode::History {
                 rv.jump_to_commit(&r.commit.oid);
+            } else {
+                // Double-click on a remote branch tip: pull it and check it out.
+                let remotes: Vec<&RefInfo> = r.refs.iter().filter(|x| x.kind == RefKind::Remote).collect();
+                match remotes.as_slice() {
+                    [] => {}
+                    [one] => super::dialogs::dispatch(&rv, "checkout-remote", one.full.clone()),
+                    _ => super::dialogs::dispatch(&rv, "checkout-commit", r.commit.oid.clone()),
+                }
             }
         });
         for dd in [&self.scope, &self.order] {

@@ -20,7 +20,7 @@ scripts/i18n.sh pot|update|check|build <prefix>   # translation template, merge,
 
 System deps (Debian names): `libgtk-4-dev libadwaita-1-dev libgtksourceview-5-dev pkg-config gettext`. On Fedora: `gtk4-devel libadwaita-devel gtksourceview5-devel gettext`. `scripts/install.sh` checks for them and prints the right command for the distro.
 
-`screenshot.sh` runs `target/debug/gitree` (so `cargo build` first) inside a private headless GNOME Shell with a throwaway `XDG_CONFIG_HOME`, triggers the given `repo.*` actions (`name=arg;name2`; `wait=<ms>` pauses between them), saves a PNG of the newest visible window, and quits. This is the way to check UI changes visually. Set `GITREE_AUTO_ACCEPT=1` to auto-accept confirmation dialogs and `Form`s with their defaults so Push, Pull, Stash and similar flows run end to end.
+`screenshot.sh` runs `target/debug/gitree` (so `cargo build` first) inside a private headless GNOME Shell with a throwaway `XDG_CONFIG_HOME`, triggers the given `repo.*` actions (`name=arg;name2`; `wait=<ms>` pauses between them), saves a PNG of the newest visible window, and quits. This is the way to check UI changes visually. Set `GITREE_AUTO_ACCEPT=1` to auto-accept confirmation dialogs and `Form`s with their defaults (and close error sheets after 1 s) so Push, Pull, Stash and similar flows run end to end.
 
 Other dev env vars: `GITREE_LOCALEDIR` (message catalog dir), `GITREE_DEBUG_REFRESH` (logs refreshes and watcher triggers), `GITREE_KEEP_OPEN` (don't quit after a screenshot), `GITREE_TEST_CONFIG` (config dir for `screenshot.sh`).
 
